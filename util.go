@@ -2,12 +2,11 @@ package main
 
 import (
 	"github.com/gotk3/gotk3/glib"
-	"github.com/gotk3/gotk3/gtk"
 	"log"
 )
 
-func getObject(builder *gtk.Builder, objectName string) glib.IObject {
-	object, err := builder.GetObject(objectName)
+func getObject(objectName string) glib.IObject {
+	object, err := Builder.GetObject(objectName)
 	checkError(err)
 
 	return object

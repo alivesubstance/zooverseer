@@ -50,12 +50,11 @@
               </packing>
             </child>
             <child>
-              <object class="GtkButton" id="connCancelBtn">
+              <object class="GtkButton" id="connDialogCancelBtn">
                 <property name="label" translatable="yes">Cancel</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
-                <signal name="clicked" handler="onConnCancelBtnClicked" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">True</property>
@@ -184,6 +183,7 @@
                 <property name="width_request">380</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
+                <property name="text" translatable="yes">nightly-pleeco</property>
               </object>
               <packing>
                 <property name="x">300</property>
@@ -196,6 +196,7 @@
                 <property name="height_request">30</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
+                <property name="text" translatable="yes">172.0.100.20</property>
               </object>
               <packing>
                 <property name="x">300</property>
@@ -206,6 +207,7 @@
               <object class="GtkEntry" id="connPortEntry">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
+                <property name="text" translatable="yes">36955</property>
               </object>
               <packing>
                 <property name="x">583</property>
@@ -217,6 +219,7 @@
                 <property name="width_request">200</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
+                <property name="text" translatable="yes">zookeeper</property>
               </object>
               <packing>
                 <property name="x">300</property>
@@ -228,6 +231,8 @@
                 <property name="width_request">200</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
+                <property name="text" translatable="yes">z00k33p3r</property>
+                <property name="input_purpose">password</property>
               </object>
               <packing>
                 <property name="x">300</property>

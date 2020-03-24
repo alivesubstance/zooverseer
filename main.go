@@ -10,10 +10,11 @@ import (
 
 const appId = "com.github.alivesubstance.zooverseer"
 
-var signals = map[string]interface{}{
-	"onConnCancelBtnClicked": onConnCancelBtnClicked,
-	"openConnDialog":         openConnDialog,
-}
+// todo change to relative path
+const gladeFilePath = "/home/mirian/code/go/src/github.com/alivesubstance/zooverseer/assets/main.glade"
+
+// there are rumors that global variable is evil. why?
+var Builder *gtk.Builder
 
 func main() {
 	log.Print("Starting zooverseer")
@@ -21,50 +22,58 @@ func main() {
 	app, err := gtk.ApplicationNew(appId, glib.APPLICATION_FLAGS_NONE)
 	checkError(err)
 
-	app.Connect("activate", func() {
-		// Создаём билдер
-		builder, err := gtk.BuilderNew()
-		checkError(err)
-
-		// Загружаем в билдер окно из файла Glade
-		// todo change to relative path
-		err = builder.AddFromFile("/home/mirian/code/go/src/github.com/alivesubstance/zooverseer/assets/main.glade")
-		checkError(err)
-
-		builder.ConnectSignals(signals)
-
-		connectDialog := initConnDialog(builder)
-		connectDialog.ShowAll()
-
-		// Преобразуем из объекта именно окно типа gtk.Window
-		// и соединяем с сигналом "destroy" чтобы можно было закрыть
-		// приложение при закрытии окна
-		mainWindow := getObject(builder, "mainWindow").(*gtk.Window)
-		//mainWindow.Connect("destroy", func() {
-		//	gtk.MainQuit()
-		//})
-
-		// Отображаем все виджеты в окне
-		mainWindow.ShowAll()
-		app.AddWindow(mainWindow)
-	})
+	app.Connect("activate", onAppActivate(app))
 
 	os.Exit(app.Run(os.Args))
 }
 
-func initConnDialog(builder *gtk.Builder) *gtk.Dialog {
-	portEntry := getObject(builder, "connPortEntry").(*gtk.Entry)
-	portEntry.SetWidthChars(10)
+func onAppActivate(app *gtk.Application) func() {
+	return func() {
+		log.Print("Reading glade file")
+		builder, err := gtk.BuilderNewFromFile(gladeFilePath)
+		checkError(err)
 
-	connectDialog := getObject(builder, "connDialog").(*gtk.Dialog)
+		Builder = builder
 
-	return connectDialog
+		mainWindow := getObject("mainWindow").(*gtk.Window)
+
+		connDialog := initConnDialog(mainWindow)
+		connDialog.ShowAll()
+
+		mainWindow.ShowAll()
+		app.AddWindow(mainWindow)
+	}
 }
 
-func onConnCancelBtnClicked() {
-	log.Print("onConnCancelBtnClicked")
+func initConnDialog(mainWindow *gtk.Window) *gtk.Dialog {
+	connPortEntry := getObject("connPortEntry").(*gtk.Entry)
+	connPortEntry.SetWidthChars(10)
+
+	connDialog := getObject("connDialog").(*gtk.Dialog)
+	connDialog.SetTransientFor(mainWindow)
+
+	connDialogCancelBtn := getObject("connDialogCancelBtn").(*gtk.Button)
+	connDialogCancelBtn.Connect("clicked", onConnDialogCancelBtnClicked(connDialog))
+
+	connAddBtn := getObject("connAddBtn").(*gtk.Button)
+	connAddBtn.Connect("clicked", onConnAddBtnClicked)
+
+	return connDialog
 }
 
-func openConnDialog() {
-	log.Print("Open conn dialog")
+func onConnAddBtnClicked() {
+	log.Print("Conn add btn clicked")
+	connList := getObject("connList").(*gtk.ListBox)
+	connList.SetHAlign(gtk.ALIGN_START)
+	l, err := gtk.LabelNew("nightly-pleeco")
+	checkError(err)
+
+	connList.Add(l)
+	connList.ShowAll()
+}
+
+func onConnDialogCancelBtnClicked(connDialog *gtk.Dialog) func() {
+	return func() {
+		connDialog.Hide()
+	}
 }
