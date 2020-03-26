@@ -86,25 +86,26 @@ func initConnsListBox() {
 
 func onConnListBoxRowSelected() func(listBox *gtk.ListBox, row *gtk.ListBoxRow) {
 	return func(listBox *gtk.ListBox, row *gtk.ListBoxRow) {
-		child, err := row.GetChild()
-		util.CheckError(err)
-
-		connName, _ := child.GetTooltipText()
-		connInfo, ok := ConnRepository.Find(connName)
-		if !ok {
-			log.Panicf("'%s' connection setting not found. Should never happened", connName)
-		}
-
-		fillConnInfoView(connInfo)
+		selectedConn := getSelectedConn(row)
+		getObject("connNameEntry").(*gtk.Entry).SetText(selectedConn.Name)
+		getObject("connHostEntry").(*gtk.Entry).SetText(selectedConn.Host)
+		getObject("connPortEntry").(*gtk.Entry).SetText(fmt.Sprintf("%v", selectedConn.Port))
+		getObject("connUserEntry").(*gtk.Entry).SetText(selectedConn.User)
+		getObject("connPwdEntry").(*gtk.Entry).SetText("***")
 	}
 }
 
-func fillConnInfoView(connInfo *core.JsonConnInfo) {
-	getObject("connNameEntry").(*gtk.Entry).SetText(connInfo.Name)
-	getObject("connHostEntry").(*gtk.Entry).SetText(connInfo.Host)
-	getObject("connPortEntry").(*gtk.Entry).SetText(fmt.Sprintf("%v", connInfo.Port))
-	getObject("connUserEntry").(*gtk.Entry).SetText(connInfo.User)
-	getObject("connPwdEntry").(*gtk.Entry).SetText("***")
+func getSelectedConn(row *gtk.ListBoxRow) *core.JsonConnInfo {
+	child, err := row.GetChild()
+	util.CheckError(err)
+
+	connName, _ := child.GetTooltipText()
+	connInfo, ok := ConnRepository.Find(connName)
+	if !ok {
+		log.Panicf("'%s' connection setting not found. Should never happened", connName)
+	}
+
+	return connInfo
 }
 
 func onConnAddBtnClicked() {
