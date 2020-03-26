@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/alivesubstance/zooverseer/core"
 	"github.com/alivesubstance/zooverseer/util"
 	"github.com/gotk3/gotk3/glib"
@@ -10,8 +11,10 @@ import (
 )
 
 // there are rumors that global variable is evil. why?
-var Builder *gtk.Builder
-var ConnRepository core.ConnRepository = core.JsonConnInfo{}
+var (
+	Builder        *gtk.Builder
+	ConnRepository core.ConnRepository = core.JsonConnInfo{}
+)
 
 func main() {
 	log.Print("Starting zooverseer")
@@ -61,29 +64,47 @@ func initConnDialog(mainWindow *gtk.Window) *gtk.Dialog {
 }
 
 func initConnsListBox() {
-	//connNameEntry := getObject("connNameEntry").(*gtk.Entry)
-	//connHostEntry := getObject("connHostEntry").(*gtk.Entry)
-	//connPortEntry := getObject("connPortEntry").(*gtk.Entry)
-	//connUserEntry := getObject("connUserEntry").(*gtk.Entry)
-	//connPwdEntry := getObject("connPwdEntry").(*gtk.Entry)
-
 	connListBox := getConnListBox()
-	connListBox.Connect("row-selected", func() {
-		connName, err := connListBox.GetSelectedRow().GetName()
-		util.CheckError(err)
-
-		log.Print("Selected row " + connName)
-	})
+	connListBox.Connect("row-selected", onConnListBoxRowSelected())
 
 	connInfos := ConnRepository.FindAll()
 	for _, connInfo := range connInfos {
 		label, err := gtk.LabelNew(connInfo.Name)
 		util.CheckError(err)
+		// set tooltip to hold connection name and to be used further
+		// to get connection settings by name.
+		// looks like go gtk implementation doesn't have separate method
+		// to get label text and tooltip is the only way I've found to fetch
+		// connection name when connection is selected. this is looks ugly
+		label.SetTooltipText(connInfo.Name)
 
 		connListBox.Add(label)
 	}
 	connListBox.SelectRow(connListBox.GetRowAtIndex(0))
 	connListBox.ShowAll()
+}
+
+func onConnListBoxRowSelected() func(listBox *gtk.ListBox, row *gtk.ListBoxRow) {
+	return func(listBox *gtk.ListBox, row *gtk.ListBoxRow) {
+		child, err := row.GetChild()
+		util.CheckError(err)
+
+		connName, _ := child.GetTooltipText()
+		connInfo, ok := ConnRepository.Find(connName)
+		if !ok {
+			log.Panicf("'%s' connection setting not found. Should never happened", connName)
+		}
+
+		fillConnInfoView(connInfo)
+	}
+}
+
+func fillConnInfoView(connInfo *core.JsonConnInfo) {
+	getObject("connNameEntry").(*gtk.Entry).SetText(connInfo.Name)
+	getObject("connHostEntry").(*gtk.Entry).SetText(connInfo.Host)
+	getObject("connPortEntry").(*gtk.Entry).SetText(fmt.Sprintf("%v", connInfo.Port))
+	getObject("connUserEntry").(*gtk.Entry).SetText(connInfo.User)
+	getObject("connPwdEntry").(*gtk.Entry).SetText("***")
 }
 
 func onConnAddBtnClicked() {

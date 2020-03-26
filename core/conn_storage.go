@@ -9,21 +9,52 @@ import (
 
 type ConnRepository interface {
 	Upset(connInfo JsonConnInfo)
-	Find(connName string) JsonConnInfo
+	Find(connName string) (*JsonConnInfo, bool)
 	FindAll() []JsonConnInfo
 	Delete(connName string)
+}
+
+type ZooverseerConfig struct {
+	Connections []JsonConnInfo /* `json:"connections"`*/
+}
+
+type JsonConnInfo struct {
+	Name     string /*`json:"name"`*/
+	Host     string
+	Port     uint16
+	User     string
+	Password string
 }
 
 func (c JsonConnInfo) Upset(connInfo JsonConnInfo) {
 
 }
 
-func (c JsonConnInfo) Find(connName string) JsonConnInfo {
-	panic(nil)
+func (c JsonConnInfo) Find(connName string) (*JsonConnInfo, bool) {
+	if len(connName) == 0 {
+		return nil, false
+	}
+
+	for _, connInfo := range c.FindAll() {
+		if connInfo.Name == connName {
+			return &connInfo, true
+		}
+	}
+
+	return nil, false
 }
 
 func (c JsonConnInfo) FindAll() []JsonConnInfo {
-	var connInfos JsonConnInfos
+	config := readConfig()
+	return config.Connections
+}
+
+func (c JsonConnInfo) Delete(connName string) {
+
+}
+
+func readConfig() ZooverseerConfig {
+	var config ZooverseerConfig
 
 	connConfigJson, err := os.Open(ConnConfigFilePath)
 	util.CheckError(err)
@@ -31,24 +62,8 @@ func (c JsonConnInfo) FindAll() []JsonConnInfo {
 	connConfigBytes, err := ioutil.ReadAll(connConfigJson)
 	util.CheckError(err)
 
-	json.Unmarshal(connConfigBytes, &connInfos)
+	json.Unmarshal(connConfigBytes, &config)
 	defer connConfigJson.Close()
 
-	return connInfos.Connections
-}
-
-func (c JsonConnInfo) Delete(connName string) {
-
-}
-
-type JsonConnInfos struct {
-	Connections []JsonConnInfo /* `json:"connections"`*/
-}
-
-type JsonConnInfo struct {
-	Name     string /*`json:"name"`*/
-	Host     string
-	Port     int16
-	User     string
-	Password string
+	return config
 }
