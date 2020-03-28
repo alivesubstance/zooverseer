@@ -1,13 +1,19 @@
 package main
 
+// #cgo pkg-config: gdk-3.0 glib-2.0 gobject-2.0
+// #include <gdk/gdk.h>
+// #include "/home/mirian/code/go/src/github.com/gotk3/gotk3/gdk/gdk.go.h"
+import "C"
 import (
 	"fmt"
 	"github.com/alivesubstance/zooverseer/core"
 	"github.com/alivesubstance/zooverseer/util"
+	"github.com/gotk3/gotk3/gdk"
 	"github.com/gotk3/gotk3/glib"
 	"github.com/gotk3/gotk3/gtk"
 	"log"
 	"os"
+	"unsafe"
 )
 
 // there are rumors that global variable is evil. why?
@@ -36,13 +42,31 @@ func onAppActivate(app *gtk.Application) func() {
 		Builder = builder
 
 		mainWindow := getObject("mainWindow").(*gtk.Window)
-
-		connDialog := initConnDialog(mainWindow)
-		connDialog.ShowAll()
+		mainWindow.Connect("button-release-event", on_button_press_event)
+		//connDialog := initConnDialog(mainWindow)
+		//connDialog.ShowAll()
 
 		mainWindow.ShowAll()
 		app.AddWindow(mainWindow)
+
 	}
+}
+
+func on_button_press_event(b *gtk.Window, e *gdk.Event) {
+	mouseButton := getMouseButton(e)
+	if mouseButton == 3 {
+		// if mouse2 button pressed
+		menu := getObject("popupMenu").(*gtk.Menu)
+
+		menu.ShowAll()
+		menu.PopupAtPointer(e)
+	}
+}
+
+func getMouseButton(e *gdk.Event) uint {
+	event := &gdk.EventKey{e}
+	mouseButton := (*C.GdkEventButton)(unsafe.Pointer(event.Event.GdkEvent)).button
+	return uint(mouseButton)
 }
 
 func initConnDialog(mainWindow *gtk.Window) *gtk.Dialog {
@@ -57,6 +81,9 @@ func initConnDialog(mainWindow *gtk.Window) *gtk.Dialog {
 
 	connAddBtn := getObject("connAddBtn").(*gtk.Button)
 	connAddBtn.Connect("clicked", onConnAddBtnClicked)
+
+	connBtn := getObject("connBtn").(*gtk.Button)
+	connBtn.Connect("clicked", onConnBtnClicked(connDialog))
 
 	initConnsListBox()
 
@@ -112,14 +139,21 @@ func onConnAddBtnClicked() {
 	log.Print("Conn add btn clicked")
 }
 
-func getConnListBox() *gtk.ListBox {
-	return getObject("connList").(*gtk.ListBox)
+func onConnBtnClicked(connDialog *gtk.Dialog) func() {
+	return func() {
+		connDialog.Hide()
+
+	}
 }
 
 func onConnDialogCancelBtnClicked(connDialog *gtk.Dialog) func() {
 	return func() {
 		connDialog.Hide()
 	}
+}
+
+func getConnListBox() *gtk.ListBox {
+	return getObject("connList").(*gtk.ListBox)
 }
 
 func getObject(objectName string) glib.IObject {
