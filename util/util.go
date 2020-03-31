@@ -9,3 +9,13 @@ func CheckError(e error) {
 		log.Panic(e)
 	}
 }
+
+func CheckErrorWithMsg(msg string, e error) {
+	if e != nil {
+		log.Panic(msg, e)
+	}
+}
+
+func BytesToString(data []byte) string {
+	return string(data[:])
+}

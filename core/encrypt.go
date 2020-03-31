@@ -11,12 +11,6 @@ import (
 
 const salt = "8d84b9363adf51458a3e67672176bcfd"
 
-func createHash(key string) string {
-	hasher := md5.New()
-	hasher.Write([]byte(key))
-	return hex.EncodeToString(hasher.Sum(nil))
-}
-
 func Encrypt(passphrase string) string {
 	block, err := aes.NewCipher([]byte(createHash(salt)))
 	util.CheckError(err)
@@ -56,4 +50,10 @@ func Decrypt(cipherText string) string {
 		panic(err.Error())
 	}
 	return string(plaintext)
+}
+
+func createHash(key string) string {
+	hasher := md5.New()
+	hasher.Write([]byte(key))
+	return hex.EncodeToString(hasher.Sum(nil))
 }

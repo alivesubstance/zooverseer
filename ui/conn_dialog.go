@@ -84,7 +84,8 @@ func onConnAddBtnClicked() {
 func onConnBtnClicked(connDialog *gtk.Dialog) func() {
 	return func() {
 		connDialog.Hide()
-
+		ClearNodesTree()
+		ShowTreeRootData()
 	}
 }
 
