@@ -4,78 +4,109 @@ import (
 	"fmt"
 	"github.com/alivesubstance/zooverseer/core"
 	"github.com/alivesubstance/zooverseer/util"
-	zookeeper "github.com/outbrain/zookeepercli/go/zk"
+	zkGo "github.com/samuel/go-zookeeper/zk"
 	log "github.com/sirupsen/logrus"
 	gopath "path"
 )
 
-var zk = zookeeper.NewZooKeeper()
-
 type Node struct {
-	Name     string
-	Value    string
-	Children []Node
+	Name        string
+	Value       string
+	Meta        *zkGo.Stat
+	HasChildren bool
+	Children    []Node
 }
 
-func Get(path string, connInfo *core.JsonConnInfo, chanNode chan Node) error {
-	zk.SetServers(getServer(connInfo))
-	if len(connInfo.User) != 0 && len(connInfo.Password) != 0 {
-		authExp := fmt.Sprint(connInfo.User, ":", connInfo.Password)
-		zk.SetAuth("digest", []byte(authExp))
-	}
+func Get(path string, connInfo *core.JsonConnInfo /*, chanNode chan Node*/) (*Node, error) {
+	log.Info("Get data for " + path)
 
-	children, err := getChildren(path)
+	value, err := GetValue(path, connInfo)
 	if err != nil {
-		return err
-	}
-
-	//value, err := getValue(path)
-	//if err != nil {
-	//	return err
-	//}
-
-	node := Node{
-		Name:     gopath.Base(path),
-		Value:    "",
-		Children: children,
-	}
-
-	chanNode <- node
-	return nil
-}
-
-func getChildren(path string) ([]Node, error) {
-	children, err := zk.Children(path)
-	if err != nil {
-		log.Error("Failed to get children for [" + path + "]")
 		return nil, err
 	}
 
-	if len(children) == 0 {
-		return nil, nil
+	children, err := GetChildren(path, connInfo)
+	if err != nil {
+		return nil, err
 	}
 
-	nodes := make([]Node, len(children))
-	for i, child := range children {
-		nodes[i] = Node{Name: child}
+	node := &Node{
+		Name:        gopath.Base(path),
+		Value:       value,
+		HasChildren: len(children) > 0,
+		Children:    children,
 	}
 
-	return nodes, nil
+	//chanNode <- node
+	return node, nil
 }
 
-func getValue(path string) (string, error) {
-	log.Debug("Looking for value for [" + path + "]")
-	valueBytes, err := zk.Get(path)
+func Exists(path string, connInfo *core.JsonConnInfo) (bool, *zkGo.Stat, error) {
+	conn, err := getConn(connInfo)
 	if err != nil {
-		log.Error("Failed to get value for [" + path + "]")
+		log.Errorf("Failed to check existing for %s", path, err)
+		return false, nil, err
+	}
+
+	return conn.Exists(path)
+}
+
+func GetValue(path string, connInfo *core.JsonConnInfo) (string, error) {
+	log.Info("Looking for value for " + path)
+
+	conn, err := getConn(connInfo)
+	if err != nil {
+		return "", err
+	}
+
+	valueBytes, _, err := conn.Get(path)
+	if err != nil {
+		log.Error("Failed to get value for " + path)
 		return "", err
 	}
 
 	return util.BytesToString(valueBytes), nil
 }
 
-func getServer(info *core.JsonConnInfo) []string {
-	servers := make([]string, 1)
-	servers[0] = fmt.Sprintf("%v:%v", info.Host, info.Port)
-	return servers
+func GetChildren(path string, connInfo *core.JsonConnInfo) ([]Node, error) {
+	log.Info("Looking for children for " + path)
+
+	conn, err := getConn(connInfo)
+	if err != nil {
+		return nil, err
+	}
+
+	childrenNames, _, err := conn.Children(path)
+	if err != nil {
+		log.Error("Failed to get children for " + path)
+		return nil, err
+	}
+
+	if len(childrenNames) == 0 {
+		return nil, nil
+	}
+
+	nodes := make([]Node, len(childrenNames))
+	for i, childName := range childrenNames {
+		_, stat, err := Exists(fmt.Sprintf("%s/%s", path, childName), connInfo)
+		if err != nil {
+			return nil, err
+		}
+		nodes[i] = Node{
+			Name:        childName,
+			HasChildren: stat.NumChildren > 0,
+		}
+	}
+
+	return nodes, nil
+}
+
+func getConn(connInfo *core.JsonConnInfo) (*zkGo.Conn, error) {
+	conn, err := ConnCache.Get(connInfo.String())
+	if err != nil {
+		log.Errorf("Failed to get connection for %s", connInfo.String())
+		return nil, err
+	}
+
+	return conn.(*zkGo.Conn), nil
 }

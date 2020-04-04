@@ -295,7 +295,6 @@
     <property name="stock">gtk-find</property>
     <property name="icon_size">3</property>
   </object>
-  <object class="GtkTreeStore" id="nodesStore"/>
   <object class="GtkWindow" id="mainWindow">
     <property name="can_focus">False</property>
     <property name="default_width">1000</property>
@@ -533,7 +532,7 @@
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="vexpand">True</property>
-                    <property name="model">nodesStore</property>
+                    <property name="activate_on_single_click">True</property>
                     <child internal-child="selection">
                       <object class="GtkTreeSelection"/>
                     </child>

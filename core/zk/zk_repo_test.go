@@ -2,33 +2,32 @@ package zk
 
 import (
 	"github.com/alivesubstance/zooverseer/core"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"testing"
 	"time"
 )
 
 func TestGet(t *testing.T) {
-	c := make(chan Node)
-	connInfo := core.JsonConnInfo{
-		Host: "localhost",
-		Port: 2181,
-	}
-	go Get("/", &connInfo, c)
-	node := <-c
-	log.Println(node.name)
-	for _, child := range node.children {
-		log.Println(child.name)
+	connInfo := &core.JsonConnInfo{
+		Host:     "10.1.1.113",
+		Port:     2181,
+		User:     "zookeeper",
+		Password: "z00k33p3r",
 	}
 
+	exists(connInfo, "/")
+	exists(connInfo, "/env")
+
+	log.Println("Sleep")
+	time.Sleep(10 * time.Second)
+
+	exists(connInfo, "/env/sandbox-pleeco/acl")
+	exists(connInfo, "/env/sandbox-pleeco/cassandra.port")
 }
 
-func TestNil(t *testing.T) {
-	var c []string
-	if len(c) == 0 {
-		log.Print("empty")
-	} else {
-		log.Print("not empty")
-	}
+func exists(connInfo *core.JsonConnInfo, path string) {
+	_, stat, _ := Exists(path, connInfo)
+	log.Infof("Path %s has children: %v", path, stat.NumChildren)
 }
 
 func TestSleep(t *testing.T) {

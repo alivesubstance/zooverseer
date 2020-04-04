@@ -2,13 +2,15 @@ package core
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/alivesubstance/zooverseer/util"
 	"io/ioutil"
 	"os"
 )
 
+//TODO remove it and put conn_info_repo.go into conn_repo folder?
 type ConnRepository interface {
-	Upset(connInfo JsonConnInfo)
+	Upsert(connInfo *JsonConnInfo)
 	Find(connName string) (*JsonConnInfo, bool)
 	FindAll() []JsonConnInfo
 	Delete(connName string)
@@ -26,11 +28,18 @@ type JsonConnInfo struct {
 	Password string
 }
 
-func (c JsonConnInfo) Upset(connInfo JsonConnInfo) {
+func (c *JsonConnInfo) String() string {
+	return fmt.Sprintf(
+		"JsonConnInfo[name: %s, host: %s, port: %v, user: %v]",
+		c.Name, c.Host, c.Port, c.User,
+	)
+}
+
+func (c *JsonConnInfo) Upsert(connInfo *JsonConnInfo) {
 
 }
 
-func (c JsonConnInfo) Find(connName string) (*JsonConnInfo, bool) {
+func (c *JsonConnInfo) Find(connName string) (*JsonConnInfo, bool) {
 	if len(connName) == 0 {
 		return nil, false
 	}
@@ -45,16 +54,16 @@ func (c JsonConnInfo) Find(connName string) (*JsonConnInfo, bool) {
 	return nil, false
 }
 
-func (c JsonConnInfo) FindAll() []JsonConnInfo {
+func (c *JsonConnInfo) FindAll() []JsonConnInfo {
 	config := readConfig()
 	return config.Connections
 }
 
-func (c JsonConnInfo) Delete(connName string) {
+func (c *JsonConnInfo) Delete(connName string) {
 
 }
 
-func readConfig() ZooverseerConfig {
+func readConfig() *ZooverseerConfig {
 	var config ZooverseerConfig
 
 	connConfigJson, err := os.Open(ConnConfigFilePath)
@@ -66,5 +75,5 @@ func readConfig() ZooverseerConfig {
 	json.Unmarshal(connConfigBytes, &config)
 	defer connConfigJson.Close()
 
-	return config
+	return &config
 }

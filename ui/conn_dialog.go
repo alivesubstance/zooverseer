@@ -26,21 +26,29 @@ func InitConnDialog(mainWindow *gtk.Window) *gtk.Dialog {
 
 	initConnsListBox()
 
+	connDialog.ShowAll()
+
 	return connDialog
 }
 
 func GetSelectedConn() *core.JsonConnInfo {
-	connList := getObject("connList").(*gtk.ListBox)
-	child, err := connList.GetSelectedRow().GetChild()
-	util.CheckError(err)
-
-	connName, _ := child.GetTooltipText()
-	connInfo, ok := ConnRepository.Find(connName)
-	if !ok {
-		log.Panicf("'%s' connection setting not found. Should never happened", connName)
+	return &core.JsonConnInfo{
+		Host:     "10.1.1.112",
+		Port:     2181,
+		User:     "zookeeper",
+		Password: "z00k33p3r",
 	}
-
-	return connInfo
+	//connList := getObject("connList").(*gtk.ListBox)
+	//child, err := connList.GetSelectedRow().GetChild()
+	//util.CheckError(err)
+	//
+	//connName, _ := child.GetTooltipText()
+	//connInfo, ok := ConnRepository.Find(connName)
+	//if !ok {
+	//	log.Panicf("'%s' connection setting not found. Should never happened", connName)
+	//}
+	//
+	//return connInfo
 }
 
 func onConnListBoxRowSelected() {
@@ -85,7 +93,7 @@ func onConnBtnClicked(connDialog *gtk.Dialog) func() {
 	return func() {
 		connDialog.Hide()
 		ClearNodesTree()
-		ShowTreeRootData()
+		//ShowTreeRootNodes()
 	}
 }
 

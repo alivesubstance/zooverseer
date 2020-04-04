@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/alivesubstance/zooverseer/core"
+	"github.com/alivesubstance/zooverseer/core/zk"
 	"github.com/alivesubstance/zooverseer/ui"
 	"github.com/alivesubstance/zooverseer/util"
 	"github.com/gotk3/gotk3/glib"
@@ -17,6 +18,8 @@ func main() {
 	util.CheckError(err)
 
 	app.Connect("activate", ui.OnAppActivate(app))
+
+	zk.InitConnCache()
 
 	os.Exit(app.Run(os.Args))
 }
