@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"github.com/alivesubstance/zooverseer/core"
 	"github.com/alivesubstance/zooverseer/util"
+	"github.com/avast/retry-go"
 	zkGo "github.com/samuel/go-zookeeper/zk"
 	log "github.com/sirupsen/logrus"
 	gopath "path"
+	"time"
 )
 
 type Node struct {
@@ -14,6 +16,14 @@ type Node struct {
 	Value    string
 	Meta     *zkGo.Stat
 	Children []Node
+}
+
+var retryOptions = []retry.Option{
+	retry.Attempts(core.ZkOpRetryAttempts),
+	retry.Delay(core.ZkOpRetryDelay * time.Millisecond),
+	retry.OnRetry(func(n uint, err error) {
+		log.WithError(err).Infof("Zk op failed. Retry %v of %v", n, core.ZkOpRetryAttempts)
+	}),
 }
 
 func GetRootNodeChildren(connInfo *core.JsonConnInfo) ([]Node, error) {
@@ -24,7 +34,7 @@ func GetRootNodeChildren(connInfo *core.JsonConnInfo) ([]Node, error) {
 	return doGetChildren(core.NodeRootName, connInfo, childPathCreator)
 }
 
-func Get(path string, connInfo *core.JsonConnInfo /*, chanNode chan Node*/) (*Node, error) {
+func Get(path string, connInfo *core.JsonConnInfo) (*Node, error) {
 	log.Info("Get data for " + path)
 
 	value, meta, err := GetValue(path, connInfo)
@@ -44,7 +54,6 @@ func Get(path string, connInfo *core.JsonConnInfo /*, chanNode chan Node*/) (*No
 		Children: children,
 	}
 
-	//chanNode <- node
 	return node, nil
 }
 
@@ -61,18 +70,33 @@ func Exists(path string, connInfo *core.JsonConnInfo) (bool, *zkGo.Stat, error) 
 func GetValue(path string, connInfo *core.JsonConnInfo) (string, *zkGo.Stat, error) {
 	log.Info("Looking for value for " + path)
 
+	var value string
+	var meta *zkGo.Stat
+
 	conn, err := getConn(connInfo)
 	if err != nil {
 		return "", nil, err
 	}
 
-	valueBytes, stat, err := conn.Get(path)
+	err = retry.Do(
+		func() error {
+			valueBytes, stat, err := conn.Get(path)
+			if err != nil {
+				log.WithError(err).Error("Failed to get value for " + path)
+				return err
+			}
+
+			value = util.BytesToString(valueBytes)
+			meta = stat
+			return nil
+		}, retryOptions...,
+	)
+
 	if err != nil {
-		log.Error("Failed to get value for " + path)
 		return "", nil, err
 	}
 
-	return util.BytesToString(valueBytes), stat, nil
+	return value, meta, nil
 }
 
 func GetChildren(path string, connInfo *core.JsonConnInfo) ([]Node, error) {
@@ -90,6 +114,7 @@ func doGetChildren(path string, connInfo *core.JsonConnInfo, childPathCreator fu
 		return nil, err
 	}
 
+	//TODO add retry
 	childrenNames, _, err := conn.Children(path)
 	if err != nil {
 		log.WithError(err).Fatal("Failed to get children for " + path)
@@ -120,7 +145,7 @@ func getConn(connInfo *core.JsonConnInfo) (*zkGo.Conn, error) {
 	connInfoValue := *connInfo
 	conn, err := ConnCache.Get(connInfoValue)
 	if err != nil {
-		log.Errorf("Failed to get connection for %s", connInfo.String())
+		log.WithError(err).Errorf("Failed to get connection for %s", connInfo.String())
 		return nil, err
 	}
 

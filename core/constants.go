@@ -12,12 +12,19 @@ const (
 const (
 	ConnCacheExpireAfterAccessMinutes = 20
 	ConnCacheStatsPeriodMinutes       = 5
+	ConnRetryAttempts                 = 3
+	ConnRetryDelay                    = 1000
 )
 
 // Nodes tree and repository
 const (
-	NodeColumn       = 0
-	NodeRootTreePath = "0"
-	NodeRootName     = "/"
-	NodeDummy        = "__dummy" // Dummy node to be used as real node children placeholder
+	NodeColumn   = 0
+	NodeRootName = "/"
+	NodeDummy    = "__dummy" // Dummy node to be used as real node children placeholder
+)
+
+// Retry config for ZK operations
+const (
+	ZkOpRetryAttempts = 3
+	ZkOpRetryDelay    = 500
 )

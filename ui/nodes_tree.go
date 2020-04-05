@@ -40,18 +40,6 @@ func ClearNodeTree() {
 }
 
 func ShowTreeRootNodes() {
-	// append root node
-	rootIter := NodeTreeStore.Append(nil)
-	setNodeName(rootIter, core.NodeRootName)
-
-	// for tree path see
-	//https://developer.gnome.org/gtk3/stable/GtkTreeModel.html#gtk-tree-path-new-from-string
-	rootTreePath, err := gtk.TreePathNewFromString(core.NodeRootTreePath)
-	util.CheckErrorWithMsg("Failed to get root tree path", err)
-
-	// store root tree path to zk path mapping
-	ZkPathByTreePath[rootTreePath.String()] = core.NodeRootName
-
 	rootChildren, err := zk.GetRootNodeChildren(GetSelectedConn())
 	if err != nil {
 		log.WithError(err).Error("Failed to get read ZK root node")
@@ -59,7 +47,7 @@ func ShowTreeRootNodes() {
 
 	// add root children to tree
 	for _, rootChild := range rootChildren {
-		addSubRow(rootIter, &rootChild)
+		addSubRow(nil, &rootChild)
 	}
 }
 
@@ -101,19 +89,6 @@ func onTreeRowExpanded(treeView *gtk.TreeView, treeIter *gtk.TreeIter, treePath 
 	}
 }
 
-func createTextColumn(title string, id int) *gtk.TreeViewColumn {
-	// In this column we want to show text, hence create a text renderer
-	cellRenderer, err := gtk.CellRendererTextNew()
-	util.CheckErrorWithMsg("Unable to create text cell renderer", err)
-
-	// Tell the renderer where to pick input from. Text renderer understands
-	// the "text" property.
-	column, err := gtk.TreeViewColumnNewWithAttribute(title, cellRenderer, "text", id)
-	util.CheckErrorWithMsg("Unable to create cell column:", err)
-
-	return column
-}
-
 func addSubRow(parentIter *gtk.TreeIter, child *zk.Node) {
 	childIter := NodeTreeStore.Append(parentIter)
 	setNodeName(childIter, child.Name)
@@ -125,14 +100,13 @@ func addSubRow(parentIter *gtk.TreeIter, child *zk.Node) {
 		setNodeName(dummyChildIter, core.NodeDummy)
 	}
 
-	parentTreePath := getTreePath(parentIter).String()
-	parentZkPath := ZkPathByTreePath[parentTreePath]
-
-	if parentZkPath == core.NodeRootName {
-		parentZkPath = ""
+	parentZkPath := ""
+	if parentIter != nil {
+		parentTreePath := getTreePath(parentIter)
+		parentZkPath = ZkPathByTreePath[parentTreePath]
 	}
 
-	childTreePath := getTreePath(childIter).String()
+	childTreePath := getTreePath(childIter)
 	childZkPath := fmt.Sprintf("%s/%s", parentZkPath, child.Name)
 	ZkPathByTreePath[childTreePath] = childZkPath
 }
@@ -145,10 +119,10 @@ func setNodeValue(child *zk.Node) {
 	textBuffer.SetText(child.Value)
 }
 
-func getTreePath(iter *gtk.TreeIter) *gtk.TreePath {
+func getTreePath(iter *gtk.TreeIter) string {
 	path, err := NodeTreeStore.GetPath(iter)
 	util.CheckErrorWithMsg(fmt.Sprintf("Failed to get path for %s\n", iter), err)
-	return path
+	return path.String()
 }
 
 func setNodeName(treeIter *gtk.TreeIter, value string) {
@@ -159,4 +133,17 @@ func setNodeName(treeIter *gtk.TreeIter, value string) {
 
 		log.Panic("Unable set value ["+value+"] for ["+path.String()+"]", err)
 	}
+}
+
+func createTextColumn(title string, id int) *gtk.TreeViewColumn {
+	// In this column we want to show text, hence create a text renderer
+	cellRenderer, err := gtk.CellRendererTextNew()
+	util.CheckErrorWithMsg("Unable to create text cell renderer", err)
+
+	// Tell the renderer where to pick input from. Text renderer understands
+	// the "text" property.
+	column, err := gtk.TreeViewColumnNewWithAttribute(title, cellRenderer, "text", id)
+	util.CheckErrorWithMsg("Unable to create cell column:", err)
+
+	return column
 }

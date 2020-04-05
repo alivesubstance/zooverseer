@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/alivesubstance/zooverseer/core"
 	"github.com/alivesubstance/zooverseer/util"
+	"github.com/avast/retry-go"
 	"github.com/goburrow/cache"
 	zkGo "github.com/samuel/go-zookeeper/zk"
 	log "github.com/sirupsen/logrus"
@@ -19,10 +20,6 @@ func (_ infoLogger) Printf(format string, a ...interface{}) {
 }
 
 func InitConnCache() {
-	connCreateFunc := func(key cache.Key) (cache.Value, error) {
-		return connect(key.(core.JsonConnInfo))
-	}
-
 	connRemoveListener := func(key cache.Key, value cache.Value) {
 		log.Debugf("Conn closed from remove listener. %s", key)
 		value.(*zkGo.Conn).Close()
@@ -63,4 +60,27 @@ func getServers(connInfo core.JsonConnInfo) []string {
 	servers := make([]string, 1)
 	servers[0] = fmt.Sprintf("%v:%v", connInfo.Host, connInfo.Port)
 	return servers
+}
+
+func connCreateFunc(key cache.Key) (cache.Value, error) {
+	var validConn *zkGo.Conn
+	connInfo := key.(core.JsonConnInfo)
+	err := retry.Do(
+		func() error {
+			conn, err := connect(connInfo)
+			if err != nil {
+				return err
+			}
+
+			validConn = conn
+			return nil
+		},
+		retry.Attempts(core.ConnRetryAttempts),
+		retry.Delay(core.ConnRetryDelay*time.Millisecond),
+		retry.OnRetry(func(n uint, err error) {
+			log.WithError(err).Infof("Retry %v of %v failed to connect to %s", n, core.ConnRetryAttempts, connInfo)
+		}),
+	)
+
+	return validConn, err
 }

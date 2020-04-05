@@ -220,11 +220,11 @@
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <child>
-                  <object class="GtkButton" id="connAddBtn">
+                  <object class="GtkButton" id="connDeleteBtn">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
-                    <property name="image">iconConnAdd</property>
+                    <property name="image">iconConnDelete</property>
                   </object>
                   <packing>
                     <property name="position">0</property>
@@ -242,11 +242,11 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkButton" id="connDeleteBtn">
+                  <object class="GtkButton" id="connAddBtn">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
-                    <property name="image">iconConnDelete</property>
+                    <property name="image">iconConnAdd</property>
                   </object>
                   <packing>
                     <property name="position">0</property>
@@ -491,7 +491,7 @@
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
-                        <property name="image">iconNodeRefresh</property>
+                        <property name="image">iconNodeDelete</property>
                       </object>
                       <packing>
                         <property name="position">0</property>
@@ -513,7 +513,7 @@
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
-                        <property name="image">iconNodeDelete</property>
+                        <property name="image">iconNodeRefresh</property>
                       </object>
                       <packing>
                         <property name="position">0</property>
@@ -527,14 +527,23 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkTreeView" id="nodesTreeView">
+                  <object class="GtkScrolledWindow">
                     <property name="width_request">300</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
+                    <property name="hexpand">True</property>
                     <property name="vexpand">True</property>
-                    <property name="activate_on_single_click">True</property>
-                    <child internal-child="selection">
-                      <object class="GtkTreeSelection"/>
+                    <property name="shadow_type">in</property>
+                    <child>
+                      <object class="GtkTreeView" id="nodesTreeView">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="vexpand">True</property>
+                        <property name="activate_on_single_click">True</property>
+                        <child internal-child="selection">
+                          <object class="GtkTreeSelection"/>
+                        </child>
+                      </object>
                     </child>
                   </object>
                   <packing>
@@ -581,7 +590,7 @@
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
-                            <property name="image">iconValueSave</property>
+                            <property name="image">iconValueSearch</property>
                           </object>
                           <packing>
                             <property name="position">0</property>
@@ -592,7 +601,7 @@
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
-                            <property name="image">iconValueSearch</property>
+                            <property name="image">iconValueSave</property>
                           </object>
                           <packing>
                             <property name="position">0</property>
