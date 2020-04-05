@@ -20,7 +20,7 @@ func (_ infoLogger) Printf(format string, a ...interface{}) {
 
 func InitConnCache() {
 	connCreateFunc := func(key cache.Key) (cache.Value, error) {
-		return connect(key.(*core.JsonConnInfo))
+		return connect(key.(core.JsonConnInfo))
 	}
 
 	connRemoveListener := func(key cache.Key, value cache.Value) {
@@ -43,8 +43,8 @@ func InitConnCache() {
 	ConnCache = c
 }
 
-func connect(connInfo *core.JsonConnInfo) (*zkGo.Conn, error) {
-	log.Infof("Connecting to %s", connInfo)
+func connect(connInfo core.JsonConnInfo) (*zkGo.Conn, error) {
+	log.Infof("Connecting to %v", connInfo)
 	zkGo.DefaultLogger = &infoLogger{}
 
 	servers := getServers(connInfo)
@@ -59,7 +59,7 @@ func connect(connInfo *core.JsonConnInfo) (*zkGo.Conn, error) {
 	return conn, err
 }
 
-func getServers(connInfo *core.JsonConnInfo) []string {
+func getServers(connInfo core.JsonConnInfo) []string {
 	servers := make([]string, 1)
 	servers[0] = fmt.Sprintf("%v:%v", connInfo.Host, connInfo.Port)
 	return servers

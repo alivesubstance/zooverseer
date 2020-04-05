@@ -7,13 +7,19 @@ import (
 	"time"
 )
 
+var connInfo = &core.JsonConnInfo{
+	Host:     "10.1.1.112",
+	Port:     2181,
+	User:     "zookeeper",
+	Password: "z00k33p3r",
+}
+
 func TestGet(t *testing.T) {
-	connInfo := &core.JsonConnInfo{
-		Host:     "10.1.1.113",
-		Port:     2181,
-		User:     "zookeeper",
-		Password: "z00k33p3r",
-	}
+	node, _ := Get("/", connInfo)
+	log.Infof("%v+", node)
+}
+
+func TestExists(t *testing.T) {
 
 	exists(connInfo, "/")
 	exists(connInfo, "/env")

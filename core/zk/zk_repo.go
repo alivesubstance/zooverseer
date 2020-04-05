@@ -10,17 +10,24 @@ import (
 )
 
 type Node struct {
-	Name        string
-	Value       string
-	Meta        *zkGo.Stat
-	HasChildren bool
-	Children    []Node
+	Name     string
+	Value    string
+	Meta     *zkGo.Stat
+	Children []Node
+}
+
+func GetRootNodeChildren(connInfo *core.JsonConnInfo) ([]Node, error) {
+	childPathCreator := func(path string, childName string) string {
+		return fmt.Sprintf("/%s", childName)
+	}
+
+	return doGetChildren(core.NodeRootName, connInfo, childPathCreator)
 }
 
 func Get(path string, connInfo *core.JsonConnInfo /*, chanNode chan Node*/) (*Node, error) {
 	log.Info("Get data for " + path)
 
-	value, err := GetValue(path, connInfo)
+	value, meta, err := GetValue(path, connInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -31,10 +38,10 @@ func Get(path string, connInfo *core.JsonConnInfo /*, chanNode chan Node*/) (*No
 	}
 
 	node := &Node{
-		Name:        gopath.Base(path),
-		Value:       value,
-		HasChildren: len(children) > 0,
-		Children:    children,
+		Name:     gopath.Base(path),
+		Value:    value,
+		Meta:     meta,
+		Children: children,
 	}
 
 	//chanNode <- node
@@ -44,31 +51,38 @@ func Get(path string, connInfo *core.JsonConnInfo /*, chanNode chan Node*/) (*No
 func Exists(path string, connInfo *core.JsonConnInfo) (bool, *zkGo.Stat, error) {
 	conn, err := getConn(connInfo)
 	if err != nil {
-		log.Errorf("Failed to check existing for %s", path, err)
+		log.WithError(err).Errorf("Failed to check existing for %s", path)
 		return false, nil, err
 	}
 
 	return conn.Exists(path)
 }
 
-func GetValue(path string, connInfo *core.JsonConnInfo) (string, error) {
+func GetValue(path string, connInfo *core.JsonConnInfo) (string, *zkGo.Stat, error) {
 	log.Info("Looking for value for " + path)
 
 	conn, err := getConn(connInfo)
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 
-	valueBytes, _, err := conn.Get(path)
+	valueBytes, stat, err := conn.Get(path)
 	if err != nil {
 		log.Error("Failed to get value for " + path)
-		return "", err
+		return "", nil, err
 	}
 
-	return util.BytesToString(valueBytes), nil
+	return util.BytesToString(valueBytes), stat, nil
 }
 
 func GetChildren(path string, connInfo *core.JsonConnInfo) ([]Node, error) {
+	childPathCreator := func(path string, childName string) string {
+		return fmt.Sprintf("%s/%s", path, childName)
+	}
+	return doGetChildren(path, connInfo, childPathCreator)
+}
+
+func doGetChildren(path string, connInfo *core.JsonConnInfo, childPathCreator func(path string, childName string) string) ([]Node, error) {
 	log.Info("Looking for children for " + path)
 
 	conn, err := getConn(connInfo)
@@ -78,7 +92,7 @@ func GetChildren(path string, connInfo *core.JsonConnInfo) ([]Node, error) {
 
 	childrenNames, _, err := conn.Children(path)
 	if err != nil {
-		log.Error("Failed to get children for " + path)
+		log.WithError(err).Fatal("Failed to get children for " + path)
 		return nil, err
 	}
 
@@ -88,13 +102,13 @@ func GetChildren(path string, connInfo *core.JsonConnInfo) ([]Node, error) {
 
 	nodes := make([]Node, len(childrenNames))
 	for i, childName := range childrenNames {
-		_, stat, err := Exists(fmt.Sprintf("%s/%s", path, childName), connInfo)
+		_, meta, err := Exists(childPathCreator(path, childName), connInfo)
 		if err != nil {
 			return nil, err
 		}
 		nodes[i] = Node{
-			Name:        childName,
-			HasChildren: stat.NumChildren > 0,
+			Name: childName,
+			Meta: meta,
 		}
 	}
 
@@ -102,7 +116,9 @@ func GetChildren(path string, connInfo *core.JsonConnInfo) ([]Node, error) {
 }
 
 func getConn(connInfo *core.JsonConnInfo) (*zkGo.Conn, error) {
-	conn, err := ConnCache.Get(connInfo.String())
+	// dereferencing conn info to use struct copy(not a pointer) as a cache key
+	connInfoValue := *connInfo
+	conn, err := ConnCache.Get(connInfoValue)
 	if err != nil {
 		log.Errorf("Failed to get connection for %s", connInfo.String())
 		return nil, err

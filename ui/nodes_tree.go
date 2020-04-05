@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"github.com/alivesubstance/zooverseer/core"
 	"github.com/alivesubstance/zooverseer/core/zk"
 	"github.com/alivesubstance/zooverseer/util"
 	"github.com/gotk3/gotk3/glib"
@@ -9,22 +10,14 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// ID to access the tree view columns by
-const (
-	NodeColumn    = 0
-	NodeRootPath  = "0"
-	NodeRootValue = "/"
-)
-
 var (
-	TreeStore        *gtk.TreeStore
-	NodeDummy        = "__dummy"
+	NodeTreeStore    *gtk.TreeStore
 	ZkPathByTreePath = make(map[string]string)
 )
 
 func InitNodesTree() {
 	treeView := getObject("nodesTreeView").(*gtk.TreeView)
-	treeView.AppendColumn(createTextColumn("Node", NodeColumn))
+	treeView.AppendColumn(createTextColumn("Node", core.NodeColumn))
 	treeView.Connect("row-expanded", onTreeRowExpanded)
 
 	treeSelection, _ := treeView.GetSelection()
@@ -35,46 +28,39 @@ func InitNodesTree() {
 	newTreeStore, err := gtk.TreeStoreNew(glib.TYPE_STRING)
 	util.CheckError(err)
 
-	TreeStore = newTreeStore
-	nodesTreeView.SetModel(TreeStore)
+	NodeTreeStore = newTreeStore
+	nodesTreeView.SetModel(NodeTreeStore)
 
-	// ---- TEST ----
-	// append root node
-	//rootIter := TreeStore.Append(nil)
-	//// set value for root node(value it's a node name but not a value from ZK root node)
-	//err = TreeStore.SetValue(rootIter, NodeColumn, NodeRootValue)
-	//util.CheckError(err)
-	//addChild(TreeStore, rootIter, "1")
-	//ZkPathByTreePath["0"] = NodeRootValue
-
+	//TODO test. remove once conn dialog will be used
 	ShowTreeRootNodes()
-	//rootTreePath, err := gtk.TreePathNewFromString(NodeRootPath)
-	//util.CheckErrorWithMsg("Failed to get root tree path", err)
-	//onTreeRowExpanded(nodesTreeView, rootIter, rootTreePath)
-	// --------------
 }
 
-func ClearNodesTree() {
-	nodesStore := getObject("nodesStore").(*gtk.TreeStore)
-	nodesStore.Clear()
+func ClearNodeTree() {
+	NodeTreeStore.Clear()
 }
 
 func ShowTreeRootNodes() {
+	// append root node
+	rootIter := NodeTreeStore.Append(nil)
+	setNodeName(rootIter, core.NodeRootName)
+
 	// for tree path see
 	//https://developer.gnome.org/gtk3/stable/GtkTreeModel.html#gtk-tree-path-new-from-string
-	rootTreePath, err := gtk.TreePathNewFromString(NodeRootPath)
+	rootTreePath, err := gtk.TreePathNewFromString(core.NodeRootTreePath)
 	util.CheckErrorWithMsg("Failed to get root tree path", err)
 
-	// append root node
-	rootIter := TreeStore.Append(nil)
-	addChild(TreeStore, rootIter, NodeDummy)
+	// store root tree path to zk path mapping
+	ZkPathByTreePath[rootTreePath.String()] = core.NodeRootName
 
-	// set value for root node(value it's a node name but not a value from ZK root node)
-	err = TreeStore.SetValue(rootIter, NodeColumn, NodeRootValue)
-	util.CheckError(err)
+	rootChildren, err := zk.GetRootNodeChildren(GetSelectedConn())
+	if err != nil {
+		log.WithError(err).Error("Failed to get read ZK root node")
+	}
 
-	nodesTreeView := getObject("nodesTreeView").(*gtk.TreeView)
-	onTreeRowExpanded(nodesTreeView, rootIter, rootTreePath)
+	// add root children to tree
+	for _, rootChild := range rootChildren {
+		addSubRow(rootIter, &rootChild)
+	}
 }
 
 func onTreeRowChanged(treeSelection *gtk.TreeSelection) {
@@ -87,7 +73,7 @@ func onTreeRowChanged(treeSelection *gtk.TreeSelection) {
 		}
 		log.Infof("Selected path: %s\n", selectedPath)
 
-		value, _ := model.(*gtk.TreeModel).GetValue(iter, NodeColumn)
+		value, _ := model.(*gtk.TreeModel).GetValue(iter, core.NodeColumn)
 		valueStr, _ := value.GetString()
 		log.Info("Selected value " + valueStr)
 	}
@@ -97,24 +83,21 @@ func onTreeRowExpanded(treeView *gtk.TreeView, treeIter *gtk.TreeIter, treePath 
 	//TODO use go subroutine with channel in order not to freeze UI
 	//TODO add spinner in case of long running function
 
-	//nodeChannel := make(chan zk.Node)
-
-	//TODO FUCK! tree path has form 0:1 but zk need /env/sandbox-pleeco
 	treePathStr := treePath.String()
-	node, err := zk.Get("/", GetSelectedConn() /*, nodeChannel*/)
+	zkPath := ZkPathByTreePath[treePathStr]
+	if zkPath == core.NodeRootName {
+		return
+	}
+
+	node, err := zk.Get(zkPath, GetSelectedConn())
 	if err != nil {
 		//TODO show error dialog
-		util.CheckErrorWithMsg("Failed to get data and children for ["+treePathStr+"]", err)
+		log.WithError(err).Errorf("Failed to get data and children for %s", zkPath)
 	}
-	//node := <-nodeChannel
 
-	log.Info("Node " + node.Name + " has " + string(len(node.Children)) + " children")
-
-	//setNodeValue(TreeStore, treeIter, node.Value)
-	//
-	//childIter := TreeStore.Append(treeIter)
+	setNodeName(treeIter, node.Name)
 	for _, child := range node.Children {
-		addChild(TreeStore, treeIter, child.Name)
+		addSubRow(treeIter, &child)
 	}
 }
 
@@ -131,28 +114,47 @@ func createTextColumn(title string, id int) *gtk.TreeViewColumn {
 	return column
 }
 
-func addChild(treeStore *gtk.TreeStore, parent *gtk.TreeIter, childValue string) {
-	childIter := treeStore.Append(parent)
-	setNodeValue(treeStore, childIter, childValue)
+func addSubRow(parentIter *gtk.TreeIter, child *zk.Node) {
+	childIter := NodeTreeStore.Append(parentIter)
+	setNodeName(childIter, child.Name)
+	setNodeValue(child)
 
-	childPath := getTreePath(treeStore, childIter).String()
-	parentPath := getTreePath(treeStore, parent).String()
+	if child.Meta.NumChildren > 0 {
+		// add dummy node value in order to force GtkTreeView show expander icon
+		dummyChildIter := NodeTreeStore.Append(childIter)
+		setNodeName(dummyChildIter, core.NodeDummy)
+	}
 
-	parentZkPath := ZkPathByTreePath[parentPath]
+	parentTreePath := getTreePath(parentIter).String()
+	parentZkPath := ZkPathByTreePath[parentTreePath]
 
-	ZkPathByTreePath[childPath] = fmt.Sprintf("%s/%s", parentZkPath, childPath)
+	if parentZkPath == core.NodeRootName {
+		parentZkPath = ""
+	}
+
+	childTreePath := getTreePath(childIter).String()
+	childZkPath := fmt.Sprintf("%s/%s", parentZkPath, child.Name)
+	ZkPathByTreePath[childTreePath] = childZkPath
 }
 
-func getTreePath(treeStore *gtk.TreeStore, iter *gtk.TreeIter) *gtk.TreePath {
-	path, err := treeStore.GetPath(iter)
+func setNodeValue(child *zk.Node) {
+	nodeDataTextView := getObject("nodeDataTextView").(*gtk.TextView)
+	textBuffer, err := nodeDataTextView.GetBuffer()
+	util.CheckErrorWithMsg("Faield to get text buffer", err)
+
+	textBuffer.SetText(child.Value)
+}
+
+func getTreePath(iter *gtk.TreeIter) *gtk.TreePath {
+	path, err := NodeTreeStore.GetPath(iter)
 	util.CheckErrorWithMsg(fmt.Sprintf("Failed to get path for %s\n", iter), err)
 	return path
 }
 
-func setNodeValue(nodeStore *gtk.TreeStore, treeIter *gtk.TreeIter, value string) {
-	err := nodeStore.SetValue(treeIter, NodeColumn, value)
+func setNodeName(treeIter *gtk.TreeIter, value string) {
+	err := NodeTreeStore.SetValue(treeIter, core.NodeColumn, value)
 	if err != nil {
-		path, err := nodeStore.GetPath(treeIter)
+		path, err := NodeTreeStore.GetPath(treeIter)
 		util.CheckError(err)
 
 		log.Panic("Unable set value ["+value+"] for ["+path.String()+"]", err)
