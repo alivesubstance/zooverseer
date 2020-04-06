@@ -57,37 +57,46 @@ func Get(path string, connInfo *core.JsonConnInfo) (*Node, error) {
 	return node, nil
 }
 
-func Exists(path string, connInfo *core.JsonConnInfo) (bool, *zkGo.Stat, error) {
+func GetMeta(path string, connInfo *core.JsonConnInfo) (*zkGo.Stat, error) {
 	conn, err := getConn(connInfo)
 	if err != nil {
 		log.WithError(err).Errorf("Failed to check existing for %s", path)
-		return false, nil, err
+		return nil, err
 	}
 
-	return conn.Exists(path)
+	var meta *zkGo.Stat
+	err = retry.Do(
+		func() error {
+			_, meta, err = conn.Exists(path)
+			if err != nil {
+				log.WithError(err).Error("Failed to get metadata for " + path)
+				return err
+			}
+
+			return nil
+		}, retryOptions...)
+
+	return meta, err
 }
 
 func GetValue(path string, connInfo *core.JsonConnInfo) (string, *zkGo.Stat, error) {
 	log.Info("Looking for value for " + path)
-
-	var value string
-	var meta *zkGo.Stat
 
 	conn, err := getConn(connInfo)
 	if err != nil {
 		return "", nil, err
 	}
 
+	var value []byte
+	var meta *zkGo.Stat
 	err = retry.Do(
 		func() error {
-			valueBytes, stat, err := conn.Get(path)
+			value, meta, err = conn.Get(path)
 			if err != nil {
 				log.WithError(err).Error("Failed to get value for " + path)
 				return err
 			}
 
-			value = util.BytesToString(valueBytes)
-			meta = stat
 			return nil
 		}, retryOptions...,
 	)
@@ -96,7 +105,7 @@ func GetValue(path string, connInfo *core.JsonConnInfo) (string, *zkGo.Stat, err
 		return "", nil, err
 	}
 
-	return value, meta, nil
+	return util.BytesToString(value), meta, nil
 }
 
 func GetChildren(path string, connInfo *core.JsonConnInfo) ([]Node, error) {
@@ -114,12 +123,17 @@ func doGetChildren(path string, connInfo *core.JsonConnInfo, childPathCreator fu
 		return nil, err
 	}
 
-	//TODO add retry
-	childrenNames, _, err := conn.Children(path)
-	if err != nil {
-		log.WithError(err).Fatal("Failed to get children for " + path)
-		return nil, err
-	}
+	var childrenNames []string
+	err = retry.Do(
+		func() error {
+			childrenNames, _, err = conn.Children(path)
+			if err != nil {
+				log.WithError(err).Fatal("Failed to get children for " + path)
+				return err
+			}
+			return nil
+		}, retryOptions...,
+	)
 
 	if len(childrenNames) == 0 {
 		return nil, nil
@@ -127,7 +141,7 @@ func doGetChildren(path string, connInfo *core.JsonConnInfo, childPathCreator fu
 
 	nodes := make([]Node, len(childrenNames))
 	for i, childName := range childrenNames {
-		_, meta, err := Exists(childPathCreator(path, childName), connInfo)
+		meta, err := GetMeta(childPathCreator(path, childName), connInfo)
 		if err != nil {
 			return nil, err
 		}

@@ -13,6 +13,13 @@
       "port": 2181,
       "user": "zookeeper",
       "password": "f2049ad96c997a83b08ddca52bf48759237dd5270a178a2e6614d1b02de02da8bb90f1d419"
+    },
+    {
+      "name": "pleeco-dev-nightly",
+      "host": "172.0.30.173",
+      "port": 32271,
+      "user": "zookeeper",
+      "password": "f2049ad96c997a83b08ddca52bf48759237dd5270a178a2e6614d1b02de02da8bb90f1d419"
     }
   ]
 }
