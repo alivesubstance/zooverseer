@@ -19,7 +19,7 @@ func (_ infoLogger) Printf(format string, a ...interface{}) {
 	log.Infof(format, a...)
 }
 
-func InitConnCache() {
+func init() {
 	connRemoveListener := func(key cache.Key, value cache.Value) {
 		log.Debugf("Conn closed from remove listener. %s", key)
 		value.(*zkGo.Conn).Close()
@@ -78,7 +78,7 @@ func connCreateFunc(key cache.Key) (cache.Value, error) {
 		retry.Attempts(core.ConnRetryAttempts),
 		retry.Delay(core.ConnRetryDelay*time.Millisecond),
 		retry.OnRetry(func(n uint, err error) {
-			log.WithError(err).Infof("Retry %v of %v failed to connect to %s", n, core.ConnRetryAttempts, connInfo)
+			log.WithError(err).Infof("Retry %v of %v failed to connect to %v", n, core.ConnRetryAttempts, connInfo)
 		}),
 	)
 

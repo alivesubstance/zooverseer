@@ -1,6 +1,7 @@
 package zk
 
 import (
+	"fmt"
 	"github.com/alivesubstance/zooverseer/core"
 	log "github.com/sirupsen/logrus"
 	"testing"
@@ -31,8 +32,15 @@ func TestExists(t *testing.T) {
 	exists(connInfo, "/env/sandbox-pleeco/cassandra.port")
 }
 
+func TestGetChildren(t *testing.T) {
+	children, _ := GetChildren("/env/sandbox-pleeco", connInfo)
+	for _, child := range children {
+		fmt.Printf("(%v)%s\n", child.Meta.NumChildren > 0, child.Name)
+	}
+}
+
 func exists(connInfo *core.JsonConnInfo, path string) {
-	_, stat, _ := Exists(path, connInfo)
+	stat, _ := GetMeta(path, connInfo)
 	log.Infof("Path %s has children: %v", path, stat.NumChildren)
 }
 

@@ -22,7 +22,7 @@ func InitNodesTree() {
 
 	treeSelection, _ := treeView.GetSelection()
 	treeSelection.SetMode(gtk.SELECTION_SINGLE)
-	treeSelection.Connect("changed", onTreeRowChanged)
+	treeSelection.Connect("changed", onTreeRowSelected)
 
 	nodesTreeView := getObject("nodesTreeView").(*gtk.TreeView)
 	newTreeStore, err := gtk.TreeStoreNew(glib.TYPE_STRING)
@@ -51,19 +51,18 @@ func ShowTreeRootNodes() {
 	}
 }
 
-func onTreeRowChanged(treeSelection *gtk.TreeSelection) {
+func onTreeRowSelected(treeSelection *gtk.TreeSelection) {
 	model, iter, ok := treeSelection.GetSelected()
 	if ok {
-		selectedPath, err := model.(*gtk.TreeModel).GetPath(iter)
+		treePath, err := model.(*gtk.TreeModel).GetPath(iter)
 		if err != nil {
-			util.CheckErrorWithMsg(fmt.Sprintf("Could not get path from model: %s\n", selectedPath), err)
+			log.WithError(err).Errorf("Could not get path from model: %s\n", treePath)
 			return
 		}
-		log.Infof("Selected path: %s\n", selectedPath)
-
-		value, _ := model.(*gtk.TreeModel).GetValue(iter, core.NodeColumn)
-		valueStr, _ := value.GetString()
-		log.Info("Selected value " + valueStr)
+		zkPath := ZkPathByTreePath[treePath.String()]
+		log.Infof("Selected tree path: %s, zk path: %v\n", treePath, zkPath)
+		node, _ := zk.GetValue(zkPath, GetSelectedConn())
+		setNodeValue(node)
 	}
 }
 
@@ -71,12 +70,7 @@ func onTreeRowExpanded(treeView *gtk.TreeView, treeIter *gtk.TreeIter, treePath 
 	//TODO use go subroutine with channel in order not to freeze UI
 	//TODO add spinner in case of long running function
 
-	treePathStr := treePath.String()
-	zkPath := ZkPathByTreePath[treePathStr]
-	if zkPath == core.NodeRootName {
-		return
-	}
-
+	zkPath := ZkPathByTreePath[treePath.String()]
 	node, err := zk.Get(zkPath, GetSelectedConn())
 	if err != nil {
 		//TODO show error dialog
@@ -84,8 +78,28 @@ func onTreeRowExpanded(treeView *gtk.TreeView, treeIter *gtk.TreeIter, treePath 
 	}
 
 	setNodeName(treeIter, node.Name)
+	setNodeValue(node)
 	for _, child := range node.Children {
 		addSubRow(treeIter, &child)
+	}
+
+	//removeDummyNode(treePath)
+}
+
+func removeDummyNode(treePath *gtk.TreePath) {
+	dummyNodePath := treePath.String() + ":0"
+	dummyNodeTreePath, err := gtk.TreePathNewFromString(dummyNodePath)
+	util.CheckError(err)
+	dummyNodeIter, err := NodeTreeStore.GetIter(dummyNodeTreePath)
+	util.CheckError(err)
+	dummyNodeName, err := NodeTreeStore.GetValue(dummyNodeIter, core.NodeColumn)
+	util.CheckError(err)
+	dummyNodeNameStr, err := dummyNodeName.GetString()
+	util.CheckError(err)
+	if core.NodeDummy == dummyNodeNameStr {
+		NodeTreeStore.Remove(dummyNodeIter)
+		nodesTreeView := getObject("nodesTreeView").(*gtk.TreeView)
+		nodesTreeView.ExpandToPath(treePath)
 	}
 }
 
@@ -111,12 +125,12 @@ func addSubRow(parentIter *gtk.TreeIter, child *zk.Node) {
 	ZkPathByTreePath[childTreePath] = childZkPath
 }
 
-func setNodeValue(child *zk.Node) {
+func setNodeValue(node *zk.Node) {
 	nodeDataTextView := getObject("nodeDataTextView").(*gtk.TextView)
 	textBuffer, err := nodeDataTextView.GetBuffer()
-	util.CheckErrorWithMsg("Faield to get text buffer", err)
+	util.CheckErrorWithMsg("Failed to get text buffer", err)
 
-	textBuffer.SetText(child.Value)
+	textBuffer.SetText(node.Value)
 }
 
 func getTreePath(iter *gtk.TreeIter) string {

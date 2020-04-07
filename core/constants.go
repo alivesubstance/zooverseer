@@ -26,5 +26,5 @@ const (
 // Retry config for ZK operations
 const (
 	ZkOpRetryAttempts = 3
-	ZkOpRetryDelay    = 500
+	ZkOpRetryDelay    = 1000
 )

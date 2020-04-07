@@ -8,6 +8,7 @@ import (
 	zkGo "github.com/samuel/go-zookeeper/zk"
 	log "github.com/sirupsen/logrus"
 	gopath "path"
+	"sort"
 	"time"
 )
 
@@ -37,7 +38,7 @@ func GetRootNodeChildren(connInfo *core.JsonConnInfo) ([]Node, error) {
 func Get(path string, connInfo *core.JsonConnInfo) (*Node, error) {
 	log.Info("Get data for " + path)
 
-	value, meta, err := GetValue(path, connInfo)
+	node, err := GetValue(path, connInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -47,12 +48,8 @@ func Get(path string, connInfo *core.JsonConnInfo) (*Node, error) {
 		return nil, err
 	}
 
-	node := &Node{
-		Name:     gopath.Base(path),
-		Value:    value,
-		Meta:     meta,
-		Children: children,
-	}
+	node.Name = gopath.Base(path)
+	node.Children = children
 
 	return node, nil
 }
@@ -79,12 +76,12 @@ func GetMeta(path string, connInfo *core.JsonConnInfo) (*zkGo.Stat, error) {
 	return meta, err
 }
 
-func GetValue(path string, connInfo *core.JsonConnInfo) (string, *zkGo.Stat, error) {
-	log.Info("Looking for value for " + path)
+func GetValue(path string, connInfo *core.JsonConnInfo) (*Node, error) {
+	log.Debug("Looking for value for " + path)
 
 	conn, err := getConn(connInfo)
 	if err != nil {
-		return "", nil, err
+		return nil, err
 	}
 
 	var value []byte
@@ -102,10 +99,14 @@ func GetValue(path string, connInfo *core.JsonConnInfo) (string, *zkGo.Stat, err
 	)
 
 	if err != nil {
-		return "", nil, err
+		return nil, err
 	}
 
-	return util.BytesToString(value), meta, nil
+	node := &Node{
+		Value: util.BytesToString(value),
+		Meta:  meta,
+	}
+	return node, nil
 }
 
 func GetChildren(path string, connInfo *core.JsonConnInfo) ([]Node, error) {
@@ -150,6 +151,11 @@ func doGetChildren(path string, connInfo *core.JsonConnInfo, childPathCreator fu
 			Meta: meta,
 		}
 	}
+
+	//TODO make nodes with children first in the slice
+	sort.Slice(nodes, func(i, j int) bool {
+		return nodes[i].Name < nodes[j].Name
+	})
 
 	return nodes, nil
 }
