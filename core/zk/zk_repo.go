@@ -16,7 +16,7 @@ type Node struct {
 	Name     string
 	Value    string
 	Meta     *zkGo.Stat
-	Children []Node
+	Children []*Node
 }
 
 var retryOptions = []retry.Option{
@@ -27,23 +27,36 @@ var retryOptions = []retry.Option{
 	}),
 }
 
-func GetRootNodeChildren(connInfo *core.JsonConnInfo) ([]Node, error) {
+type Accessor interface {
+	Get(path string, connInfo *core.JsonConnInfo) (*Node, error)
+	GetMeta(path string, connInfo *core.JsonConnInfo) (*zkGo.Stat, error)
+	// Returns node value and metadata
+	GetValue(path string, connInfo *core.JsonConnInfo) (*Node, error)
+	GetChildren(path string, connInfo *core.JsonConnInfo) ([]*Node, error)
+	GetRootNodeChildren(connInfo *core.JsonConnInfo) ([]*Node, error)
+}
+
+type Repository struct {
+	Accessor
+}
+
+func (repo *Repository) GetRootNodeChildren(connInfo *core.JsonConnInfo) ([]*Node, error) {
 	childPathCreator := func(path string, childName string) string {
 		return fmt.Sprintf("/%s", childName)
 	}
 
-	return doGetChildren(core.NodeRootName, connInfo, childPathCreator)
+	return doGetChildren(nil, core.NodeRootName, connInfo, childPathCreator)
 }
 
-func Get(path string, connInfo *core.JsonConnInfo) (*Node, error) {
+func (repo *Repository) Get(path string, connInfo *core.JsonConnInfo) (*Node, error) {
 	log.Info("Get data for " + path)
 
-	node, err := GetValue(path, connInfo)
+	node, err := repo.GetValue(path, connInfo)
 	if err != nil {
 		return nil, err
 	}
 
-	children, err := GetChildren(path, connInfo)
+	children, err := repo.GetChildren(path, connInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +67,7 @@ func Get(path string, connInfo *core.JsonConnInfo) (*Node, error) {
 	return node, nil
 }
 
-func GetMeta(path string, connInfo *core.JsonConnInfo) (*zkGo.Stat, error) {
+func (repo *Repository) GetMeta(path string, connInfo *core.JsonConnInfo) (*zkGo.Stat, error) {
 	conn, err := getConn(connInfo)
 	if err != nil {
 		log.WithError(err).Errorf("Failed to check existing for %s", path)
@@ -76,7 +89,7 @@ func GetMeta(path string, connInfo *core.JsonConnInfo) (*zkGo.Stat, error) {
 	return meta, err
 }
 
-func GetValue(path string, connInfo *core.JsonConnInfo) (*Node, error) {
+func (repo *Repository) GetValue(path string, connInfo *core.JsonConnInfo) (*Node, error) {
 	log.Debug("Looking for value for " + path)
 
 	conn, err := getConn(connInfo)
@@ -109,14 +122,16 @@ func GetValue(path string, connInfo *core.JsonConnInfo) (*Node, error) {
 	return node, nil
 }
 
-func GetChildren(path string, connInfo *core.JsonConnInfo) ([]Node, error) {
+func (repo *Repository) GetChildren(path string, connInfo *core.JsonConnInfo) ([]*Node, error) {
 	childPathCreator := func(path string, childName string) string {
 		return fmt.Sprintf("%s/%s", path, childName)
 	}
-	return doGetChildren(path, connInfo, childPathCreator)
+	return doGetChildren(repo, path, connInfo, childPathCreator)
 }
 
-func doGetChildren(path string, connInfo *core.JsonConnInfo, childPathCreator func(path string, childName string) string) ([]Node, error) {
+func doGetChildren(
+	zkRepo *Repository, path string, connInfo *core.JsonConnInfo, childPathCreator func(path string, childName string) string,
+) ([]*Node, error) {
 	log.Info("Looking for children for " + path)
 
 	conn, err := getConn(connInfo)
@@ -140,13 +155,14 @@ func doGetChildren(path string, connInfo *core.JsonConnInfo, childPathCreator fu
 		return nil, nil
 	}
 
-	nodes := make([]Node, len(childrenNames))
+	// get metadata for each child. mostly to know is there are children in child node
+	nodes := make([]*Node, len(childrenNames))
 	for i, childName := range childrenNames {
-		meta, err := GetMeta(childPathCreator(path, childName), connInfo)
+		meta, err := zkRepo.GetMeta(childPathCreator(path, childName), connInfo)
 		if err != nil {
 			return nil, err
 		}
-		nodes[i] = Node{
+		nodes[i] = &Node{
 			Name: childName,
 			Meta: meta,
 		}

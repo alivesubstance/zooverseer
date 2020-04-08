@@ -14,9 +14,10 @@ var connInfo = &core.JsonConnInfo{
 	User:     "zookeeper",
 	Password: "z00k33p3r",
 }
+var ZkRepo = Repository{}
 
 func TestGet(t *testing.T) {
-	node, _ := Get("/", connInfo)
+	node, _ := ZkRepo.Get("/", connInfo)
 	log.Infof("%v+", node)
 }
 
@@ -33,14 +34,14 @@ func TestExists(t *testing.T) {
 }
 
 func TestGetChildren(t *testing.T) {
-	children, _ := GetChildren("/env/sandbox-pleeco", connInfo)
+	children, _ := ZkRepo.GetChildren("/env/sandbox-pleeco", connInfo)
 	for _, child := range children {
 		fmt.Printf("(%v)%s\n", child.Meta.NumChildren > 0, child.Name)
 	}
 }
 
 func exists(connInfo *core.JsonConnInfo, path string) {
-	stat, _ := GetMeta(path, connInfo)
+	stat, _ := ZkRepo.GetMeta(path, connInfo)
 	log.Infof("Path %s has children: %v", path, stat.NumChildren)
 }
 

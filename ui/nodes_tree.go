@@ -13,6 +13,7 @@ import (
 var (
 	NodeTreeStore    *gtk.TreeStore
 	ZkPathByTreePath = make(map[string]string)
+	ZkRepo           = zk.CachingRepository{}
 )
 
 func InitNodesTree() {
@@ -40,14 +41,14 @@ func ClearNodeTree() {
 }
 
 func ShowTreeRootNodes() {
-	rootChildren, err := zk.GetRootNodeChildren(GetSelectedConn())
+	rootChildren, err := ZkRepo.GetRootNodeChildren(GetSelectedConn())
 	if err != nil {
 		log.WithError(err).Error("Failed to get read ZK root node")
 	}
 
 	// add root children to tree
 	for _, rootChild := range rootChildren {
-		addSubRow(nil, &rootChild)
+		addSubRow(nil, rootChild)
 	}
 }
 
@@ -61,7 +62,7 @@ func onTreeRowSelected(treeSelection *gtk.TreeSelection) {
 		}
 		zkPath := ZkPathByTreePath[treePath.String()]
 		log.Infof("Selected tree path: %s, zk path: %v\n", treePath, zkPath)
-		node, _ := zk.GetValue(zkPath, GetSelectedConn())
+		node, _ := ZkRepo.GetValue(zkPath, GetSelectedConn())
 		setNodeValue(node)
 	}
 }
@@ -71,7 +72,7 @@ func onTreeRowExpanded(treeView *gtk.TreeView, treeIter *gtk.TreeIter, treePath 
 	//TODO add spinner in case of long running function
 
 	zkPath := ZkPathByTreePath[treePath.String()]
-	node, err := zk.Get(zkPath, GetSelectedConn())
+	node, err := ZkRepo.Get(zkPath, GetSelectedConn())
 	if err != nil {
 		//TODO show error dialog
 		log.WithError(err).Errorf("Failed to get data and children for %s", zkPath)
@@ -80,7 +81,7 @@ func onTreeRowExpanded(treeView *gtk.TreeView, treeIter *gtk.TreeIter, treePath 
 	setNodeName(treeIter, node.Name)
 	setNodeValue(node)
 	for _, child := range node.Children {
-		addSubRow(treeIter, &child)
+		addSubRow(treeIter, child)
 	}
 
 	//removeDummyNode(treePath)

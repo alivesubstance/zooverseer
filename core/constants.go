@@ -8,7 +8,7 @@ const (
 	ConnConfigFilePath = "/home/mirian/code/go/src/github.com/alivesubstance/zooverseer/assets/zooverseer.json"
 )
 
-// Connection cache
+// Zk Connection
 const (
 	ConnCacheExpireAfterAccessMinutes = 20
 	ConnCacheStatsPeriodMinutes       = 5
@@ -16,15 +16,17 @@ const (
 	ConnRetryDelay                    = 1000
 )
 
+// Zk operations
+const (
+	ZkCacheExpireAfterAccessMinutes = 10
+	ZkCacheStatsPeriodMinutes       = 5
+	ZkOpRetryAttempts               = 3
+	ZkOpRetryDelay                  = 500
+)
+
 // Nodes tree and repository
 const (
 	NodeColumn   = 0
 	NodeRootName = "/"
 	NodeDummy    = "__dummy" // Dummy node to be used as real node children placeholder
-)
-
-// Retry config for ZK operations
-const (
-	ZkOpRetryAttempts = 3
-	ZkOpRetryDelay    = 1000
 )
