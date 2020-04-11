@@ -11,7 +11,7 @@ import (
 )
 
 func InitMainWindow(mainWindow *gtk.Window) {
-	InitNodesTree()
+	InitNodeTree()
 
 	mainWindow.SetTitle("Zooverseer")
 	mainWindow.ShowAll()

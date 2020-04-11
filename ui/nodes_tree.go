@@ -16,10 +16,10 @@ var (
 	ZkRepo           = zk.CachingRepository{}
 )
 
-func InitNodesTree() {
+func InitNodeTree() {
 	treeView := getObject("nodesTreeView").(*gtk.TreeView)
 	treeView.AppendColumn(createTextColumn("Node", core.NodeColumn))
-	treeView.Connect("row-expanded", onTreeRowExpanded)
+	treeView.Connect("test-expand-row", onTestExpandRow)
 
 	treeSelection, _ := treeView.GetSelection()
 	treeSelection.SetMode(gtk.SELECTION_SINGLE)
@@ -67,9 +67,14 @@ func onTreeRowSelected(treeSelection *gtk.TreeSelection) {
 	}
 }
 
-func onTreeRowExpanded(treeView *gtk.TreeView, treeIter *gtk.TreeIter, treePath *gtk.TreePath) {
+func onTestExpandRow(treeView *gtk.TreeView, parentIter *gtk.TreeIter, treePath *gtk.TreePath) {
+	removeRowChildren(parentIter, treePath)
+
 	//TODO use go subroutine with channel in order not to freeze UI
 	//TODO add spinner in case of long running function
+	parentValue, _ := NodeTreeStore.GetValue(parentIter, core.NodeColumn)
+	parentGoValue, _ := parentValue.GoValue()
+	log.Debugf("Add %s children", parentGoValue)
 
 	zkPath := ZkPathByTreePath[treePath.String()]
 	node, err := ZkRepo.Get(zkPath, GetSelectedConn())
@@ -78,29 +83,38 @@ func onTreeRowExpanded(treeView *gtk.TreeView, treeIter *gtk.TreeIter, treePath 
 		log.WithError(err).Errorf("Failed to get data and children for %s", zkPath)
 	}
 
-	setNodeName(treeIter, node.Name)
 	setNodeValue(node)
-	for _, child := range node.Children {
-		addSubRow(treeIter, child)
+	for i := range node.Children {
+		addSubRow(parentIter, node.Children[i])
 	}
-
-	//removeDummyNode(treePath)
 }
 
-func removeDummyNode(treePath *gtk.TreePath) {
-	dummyNodePath := treePath.String() + ":0"
-	dummyNodeTreePath, err := gtk.TreePathNewFromString(dummyNodePath)
-	util.CheckError(err)
-	dummyNodeIter, err := NodeTreeStore.GetIter(dummyNodeTreePath)
-	util.CheckError(err)
-	dummyNodeName, err := NodeTreeStore.GetValue(dummyNodeIter, core.NodeColumn)
-	util.CheckError(err)
-	dummyNodeNameStr, err := dummyNodeName.GetString()
-	util.CheckError(err)
-	if core.NodeDummy == dummyNodeNameStr {
-		NodeTreeStore.Remove(dummyNodeIter)
-		nodesTreeView := getObject("nodesTreeView").(*gtk.TreeView)
-		nodesTreeView.ExpandToPath(treePath)
+func removeRowChildren(parentIter *gtk.TreeIter, treePath *gtk.TreePath) {
+	parentValue, _ := NodeTreeStore.GetValue(parentIter, core.NodeColumn)
+	parentGoValue, _ := parentValue.GoValue()
+	log.Debugf("Remove %s children", parentGoValue)
+
+	hasChildren := NodeTreeStore.IterHasChild(parentIter)
+	if hasChildren {
+		childrenNum := NodeTreeStore.IterNChildren(parentIter)
+		log.Debugf("Path %s has %v children", parentGoValue, childrenNum)
+
+		for {
+			var child gtk.TreeIter
+			ok := NodeTreeStore.IterChildren(parentIter, &child)
+			if ok {
+				childValue, _ := NodeTreeStore.GetValue(&child, core.NodeColumn)
+				childGoValue, _ := childValue.GoValue()
+				log.Debugf("Remove child %s at parent %s", childGoValue, parentGoValue)
+
+				childrenRemoved := NodeTreeStore.Remove(&child)
+				if !childrenRemoved {
+					break
+				}
+			}
+		}
+	} else {
+		log.Debugf("Row at path %s and value %s has no children", treePath, parentGoValue)
 	}
 }
 

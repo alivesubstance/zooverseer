@@ -41,7 +41,7 @@ func init() {
 }
 
 func connect(connInfo core.JsonConnInfo) (*goZk.Conn, error) {
-	log.Infof("Connecting to %v", connInfo)
+	log.Infof("Connecting to %s", connInfo)
 	goZk.DefaultLogger = &infoLogger{}
 
 	servers := getServers(connInfo)
