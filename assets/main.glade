@@ -220,11 +220,11 @@
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <child>
-                  <object class="GtkButton" id="connDeleteBtn">
+                  <object class="GtkButton" id="connAddBtn">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
-                    <property name="image">iconConnDelete</property>
+                    <property name="image">iconConnAdd</property>
                   </object>
                   <packing>
                     <property name="position">0</property>
@@ -242,11 +242,11 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkButton" id="connAddBtn">
+                  <object class="GtkButton" id="connDeleteBtn">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
-                    <property name="image">iconConnAdd</property>
+                    <property name="image">iconConnDelete</property>
                   </object>
                   <packing>
                     <property name="position">0</property>
@@ -324,22 +324,18 @@
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <child>
-                      <object class="GtkImageMenuItem" id="menuConnect">
-                        <property name="label">gtk-connect</property>
+                      <object class="GtkMenuItem" id="menuConnect">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="use_underline">True</property>
-                        <property name="use_stock">True</property>
-                        <signal name="activate" handler="openConnDialog" swapped="no"/>
+                        <property name="label" translatable="yes">Connect</property>
                       </object>
                     </child>
                     <child>
-                      <object class="GtkImageMenuItem" id="menuDisconnect">
-                        <property name="label">gtk-disconnect</property>
+                      <object class="GtkMenuItem" id="menuDisconnect">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
+                        <property name="label" translatable="yes">Disconnect</property>
                         <property name="use_underline">True</property>
-                        <property name="use_stock">True</property>
                       </object>
                     </child>
                     <child>
@@ -349,7 +345,7 @@
                       </object>
                     </child>
                     <child>
-                      <object class="GtkMenuItem">
+                      <object class="GtkMenuItem" id="menuExport">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label" translatable="yes">Export</property>
@@ -357,7 +353,7 @@
                       </object>
                     </child>
                     <child>
-                      <object class="GtkMenuItem">
+                      <object class="GtkMenuItem" id="menuImport">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label" translatable="yes">Import</property>
@@ -371,12 +367,11 @@
                       </object>
                     </child>
                     <child>
-                      <object class="GtkImageMenuItem" id="menuQuit">
-                        <property name="label">gtk-quit</property>
+                      <object class="GtkMenuItem" id="menuExit">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
+                        <property name="label" translatable="yes">Exit</property>
                         <property name="use_underline">True</property>
-                        <property name="use_stock">True</property>
                       </object>
                     </child>
                   </object>
@@ -491,7 +486,7 @@
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
-                        <property name="image">iconNodeDelete</property>
+                        <property name="image">iconNodeRefresh</property>
                       </object>
                       <packing>
                         <property name="position">0</property>
@@ -513,7 +508,7 @@
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
-                        <property name="image">iconNodeRefresh</property>
+                        <property name="image">iconNodeDelete</property>
                       </object>
                       <packing>
                         <property name="position">0</property>
@@ -590,7 +585,7 @@
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
-                            <property name="image">iconValueSearch</property>
+                            <property name="image">iconValueSave</property>
                           </object>
                           <packing>
                             <property name="position">0</property>
@@ -601,7 +596,7 @@
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
-                            <property name="image">iconValueSave</property>
+                            <property name="image">iconValueSearch</property>
                           </object>
                           <packing>
                             <property name="position">0</property>

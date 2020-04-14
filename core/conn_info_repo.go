@@ -20,6 +20,11 @@ type ZooverseerConfig struct {
 	Connections []JsonConnInfo /* `json:"connections"`*/
 }
 
+//TODO replace JsonConnInfo with JsonConnRepository
+//type JsonConnRepository struct {
+//	ConnRepository
+//}
+
 type JsonConnInfo struct {
 	Name     string /*`json:"name"`*/
 	Host     string

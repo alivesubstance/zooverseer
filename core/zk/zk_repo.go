@@ -27,6 +27,7 @@ var retryOptions = []retry.Option{
 	}),
 }
 
+//TODO measure timings for each operation
 type Accessor interface {
 	Get(path string, connInfo *core.JsonConnInfo) (*Node, error)
 	GetMeta(path string, connInfo *core.JsonConnInfo) (*zkGo.Stat, error)

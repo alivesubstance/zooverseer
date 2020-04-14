@@ -1,13 +1,19 @@
 package ui
 
+// #cgo pkg-config: gdk-3.0 glib-2.0 gobject-2.0
+// #include <gdk/gdk.h>
+// #include "/home/mirian/code/go/src/github.com/gotk3/gotk3/gdk/gdk.go.h"
+import "C"
 import (
 	"fmt"
 	"github.com/alivesubstance/zooverseer/core"
 	"github.com/alivesubstance/zooverseer/core/zk"
 	"github.com/alivesubstance/zooverseer/util"
+	"github.com/gotk3/gotk3/gdk"
 	"github.com/gotk3/gotk3/glib"
 	"github.com/gotk3/gotk3/gtk"
 	log "github.com/sirupsen/logrus"
+	"unsafe"
 )
 
 var (
@@ -38,6 +44,8 @@ func InitNodeTree() {
 
 func ClearNodeTree() {
 	NodeTreeStore.Clear()
+	ZkRepo.InvalidateAll()
+	ZkPathByTreePath = make(map[string]string)
 }
 
 func ShowTreeRootNodes() {
@@ -61,7 +69,10 @@ func onTreeRowSelected(treeSelection *gtk.TreeSelection) {
 			return
 		}
 		zkPath := ZkPathByTreePath[treePath.String()]
-		log.Infof("Selected tree path: %s, zk path: %v\n", treePath, zkPath)
+		log.Infof("Selected tree path: %s", zkPath)
+		if zkPath == "" {
+			log.Infof("Empty path")
+		}
 		node, _ := ZkRepo.GetValue(zkPath, GetSelectedConn())
 		setNodeValue(node)
 	}
@@ -77,15 +88,15 @@ func onTestExpandRow(treeView *gtk.TreeView, parentIter *gtk.TreeIter, treePath 
 	log.Debugf("Add %s children", parentGoValue)
 
 	zkPath := ZkPathByTreePath[treePath.String()]
-	node, err := ZkRepo.Get(zkPath, GetSelectedConn())
+	children, err := ZkRepo.GetChildren(zkPath, GetSelectedConn())
 	if err != nil {
 		//TODO show error dialog
 		log.WithError(err).Errorf("Failed to get data and children for %s", zkPath)
 	}
 
-	setNodeValue(node)
-	for i := range node.Children {
-		addSubRow(parentIter, node.Children[i])
+	//setNodeValue(node)
+	for i := range children {
+		addSubRow(parentIter, children[i])
 	}
 }
 
@@ -97,7 +108,7 @@ func removeRowChildren(parentIter *gtk.TreeIter, treePath *gtk.TreePath) {
 	hasChildren := NodeTreeStore.IterHasChild(parentIter)
 	if hasChildren {
 		childrenNum := NodeTreeStore.IterNChildren(parentIter)
-		log.Debugf("Path %s has %v children", parentGoValue, childrenNum)
+		log.Debugf("Remove %v children for %s", childrenNum, parentGoValue)
 
 		for {
 			var child gtk.TreeIter
@@ -145,6 +156,7 @@ func setNodeValue(node *zk.Node) {
 	textBuffer, err := nodeDataTextView.GetBuffer()
 	util.CheckErrorWithMsg("Failed to get text buffer", err)
 
+	log.Tracef("Set value '%s' to node %s", node.Value, node.Name)
 	textBuffer.SetText(node.Value)
 }
 
@@ -175,4 +187,23 @@ func createTextColumn(title string, id int) *gtk.TreeViewColumn {
 	util.CheckErrorWithMsg("Unable to create cell column:", err)
 
 	return column
+}
+
+func on_button_press_event(b *gtk.Window, e *gdk.Event) {
+	if isMouse2ButtonClicked(e) {
+		menu := getObject("popupMenu").(*gtk.Menu)
+
+		menu.ShowAll()
+		menu.PopupAtPointer(e)
+	}
+}
+
+// Go GTK3 adapter not fully support GTK3 API.
+// But it expose native GDK objects to be used to extend API.
+// This method determine when second mouse button clicked by
+// analyzing button field of native C GdkEventButton struct.
+func isMouse2ButtonClicked(e *gdk.Event) bool {
+	event := &gdk.EventKey{Event: e}
+	mouseButton := (*C.GdkEventButton)(unsafe.Pointer(event.Event.GdkEvent)).button
+	return uint(mouseButton) == 3
 }

@@ -31,12 +31,14 @@ func InitConnDialog(mainWindow *gtk.Window) *gtk.Dialog {
 	return connDialog
 }
 
+//TODO cache it for session
 func GetSelectedConn() *core.JsonConnInfo {
+	//TODO leave it for test
 	return &core.JsonConnInfo{
-		Host:     "10.1.1.112",
-		Port:     2181,
-		User:     "zookeeper",
-		Password: "z00k33p3r",
+		Host: "10.1.1.1",
+		Port: 2181,
+		//User:     "zookeeper",
+		//Password: "z00k33p3r",
 	}
 	//connList := getObject("connList").(*gtk.ListBox)
 	//child, err := connList.GetSelectedRow().GetChild()
@@ -56,8 +58,10 @@ func onConnListBoxRowSelected() {
 	getObject("connNameEntry").(*gtk.Entry).SetText(selectedConn.Name)
 	getObject("connHostEntry").(*gtk.Entry).SetText(selectedConn.Host)
 	getObject("connPortEntry").(*gtk.Entry).SetText(fmt.Sprintf("%v", selectedConn.Port))
-	getObject("connUserEntry").(*gtk.Entry).SetText(selectedConn.User)
-	getObject("connPwdEntry").(*gtk.Entry).SetText("***")
+	if len(selectedConn.User) != 0 && len(selectedConn.Password) != 0 {
+		getObject("connUserEntry").(*gtk.Entry).SetText(selectedConn.User)
+		getObject("connPwdEntry").(*gtk.Entry).SetText("***")
+	}
 }
 
 func initConnsListBox() {

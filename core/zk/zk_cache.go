@@ -14,8 +14,15 @@ var (
 	repository = Repository{}
 )
 
-type CachingRepository struct {
+type CachingRepositoryAccessor interface {
+	InvalidateAll()
+	Invalidate(zkPath string)
+
 	Accessor
+}
+
+type CachingRepository struct {
+	CachingRepositoryAccessor
 }
 
 func init() {
@@ -29,7 +36,7 @@ func init() {
 	}()
 }
 
-func (cachingRepo *CachingRepository) GetRootNodeChildren(connInfo *core.JsonConnInfo) ([]*Node, error) {
+func (c *CachingRepository) GetRootNodeChildren(connInfo *core.JsonConnInfo) ([]*Node, error) {
 	var err error
 	var node Node
 
@@ -49,7 +56,7 @@ func (cachingRepo *CachingRepository) GetRootNodeChildren(connInfo *core.JsonCon
 	return children.([]*Node), nil
 }
 
-func (cachingRepo *CachingRepository) Get(path string, connInfo *core.JsonConnInfo) (*Node, error) {
+func (c *CachingRepository) Get(path string, connInfo *core.JsonConnInfo) (*Node, error) {
 	var err error
 	node, _ := cache.GetIfPresent(path)
 	if node == nil {
@@ -66,7 +73,7 @@ func (cachingRepo *CachingRepository) Get(path string, connInfo *core.JsonConnIn
 	return node.(*Node), err
 }
 
-func (cachingRepo *CachingRepository) GetMeta(path string, connInfo *core.JsonConnInfo) (*goZk.Stat, error) {
+func (c *CachingRepository) GetMeta(path string, connInfo *core.JsonConnInfo) (*goZk.Stat, error) {
 	var err error
 	var meta *goZk.Stat
 	node, _ := cache.GetIfPresent(path)
@@ -75,17 +82,31 @@ func (cachingRepo *CachingRepository) GetMeta(path string, connInfo *core.JsonCo
 		if meta != nil {
 			cache.Put(path, &Node{Meta: meta})
 		}
+	} else if node.(*Node).Meta == nil {
+		meta, err = repository.GetMeta(path, connInfo)
+		if meta != nil {
+			node.(*Node).Meta = meta
+			cache.Put(path, node)
+		}
 	}
 
 	return meta, err
 }
 
-func (cachingRepo *CachingRepository) GetValue(path string, connInfo *core.JsonConnInfo) (*Node, error) {
+func (c *CachingRepository) GetValue(path string, connInfo *core.JsonConnInfo) (*Node, error) {
 	var err error
 	node, _ := cache.GetIfPresent(path)
 	if node == nil {
 		node, err = repository.GetValue(path, connInfo)
 		if node != nil {
+			cache.Put(path, node)
+		}
+	} else if len(node.(*Node).Value) == 0 {
+		valueNode, valueNodeErr := repository.GetValue(path, connInfo)
+		err = valueNodeErr
+		if valueNode != nil {
+			node.(*Node).Value = valueNode.Value
+			node.(*Node).Meta = valueNode.Meta
 			cache.Put(path, node)
 		}
 	}
@@ -97,27 +118,34 @@ func (cachingRepo *CachingRepository) GetValue(path string, connInfo *core.JsonC
 	return node.(*Node), err
 }
 
-func (cachingRepo *CachingRepository) GetChildren(path string, connInfo *core.JsonConnInfo) ([]Node, error) {
+func (c *CachingRepository) GetChildren(path string, connInfo *core.JsonConnInfo) ([]*Node, error) {
 	var err error
-	children, _ := cache.GetIfPresent(core.NodeRootName)
-	if children == nil {
-		children, err = repository.GetChildren(path, connInfo)
+	node, _ := cache.GetIfPresent(path)
+	if node == nil {
+		node, err = repository.GetChildren(path, connInfo)
+		if node != nil {
+			cache.Put(path, &Node{Children: node.([]*Node)})
+		}
+	} else if node.(*Node).Children == nil {
+		children, childrenErr := repository.GetChildren(path, connInfo)
+		err = childrenErr
 		if children != nil {
-			cache.Put(path, &Node{Children: children.([]*Node)})
+			node.(*Node).Children = children
+			cache.Put(path, node)
 		}
 	}
 
-	if children == nil && err != nil {
+	if node == nil && err != nil {
 		return nil, err
 	}
 
-	return children.([]Node), err
+	return node.(*Node).Children, err
 }
 
-func Invalidate(path string) {
+func (c *CachingRepository) Invalidate(path string) {
 	cache.Invalidate(path)
 }
 
-func InvalidateAll() {
+func (c *CachingRepository) InvalidateAll() {
 	cache.InvalidateAll()
 }
