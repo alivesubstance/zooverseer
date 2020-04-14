@@ -122,9 +122,11 @@ func (c *CachingRepository) GetChildren(path string, connInfo *core.JsonConnInfo
 	var err error
 	node, _ := cache.GetIfPresent(path)
 	if node == nil {
-		node, err = repository.GetChildren(path, connInfo)
-		if node != nil {
-			cache.Put(path, &Node{Children: node.([]*Node)})
+		children, childrenErr := repository.GetChildren(path, connInfo)
+		err = childrenErr
+		if children != nil {
+			node = &Node{Children: children}
+			cache.Put(path, node)
 		}
 	} else if node.(*Node).Children == nil {
 		children, childrenErr := repository.GetChildren(path, connInfo)

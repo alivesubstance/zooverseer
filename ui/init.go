@@ -28,7 +28,7 @@ func OnAppActivate(app *gtk.Application) func() {
 		mainWindow := getObject("mainWindow").(*gtk.Window)
 		InitMainWindow(mainWindow)
 
-		//InitConnDialog(mainWindow)
+		InitConnDialog(mainWindow)
 
 		app.AddWindow(mainWindow)
 	}

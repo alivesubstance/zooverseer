@@ -534,6 +534,8 @@
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="vexpand">True</property>
+                        <property name="headers_visible">False</property>
+                        <property name="enable_tree_lines">True</property>
                         <property name="activate_on_single_click">True</property>
                         <child internal-child="selection">
                           <object class="GtkTreeSelection"/>
