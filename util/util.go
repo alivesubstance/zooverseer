@@ -6,13 +6,13 @@ import (
 
 func CheckError(e error) {
 	if e != nil {
-		log.Panic(e)
+		log.WithError(e).Panic()
 	}
 }
 
 func CheckErrorWithMsg(msg string, e error) {
 	if e != nil {
-		log.Panic(msg, e)
+		log.WithError(e).Panic(msg)
 	}
 }
 

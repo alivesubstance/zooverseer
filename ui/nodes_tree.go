@@ -13,21 +13,20 @@ import (
 	"github.com/gotk3/gotk3/glib"
 	"github.com/gotk3/gotk3/gtk"
 	log "github.com/sirupsen/logrus"
-	"sync"
 	"unsafe"
 )
 
 var (
-	NodeTreeStore        *gtk.TreeStore
-	ZkPathByTreePath     = make(map[string]string)
-	ZkRepo               = zk.CachingRepository{}
-	TreeRowSelectedMutex = sync.Mutex{}
+	NodeTreeStore    *gtk.TreeStore
+	ZkPathByTreePath = make(map[string]string)
+	ZkRepo           = zk.CachingRepository{}
 )
 
 func InitNodeTree() {
 	treeView := getObject("nodesTreeView").(*gtk.TreeView)
 	treeView.AppendColumn(createTextColumn("Node", core.NodeColumn))
 	treeView.Connect("test-expand-row", onTestExpandRow)
+	treeView.Connect("button-press-event", onButtonPressEvent)
 
 	treeSelection, _ := treeView.GetSelection()
 	treeSelection.SetMode(gtk.SELECTION_SINGLE)
@@ -63,9 +62,6 @@ func ShowTreeRootNodes() {
 }
 
 func onTreeRowSelected(treeSelection *gtk.TreeSelection) {
-	//TreeRowSelectedMutex.Lock()
-	//defer TreeRowSelectedMutex.Unlock()
-
 	model, iter, ok := treeSelection.GetSelected()
 	if ok {
 		treePath, err := model.(*gtk.TreeModel).GetPath(iter)
@@ -162,7 +158,6 @@ func setNodeValue(node *zk.Node) {
 	textBuffer, err := nodeDataTextView.GetBuffer()
 	util.CheckErrorWithMsg("Failed to get text buffer", err)
 
-	log.Tracef("Set value '%s' to node %s", node.Value, node.Name)
 	textBuffer.SetText(node.Value)
 }
 
@@ -195,10 +190,11 @@ func createTextColumn(title string, id int) *gtk.TreeViewColumn {
 	return column
 }
 
-func on_button_press_event(b *gtk.Window, e *gdk.Event) {
+func onButtonPressEvent(b *gtk.TreeView, e *gdk.Event) {
 	if isMouse2ButtonClicked(e) {
-		menu := getObject("popupMenu").(*gtk.Menu)
+		log.Tracef("Mouse button 2 pressed")
 
+		menu := getObject("popupMenu").(*gtk.Menu)
 		menu.ShowAll()
 		menu.PopupAtPointer(e)
 	}

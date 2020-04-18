@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	log.Print("Starting zooverseer")
+	log.Info("Starting zooverseer")
 
 	initLogger()
 
@@ -29,5 +29,5 @@ func initLogger() {
 	log.SetOutput(os.Stdout)
 
 	// Only log the warning severity or above.
-	log.SetLevel(log.InfoLevel)
+	log.SetLevel(log.TraceLevel)
 }
