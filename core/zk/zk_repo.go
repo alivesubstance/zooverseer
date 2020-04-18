@@ -133,7 +133,7 @@ func (repo *Repository) GetChildren(path string, connInfo *core.JsonConnInfo) ([
 func doGetChildren(
 	zkRepo *Repository, path string, connInfo *core.JsonConnInfo, childPathCreator func(path string, childName string) string,
 ) ([]*Node, error) {
-	log.Info("Looking for children for " + path)
+	log.Tracef("Looking for children for %s", path)
 
 	conn, err := getConn(connInfo)
 	if err != nil {
@@ -145,7 +145,7 @@ func doGetChildren(
 		func() error {
 			childrenNames, _, err = conn.Children(path)
 			if err != nil {
-				log.WithError(err).Fatal("Failed to get children for " + path)
+				log.WithError(err).Fatalf("Failed to get children for %s", path)
 				return err
 			}
 			return nil

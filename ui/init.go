@@ -11,10 +11,6 @@ import (
 // there are rumors that global variable is evil. why?
 var (
 	Builder *gtk.Builder
-
-	//TODO better move it in core/conn/json or core/conn package and use like zk?
-	// In this case harder to change conn repo imp but more in Go style
-	ConnRepository core.ConnRepository = &core.JsonConnInfo{}
 )
 
 func OnAppActivate(app *gtk.Application) func() {

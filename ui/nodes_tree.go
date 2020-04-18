@@ -13,13 +13,15 @@ import (
 	"github.com/gotk3/gotk3/glib"
 	"github.com/gotk3/gotk3/gtk"
 	log "github.com/sirupsen/logrus"
+	"sync"
 	"unsafe"
 )
 
 var (
-	NodeTreeStore    *gtk.TreeStore
-	ZkPathByTreePath = make(map[string]string)
-	ZkRepo           = zk.CachingRepository{}
+	NodeTreeStore        *gtk.TreeStore
+	ZkPathByTreePath     = make(map[string]string)
+	ZkRepo               = zk.CachingRepository{}
+	TreeRowSelectedMutex = sync.Mutex{}
 )
 
 func InitNodeTree() {
@@ -61,6 +63,9 @@ func ShowTreeRootNodes() {
 }
 
 func onTreeRowSelected(treeSelection *gtk.TreeSelection) {
+	TreeRowSelectedMutex.Lock()
+	defer TreeRowSelectedMutex.Unlock()
+
 	model, iter, ok := treeSelection.GetSelected()
 	if ok {
 		treePath, err := model.(*gtk.TreeModel).GetPath(iter)
@@ -69,11 +74,12 @@ func onTreeRowSelected(treeSelection *gtk.TreeSelection) {
 			return
 		}
 		zkPath := ZkPathByTreePath[treePath.String()]
-		log.Infof("Selected tree path: %s", zkPath)
-		if zkPath == "" {
-			log.Infof("Empty path")
-		}
+		log.Tracef("Selected tree path: %s", zkPath)
+
 		node, _ := ZkRepo.GetValue(zkPath, GetSelectedConn())
+		if node == nil {
+			log.Warnf("Value nil for %s", zkPath)
+		}
 		setNodeValue(node)
 	}
 }

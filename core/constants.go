@@ -30,3 +30,15 @@ const (
 	NodeRootName = "/"
 	NodeDummy    = "__dummy" // Dummy node to be used as real node children placeholder
 )
+
+//TODO tested and worked with relative path. Use run.sh to build and run app
+//const (
+//	AppId = "com.github.alivesubstance.zooverseer"
+//	ConfigDir = "./config"
+//)
+//
+//const (
+//	GladeFilePath      = ConfigDir + "/main.glade"
+//	ConnConfigFilePath = ConfigDir + "/connections.json"
+//	ConfigFilePath = ConfigDir + "/zooverseer.yml"
+//)

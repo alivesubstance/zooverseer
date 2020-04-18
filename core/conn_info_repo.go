@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/alivesubstance/zooverseer/util"
+	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"os"
 )
@@ -11,19 +12,18 @@ import (
 //TODO remove it and put conn_info_repo.go into conn_repo folder?
 type ConnRepository interface {
 	Upsert(connInfo *JsonConnInfo)
-	Find(connName string) (*JsonConnInfo, bool)
-	FindAll() []JsonConnInfo
+	Find(connName string) *JsonConnInfo
+	FindAll() []*JsonConnInfo
 	Delete(connName string)
 }
 
 type ZooverseerConfig struct {
-	Connections []JsonConnInfo /* `json:"connections"`*/
+	Connections []*JsonConnInfo /* `json:"connections"`*/
 }
 
-//TODO replace JsonConnInfo with JsonConnRepository
-//type JsonConnRepository struct {
-//	ConnRepository
-//}
+type JsonConnRepository struct {
+	ConnRepository
+}
 
 type JsonConnInfo struct {
 	Name     string /*`json:"name"`*/
@@ -40,31 +40,31 @@ func (c *JsonConnInfo) String() string {
 	)
 }
 
-func (c *JsonConnInfo) Upsert(connInfo *JsonConnInfo) {
+func (c *JsonConnRepository) Upsert(connInfo *JsonConnInfo) {
 
 }
 
-func (c *JsonConnInfo) Find(connName string) (*JsonConnInfo, bool) {
+func (c *JsonConnRepository) Find(connName string) *JsonConnInfo {
 	if len(connName) == 0 {
-		return nil, false
+		return nil
 	}
 
 	// can be replaced with json path but it also need fully read json file
 	for _, connInfo := range c.FindAll() {
 		if connInfo.Name == connName {
-			return &connInfo, true
+			return connInfo
 		}
 	}
 
-	return nil, false
+	return nil
 }
 
-func (c *JsonConnInfo) FindAll() []JsonConnInfo {
+func (c *JsonConnRepository) FindAll() []*JsonConnInfo {
 	config := readConfig()
 	return config.Connections
 }
 
-func (c *JsonConnInfo) Delete(connName string) {
+func (c *JsonConnRepository) Delete(connName string) {
 
 }
 
@@ -77,7 +77,10 @@ func readConfig() *ZooverseerConfig {
 	connConfigBytes, err := ioutil.ReadAll(connConfigJson)
 	util.CheckError(err)
 
-	json.Unmarshal(connConfigBytes, &config)
+	err = json.Unmarshal(connConfigBytes, &config)
+	if err != nil {
+		log.WithError(err).Errorf("Failed to unmarshall Zooverseer config")
+	}
 	defer connConfigJson.Close()
 
 	return &config
