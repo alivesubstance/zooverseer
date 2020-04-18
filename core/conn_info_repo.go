@@ -34,10 +34,7 @@ type JsonConnInfo struct {
 }
 
 func (c *JsonConnInfo) String() string {
-	return fmt.Sprintf(
-		"JsonConnInfo[name: %s, host: %s, port: %v, user: %v]",
-		c.Name, c.Host, c.Port, c.User,
-	)
+	return fmt.Sprintf("%s(%s:%d)", c.Name, c.Host, c.Port)
 }
 
 func (c *JsonConnRepository) Upsert(connInfo *JsonConnInfo) {

@@ -50,20 +50,21 @@ func InitConnDialog(mainWindow *gtk.Window) *gtk.Dialog {
 //TODO cache it for session
 func GetSelectedConn() *core.JsonConnInfo {
 	//TODO leave it for test
-	//return &core.JsonConnInfo{
-	//	Host: "10.1.1.112",
-	//	Port: 2181,
-	//	User:     "zookeeper",
-	//	Password: "z00k33p3r",
-	//}
-	connList := getObject("connList").(*gtk.ListBox)
-	connName := getSelectedConnName(connList)
-	connInfo := ConnRepo.Find(connName)
-	if connInfo == nil {
-		log.Panicf("'%v' connection setting not found. Should never happened", connName)
+	return &core.JsonConnInfo{
+		Name:     "sandbox-pleeco",
+		Host:     "10.1.1.112",
+		Port:     2181,
+		User:     "zookeeper",
+		Password: "z00k33p3r",
 	}
-
-	return connInfo
+	//connList := getObject("connList").(*gtk.ListBox)
+	//connName := getSelectedConnName(connList)
+	//connInfo := ConnRepo.Find(connName)
+	//if connInfo == nil {
+	//	log.Panicf("'%v' connection setting not found. Should never happened", connName)
+	//}
+	//
+	//return connInfo
 }
 
 func getSelectedConnName(connList *gtk.ListBox) string {

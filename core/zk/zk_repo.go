@@ -9,8 +9,11 @@ import (
 	log "github.com/sirupsen/logrus"
 	gopath "path"
 	"sort"
+	"sync"
 	"time"
 )
+
+var connCreateLock = sync.Mutex{}
 
 type Node struct {
 	Name     string
@@ -178,6 +181,10 @@ func doGetChildren(
 }
 
 func getConn(connInfo *core.JsonConnInfo) (*zkGo.Conn, error) {
+	//todo stupid cache doesn't lock loader function when call it after it didn't find entry it cache
+	connCreateLock.Lock()
+	defer connCreateLock.Unlock()
+
 	// dereferencing conn info to use struct copy(not a pointer) as a cache key
 	connInfoValue := *connInfo
 	conn, err := ConnCache.Get(connInfoValue)

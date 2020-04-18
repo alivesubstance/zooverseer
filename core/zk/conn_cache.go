@@ -41,7 +41,7 @@ func init() {
 }
 
 func connect(connInfo core.JsonConnInfo) (*goZk.Conn, error) {
-	log.Infof("Connecting to %s", connInfo)
+	log.Infof("Connecting to %s", connInfo.String())
 	goZk.DefaultLogger = &infoLogger{}
 
 	servers := getServers(connInfo)
@@ -50,7 +50,10 @@ func connect(connInfo core.JsonConnInfo) (*goZk.Conn, error) {
 
 	if len(connInfo.User) != 0 && len(connInfo.Password) != 0 {
 		authExp := fmt.Sprint(connInfo.User, ":", connInfo.Password)
-		conn.AddAuth("digest", []byte(authExp))
+		err := conn.AddAuth("digest", []byte(authExp))
+		if err != nil {
+			log.WithError(err).Errorf("Failed to add auth for user %s", connInfo.User)
+		}
 	}
 
 	return conn, err

@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"github.com/alivesubstance/zooverseer/core"
 	log "github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
+	"sync"
 	"testing"
 	"time"
 )
@@ -31,6 +33,36 @@ func TestExists(t *testing.T) {
 
 	exists(connInfo, "/env/sandbox-pleeco/acl")
 	exists(connInfo, "/env/sandbox-pleeco/cassandra.port")
+}
+
+func TestGetValue(t *testing.T) {
+	pathToValue := make(map[string]string)
+	pathToValue["/env/sandbox-pleeco/cassandra.url"] = "10.1.1.112:9042"
+	pathToValue["/env/sandbox-pleeco/cassandra.port"] = "9042"
+	pathToValue["/env/sandbox-pleeco/cassandra.storage.port"] = "7000"
+	pathToValue["/env/sandbox-pleeco/cassandra.rpc.port"] = "9160"
+	pathToValue["/env/sandbox-pleeco/cassandra.keyspace"] = "pleeco"
+	pathToValue["/env/sandbox-pleeco/cassandra.dc"] = "dc1"
+
+	var wg sync.WaitGroup
+
+	for i := 0; i < 5; i++ {
+		for path, expectedValue := range pathToValue {
+			wg.Add(1)
+			go func(path string, expectedValue string) {
+				defer wg.Done()
+
+				node, err := ZkRepo.GetValue(path, connInfo)
+				if err != nil {
+					log.WithError(err).Errorf("Failed to read %s", path)
+				}
+				assert.Equal(t, expectedValue, node.Value)
+			}(path, expectedValue)
+		}
+	}
+
+	log.Info("Waiting for all go routines")
+	wg.Wait()
 }
 
 func TestGetChildren(t *testing.T) {

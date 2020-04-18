@@ -41,7 +41,7 @@ func InitNodeTree() {
 	nodesTreeView.SetModel(NodeTreeStore)
 
 	//TODO test. remove once conn dialog will be used
-	//ShowTreeRootNodes()
+	ShowTreeRootNodes()
 }
 
 func ClearNodeTree() {
@@ -63,8 +63,8 @@ func ShowTreeRootNodes() {
 }
 
 func onTreeRowSelected(treeSelection *gtk.TreeSelection) {
-	TreeRowSelectedMutex.Lock()
-	defer TreeRowSelectedMutex.Unlock()
+	//TreeRowSelectedMutex.Lock()
+	//defer TreeRowSelectedMutex.Unlock()
 
 	model, iter, ok := treeSelection.GetSelected()
 	if ok {

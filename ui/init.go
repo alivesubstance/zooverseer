@@ -5,7 +5,7 @@ import (
 	"github.com/alivesubstance/zooverseer/util"
 	"github.com/gotk3/gotk3/glib"
 	"github.com/gotk3/gotk3/gtk"
-	"log"
+	log "github.com/sirupsen/logrus"
 )
 
 // there are rumors that global variable is evil. why?
@@ -15,7 +15,7 @@ var (
 
 func OnAppActivate(app *gtk.Application) func() {
 	return func() {
-		log.Print("Reading glade file")
+		log.Info("Reading glade file")
 		builder, err := gtk.BuilderNewFromFile(core.GladeFilePath)
 		util.CheckError(err)
 
@@ -24,7 +24,7 @@ func OnAppActivate(app *gtk.Application) func() {
 		mainWindow := getObject("mainWindow").(*gtk.Window)
 		InitMainWindow(mainWindow)
 
-		InitConnDialog(mainWindow)
+		//InitConnDialog(mainWindow)
 
 		app.AddWindow(mainWindow)
 	}
