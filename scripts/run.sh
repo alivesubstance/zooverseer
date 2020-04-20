@@ -1,6 +1,8 @@
 #!/bin/bash
 
+#PATH="${PATH}:./bin"
 ASSETS_DIR="../assets"
+#BIN_DIR="../bin"
 INSTALL_DIR="${HOME}/env/zooverseer"
 
 mkdir -p "${INSTALL_DIR}"

@@ -8,7 +8,6 @@ import (
 	zkGo "github.com/samuel/go-zookeeper/zk"
 	log "github.com/sirupsen/logrus"
 	gopath "path"
-	"sort"
 	"sync"
 	"time"
 )
@@ -172,12 +171,21 @@ func doGetChildren(
 		}
 	}
 
-	//TODO make nodes with children first in the slice
-	sort.Slice(nodes, func(i, j int) bool {
-		return nodes[i].Name < nodes[j].Name
-	})
+	return sortNodes(nodes), nil
+}
 
-	return nodes, nil
+func sortNodes(nodes []*Node) []*Node {
+	byName := func(n1, n2 *Node) bool { return n1.Name < n2.Name }
+	byChildren := func(n1, n2 *Node) bool { return n1.Meta.NumChildren > 0 && n2.Meta.NumChildren <= 0 }
+	var lessFuncs = []lessFunc{byName}
+
+	if core.Config.SortFolderFirst {
+		lessFuncs = []lessFunc{byChildren, byName}
+	}
+
+	OrderedBy(lessFuncs...).Sort(nodes)
+
+	return nodes
 }
 
 func getConn(connInfo *core.JsonConnInfo) (*zkGo.Conn, error) {

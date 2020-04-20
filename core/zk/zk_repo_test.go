@@ -3,6 +3,7 @@ package zk
 import (
 	"fmt"
 	"github.com/alivesubstance/zooverseer/core"
+	zkGo "github.com/samuel/go-zookeeper/zk"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"sync"
@@ -77,23 +78,40 @@ func exists(connInfo *core.JsonConnInfo, path string) {
 	log.Infof("Path %s has children: %v", path, stat.NumChildren)
 }
 
-func TestSleep(t *testing.T) {
-	log.Print("start")
+func TestSortNodesByChildrenAndName(t *testing.T) {
+	core.Config.SortFolderFirst = true
 
-	for i := 0; i < 10; i++ {
-		log.Print(i)
-		time.Sleep(300 * time.Millisecond)
-
-		if i == 2 {
-			go sleep()
-		}
+	var nodes = []*Node{
+		{"with-child2", "", &zkGo.Stat{NumChildren: 2}, nil},
+		{"with-child1", "", &zkGo.Stat{NumChildren: 3}, nil},
+		{"with-child3", "", &zkGo.Stat{NumChildren: 1}, nil},
+		{"name2", "", &zkGo.Stat{NumChildren: 0}, nil},
+		{"name1", "", &zkGo.Stat{NumChildren: 0}, nil},
 	}
 
-	log.Print("end")
+	sortNodes(nodes)
+	assert.Equal(t, "with-child1", nodes[0].Name)
+	assert.Equal(t, "with-child2", nodes[1].Name)
+	assert.Equal(t, "with-child3", nodes[2].Name)
+	assert.Equal(t, "name1", nodes[3].Name)
+	assert.Equal(t, "name2", nodes[4].Name)
 }
 
-func sleep() {
-	log.Print("before sleep")
-	time.Sleep(1 * time.Second)
-	log.Print("after sleep")
+func TestSortNodesByNameOnly(t *testing.T) {
+	core.Config.SortFolderFirst = false
+
+	var nodes = []*Node{
+		{"with-child2", "", &zkGo.Stat{NumChildren: 2}, nil},
+		{"with-child1", "", &zkGo.Stat{NumChildren: 3}, nil},
+		{"with-child3", "", &zkGo.Stat{NumChildren: 1}, nil},
+		{"name2", "", &zkGo.Stat{NumChildren: 0}, nil},
+		{"name1", "", &zkGo.Stat{NumChildren: 0}, nil},
+	}
+
+	sortNodes(nodes)
+	assert.Equal(t, "name1", nodes[0].Name)
+	assert.Equal(t, "name2", nodes[1].Name)
+	assert.Equal(t, "with-child1", nodes[2].Name)
+	assert.Equal(t, "with-child2", nodes[3].Name)
+	assert.Equal(t, "with-child3", nodes[4].Name)
 }

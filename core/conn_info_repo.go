@@ -17,8 +17,8 @@ type ConnRepository interface {
 	Delete(connName string)
 }
 
-type ZooverseerConfig struct {
-	Connections []*JsonConnInfo /* `json:"connections"`*/
+type Connections struct {
+	conns []*JsonConnInfo /* `json:"connections"`*/
 }
 
 type JsonConnRepository struct {
@@ -57,16 +57,15 @@ func (c *JsonConnRepository) Find(connName string) *JsonConnInfo {
 }
 
 func (c *JsonConnRepository) FindAll() []*JsonConnInfo {
-	config := readConfig()
-	return config.Connections
+	return readConfig().conns
 }
 
 func (c *JsonConnRepository) Delete(connName string) {
 
 }
 
-func readConfig() *ZooverseerConfig {
-	var config ZooverseerConfig
+func readConfig() *Connections {
+	var config Connections
 
 	connConfigJson, err := os.Open(ConnConfigFilePath)
 	util.CheckError(err)

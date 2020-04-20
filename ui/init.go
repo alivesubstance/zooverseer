@@ -2,6 +2,7 @@ package ui
 
 import (
 	"github.com/alivesubstance/zooverseer/core"
+	"github.com/alivesubstance/zooverseer/core/zk"
 	"github.com/alivesubstance/zooverseer/util"
 	"github.com/gotk3/gotk3/glib"
 	"github.com/gotk3/gotk3/gtk"
@@ -35,4 +36,26 @@ func getObject(objectName string) glib.IObject {
 	util.CheckError(err)
 
 	return object
+}
+
+func getTreeSelectedValue(treeSelection *gtk.TreeSelection) *zk.Node {
+	model, iter, ok := treeSelection.GetSelected()
+	if ok {
+		treePath, err := model.(*gtk.TreeModel).GetPath(iter)
+		if err != nil {
+			log.WithError(err).Errorf("Could not get path from model: %s\n", treePath)
+			return nil
+		}
+
+		zkPath := ZkPathByTreePath[treePath.String()]
+		log.Tracef("Selected tree path: %s", zkPath)
+
+		node, _ := ZkRepo.GetValue(zkPath, GetSelectedConn())
+		if node == nil {
+			log.Errorf("Value nil for %s", zkPath)
+		}
+		return node
+	}
+
+	return nil
 }

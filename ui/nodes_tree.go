@@ -39,6 +39,7 @@ func InitNodeTree() {
 	NodeTreeStore = newTreeStore
 	nodesTreeView.SetModel(NodeTreeStore)
 
+	InitContextMenu()
 	//TODO test. remove once conn dialog will be used
 	ShowTreeRootNodes()
 }
@@ -62,20 +63,8 @@ func ShowTreeRootNodes() {
 }
 
 func onTreeRowSelected(treeSelection *gtk.TreeSelection) {
-	model, iter, ok := treeSelection.GetSelected()
-	if ok {
-		treePath, err := model.(*gtk.TreeModel).GetPath(iter)
-		if err != nil {
-			log.WithError(err).Errorf("Could not get path from model: %s\n", treePath)
-			return
-		}
-		zkPath := ZkPathByTreePath[treePath.String()]
-		log.Tracef("Selected tree path: %s", zkPath)
-
-		node, _ := ZkRepo.GetValue(zkPath, GetSelectedConn())
-		if node == nil {
-			log.Warnf("Value nil for %s", zkPath)
-		}
+	node := getTreeSelectedValue(treeSelection)
+	if node != nil {
 		setNodeValue(node)
 	}
 }
@@ -192,8 +181,6 @@ func createTextColumn(title string, id int) *gtk.TreeViewColumn {
 
 func onButtonPressEvent(b *gtk.TreeView, e *gdk.Event) {
 	if isMouse2ButtonClicked(e) {
-		log.Tracef("Mouse button 2 pressed")
-
 		menu := getObject("popupMenu").(*gtk.Menu)
 		menu.ShowAll()
 		menu.PopupAtPointer(e)
