@@ -51,9 +51,9 @@ func InitConnDialog(mainWindow *gtk.Window) *gtk.Dialog {
 func GetSelectedConn() *core.JsonConnInfo {
 	//TODO leave it for test
 	return &core.JsonConnInfo{
-		Name:     "sandbox-pleeco",
-		Host:     "10.1.1.112",
-		Port:     2181,
+		Name:     "kelp-nightly",
+		Host:     "172.0.30.173",
+		Port:     32050,
 		User:     "zookeeper",
 		Password: "z00k33p3r",
 	}

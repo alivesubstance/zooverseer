@@ -44,11 +44,11 @@ type Repository struct {
 }
 
 func (repo *Repository) GetRootNodeChildren(connInfo *core.JsonConnInfo) ([]*Node, error) {
-	childPathCreator := func(path string, childName string) string {
+	absolutePathCreator := func(path string, childName string) string {
 		return fmt.Sprintf("/%s", childName)
 	}
 
-	return doGetChildren(nil, core.NodeRootName, connInfo, childPathCreator)
+	return doGetChildren(nil, core.NodeRootName, connInfo, absolutePathCreator)
 }
 
 func (repo *Repository) Get(path string, connInfo *core.JsonConnInfo) (*Node, error) {
@@ -126,14 +126,14 @@ func (repo *Repository) GetValue(path string, connInfo *core.JsonConnInfo) (*Nod
 }
 
 func (repo *Repository) GetChildren(path string, connInfo *core.JsonConnInfo) ([]*Node, error) {
-	childPathCreator := func(path string, childName string) string {
+	absolutePathCreator := func(path string, childName string) string {
 		return fmt.Sprintf("%s/%s", path, childName)
 	}
-	return doGetChildren(repo, path, connInfo, childPathCreator)
+	return doGetChildren(repo, path, connInfo, absolutePathCreator)
 }
 
 func doGetChildren(
-	zkRepo *Repository, path string, connInfo *core.JsonConnInfo, childPathCreator func(path string, childName string) string,
+	zkRepo *Repository, path string, connInfo *core.JsonConnInfo, absolutePathCreator func(path string, childName string) string,
 ) ([]*Node, error) {
 	log.Tracef("Looking for children for %s", path)
 
@@ -159,19 +159,40 @@ func doGetChildren(
 	}
 
 	// get metadata for each child. mostly to know is there are children in child node
+	return getChildrenMeta(zkRepo, path, connInfo, absolutePathCreator, childrenNames)
+}
+
+func getChildrenMeta(
+	zkRepo *Repository,
+	path string,
+	connInfo *core.JsonConnInfo,
+	absolutePathCreator func(path string, childName string) string,
+	childrenNames []string,
+) ([]*Node, error) {
+	var resultErr error
+	var wg sync.WaitGroup
 	nodes := make([]*Node, len(childrenNames))
 	for i, childName := range childrenNames {
-		meta, err := zkRepo.GetMeta(childPathCreator(path, childName), connInfo)
-		if err != nil {
-			return nil, err
-		}
-		nodes[i] = &Node{
-			Name: childName,
-			Meta: meta,
-		}
-	}
+		wg.Add(1)
+		go func(idx int, path string, childName string, connInfo *core.JsonConnInfo) {
+			defer wg.Done()
 
-	return sortNodes(nodes), nil
+			absolutePath := absolutePathCreator(path, childName)
+			meta, err := zkRepo.GetMeta(absolutePath, connInfo)
+			if err != nil {
+				log.WithError(err).Errorf("Failed to get node meta %s", absolutePath)
+				resultErr = err
+			}
+
+			nodes[idx] = &Node{
+				Name: childName,
+				Meta: meta,
+			}
+		}(i, path, childName, connInfo)
+	}
+	wg.Wait()
+
+	return sortNodes(nodes), resultErr
 }
 
 func sortNodes(nodes []*Node) []*Node {
