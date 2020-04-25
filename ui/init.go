@@ -31,9 +31,8 @@ func OnAppActivate(app *gtk.Application) func() {
 	}
 }
 
-func showConfirmDialog(parent gtk.IWindow, text string) gtk.ResponseType {
-	dialog := gtk.MessageDialogNew(parent, gtk.DIALOG_MODAL, gtk.MESSAGE_QUESTION, gtk.BUTTONS_YES_NO, text)
-	return dialog.Run()
+func showConfirmDialog(parent gtk.IWindow, text string) *gtk.MessageDialog {
+	return gtk.MessageDialogNew(parent, gtk.DIALOG_MODAL, gtk.MESSAGE_QUESTION, gtk.BUTTONS_YES_NO, text)
 }
 
 func getObject(objectName string) glib.IObject {

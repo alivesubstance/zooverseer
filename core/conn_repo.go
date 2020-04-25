@@ -53,17 +53,46 @@ func (c *JsonConnRepository) Find(connName string) *JsonConnInfo {
 }
 
 func (c *JsonConnRepository) FindAll() []*JsonConnInfo {
-	return readConnections()
+	return readConns()
 }
 
 func (c *JsonConnRepository) Delete(connInfo *JsonConnInfo) {
+	conns := readConns()
+	if len(conns) == 0 {
+		log.Warnf("There are no saved connections. Nothing to remove")
+		return
+	}
 
+	var newConns = make([]*JsonConnInfo, 0)
+	for _, conn := range conns {
+		if conn.Name == connInfo.Name {
+			continue
+		}
+		newConns = append(newConns, conn)
+	}
+
+	connConfigJson, err := os.Open(ConnConfigFilePath)
+	util.CheckError(err)
+	defer connConfigJson.Close()
+
+	bytes, err := json.Marshal(newConns)
+	if err != nil {
+		log.WithError(err).Errorf("Failed to marshal connections")
+	}
+	err = ioutil.WriteFile(ConnConfigFilePath, bytes, 0644)
+	if err != nil {
+		log.WithError(err).Errorf("Failed to write connections config")
+	}
 }
 
-func readConnections() []*JsonConnInfo {
+func readConns() []*JsonConnInfo {
 	connInfos := make([]*JsonConnInfo, 0)
 
 	connConfigJson, err := os.Open(ConnConfigFilePath)
+	if os.IsNotExist(err) {
+		log.Tracef("Connections file doesn't exist")
+		return nil
+	}
 	util.CheckError(err)
 	defer connConfigJson.Close()
 

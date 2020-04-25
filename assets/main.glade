@@ -17,6 +17,27 @@
     <property name="can_focus">False</property>
     <property name="stock">gtk-delete</property>
   </object>
+  <object class="GtkImage" id="iconNodeAdd">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-add</property>
+  </object>
+  <object class="GtkImage" id="iconNodeDelete">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-delete</property>
+  </object>
+  <object class="GtkImage" id="iconNodeRefresh">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-refresh</property>
+  </object>
+  <object class="GtkImage" id="iconValueSave">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-save</property>
+    <property name="icon_size">2</property>
+  </object>
   <object class="GtkDialog" id="connDialog">
     <property name="width_request">700</property>
     <property name="height_request">400</property>
@@ -38,19 +59,6 @@
           <object class="GtkButtonBox">
             <property name="can_focus">False</property>
             <property name="layout_style">end</property>
-            <child>
-              <object class="GtkButton" id="connSaveBtn">
-                <property name="label" translatable="yes">Save</property>
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-              </object>
-              <packing>
-                <property name="expand">True</property>
-                <property name="fill">True</property>
-                <property name="position">0</property>
-              </packing>
-            </child>
             <child>
               <object class="GtkButton" id="connBtn">
                 <property name="label" translatable="yes">Connect</property>
@@ -231,6 +239,17 @@
                   </packing>
                 </child>
                 <child>
+                  <object class="GtkButton" id="connSaveBtn">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
+                    <property name="image">iconValueSave</property>
+                  </object>
+                  <packing>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
+                <child>
                   <object class="GtkButton" id="connCopyBtn">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
@@ -238,7 +257,7 @@
                     <property name="image">iconConnCopy</property>
                   </object>
                   <packing>
-                    <property name="position">0</property>
+                    <property name="position">2</property>
                   </packing>
                 </child>
                 <child>
@@ -247,9 +266,10 @@
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
                     <property name="image">iconConnDelete</property>
+                    <property name="image_position">right</property>
                   </object>
                   <packing>
-                    <property name="position">0</property>
+                    <property name="position">3</property>
                   </packing>
                 </child>
               </object>
@@ -267,27 +287,6 @@
         </child>
       </object>
     </child>
-  </object>
-  <object class="GtkImage" id="iconNodeAdd">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-add</property>
-  </object>
-  <object class="GtkImage" id="iconNodeDelete">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-delete</property>
-  </object>
-  <object class="GtkImage" id="iconNodeRefresh">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-refresh</property>
-  </object>
-  <object class="GtkImage" id="iconValueSave">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-save</property>
-    <property name="icon_size">2</property>
   </object>
   <object class="GtkImage" id="iconValueSearch">
     <property name="visible">True</property>
@@ -482,18 +481,7 @@
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <child>
-                      <object class="GtkButton">
-                        <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                        <property name="receives_default">True</property>
-                        <property name="image">iconNodeRefresh</property>
-                      </object>
-                      <packing>
-                        <property name="position">0</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkButton">
+                      <object class="GtkButton" id="nodeAddBtn">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
@@ -504,14 +492,25 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkButton">
+                      <object class="GtkButton" id="nodeDeleteBtn">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
                         <property name="image">iconNodeDelete</property>
                       </object>
                       <packing>
-                        <property name="position">0</property>
+                        <property name="position">1</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkButton" id="nodeRefresh">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="receives_default">True</property>
+                        <property name="image">iconNodeRefresh</property>
+                      </object>
+                      <packing>
+                        <property name="position">2</property>
                       </packing>
                     </child>
                   </object>
@@ -587,7 +586,7 @@
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
-                            <property name="image">iconValueSave</property>
+                            <property name="image">iconValueSearch</property>
                           </object>
                           <packing>
                             <property name="position">0</property>
@@ -598,7 +597,6 @@
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
-                            <property name="image">iconValueSearch</property>
                           </object>
                           <packing>
                             <property name="position">0</property>
@@ -799,7 +797,7 @@
       </object>
     </child>
     <child>
-      <object class="GtkImageMenuItem">
+      <object class="GtkImageMenuItem" id="contextMenuPasteValue">
         <property name="label">gtk-paste</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
@@ -808,7 +806,7 @@
       </object>
     </child>
     <child>
-      <object class="GtkMenuItem">
+      <object class="GtkMenuItem" id="contextMenuRename">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="label" translatable="yes">Rename</property>
@@ -816,7 +814,7 @@
       </object>
     </child>
     <child>
-      <object class="GtkImageMenuItem">
+      <object class="GtkImageMenuItem" id="contextMenuDeleteNode">
         <property name="label">gtk-delete</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>

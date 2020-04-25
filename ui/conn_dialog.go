@@ -24,27 +24,31 @@ var (
 )
 
 func InitConnDialog(mainWindow *gtk.Window) *gtk.Dialog {
-	connPortEntry := getObject("connPortEntry").(*gtk.Entry)
-	connPortEntry.SetWidthChars(10)
+	getObject("connPortEntry").(*gtk.Entry).SetWidthChars(10)
 
 	connDialog := getObject("connDialog").(*gtk.Dialog)
 	connDialog.SetTransientFor(mainWindow)
 	connDialog.SetPosition(gtk.WIN_POS_CENTER)
 
-	connDialogCancelBtn := getObject("connDialogCancelBtn").(*gtk.Button)
-	connDialogCancelBtn.Connect("clicked", onConnDialogCancelBtnClicked(connDialog))
-
+	getObject("connDialogCancelBtn").(*gtk.Button).Connect("clicked", onConnDialogCancelBtnClicked(connDialog))
 	getObject("connAddBtn").(*gtk.Button).Connect("clicked", onConnAddBtnClicked)
-	getObject("connCopyBtn").(*gtk.Button).Connect("clicked", onConnCopyBtnClicked)
-	getObject("connDeleteBtn").(*gtk.Button).Connect("clicked", onConnDeleteBtnClicked)
+	connCopyBtn := getObject("connCopyBtn").(*gtk.Button)
+	connCopyBtn.Connect("clicked", onConnCopyBtnClicked)
 
-	connBtn := getObject("connBtn").(*gtk.Button)
-	connBtn.Connect("clicked", onConnBtnClicked(connDialog))
+	connDeleteBtn := getObject("connDeleteBtn").(*gtk.Button)
+	connDeleteBtn.Connect("clicked", onConnDeleteBtnClicked)
+
+	connInfos := ConnRepo.FindAll()
+	if len(connInfos) == 0 {
+		connCopyBtn.SetSensitive(false)
+		connDeleteBtn.SetSensitive(false)
+	}
+
+	getObject("connBtn").(*gtk.Button).Connect("clicked", onConnBtnClicked(connDialog))
 
 	initConnListBox()
 
 	connDialog.ShowAll()
-
 	return connDialog
 }
 
@@ -60,6 +64,10 @@ func GetSelectedConn() *core.JsonConnInfo {
 	//}
 	connList := getConnListBox()
 	connName := getSelectedConnName(connList)
+	if len(connName) == 0 {
+		return nil
+	}
+
 	connInfo := ConnRepo.Find(connName)
 	if connInfo == nil {
 		log.Panicf("'%v' connection setting not found. Should never happened", connName)
@@ -69,7 +77,12 @@ func GetSelectedConn() *core.JsonConnInfo {
 }
 
 func getSelectedConnName(connList *gtk.ListBox) string {
-	child, err := connList.GetSelectedRow().GetChild()
+	selectedRow := connList.GetSelectedRow()
+	if selectedRow == nil {
+		return ""
+	}
+
+	child, err := selectedRow.GetChild()
 	if err != nil {
 		log.WithError(err).Errorf("Failed to get list box selected child")
 	}
@@ -80,6 +93,10 @@ func getSelectedConnName(connList *gtk.ListBox) string {
 
 func onConnListBoxRowSelected() {
 	selectedConn := GetSelectedConn()
+	if selectedConn == nil {
+		return
+	}
+
 	getObject("connNameEntry").(*gtk.Entry).SetText(selectedConn.Name)
 	getObject("connHostEntry").(*gtk.Entry).SetText(selectedConn.Host)
 	getObject("connPortEntry").(*gtk.Entry).SetText(fmt.Sprintf("%v", selectedConn.Port))
@@ -97,8 +114,7 @@ func initConnListBox() {
 	connListBox.Connect("row-selected", onConnListBoxRowSelected)
 	connListBox.Connect("button-press-event", onConnListBoxDoubleClick)
 
-	connInfos := ConnRepo.FindAll()
-	for _, connInfo := range connInfos {
+	for _, connInfo := range ConnRepo.FindAll() {
 		label, err := gtk.LabelNew(connInfo.Name)
 		util.CheckError(err)
 		// set tooltip to hold connection name and to be used further
@@ -147,12 +163,15 @@ func onConnCopyBtnClicked() {
 
 func onConnDeleteBtnClicked() {
 	selectedConn := GetSelectedConn()
-	resp := showConfirmDialog(getConnDialog(), "Are you sure you want to delete "+selectedConn.Name+"?")
+	dialog := showConfirmDialog(getConnDialog(), "Are you sure you want to delete "+selectedConn.Name+"?")
+	resp := dialog.Run()
 	if resp == gtk.RESPONSE_YES {
 		ConnRepo.Delete(selectedConn)
 		connListBox := getConnListBox()
 		connListBox.Remove(connListBox.GetSelectedRow())
 	}
+
+	dialog.Hide()
 }
 
 func onConnBtnClicked(connDialog *gtk.Dialog) func() {
