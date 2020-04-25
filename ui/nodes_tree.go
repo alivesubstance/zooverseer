@@ -41,7 +41,7 @@ func InitNodeTree() {
 
 	InitContextMenu()
 	//TODO test. remove once conn dialog will be used
-	ShowTreeRootNodes()
+	//ShowTreeRootNodes()
 }
 
 func ClearNodeTree() {

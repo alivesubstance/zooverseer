@@ -34,8 +34,9 @@ func InitConnDialog(mainWindow *gtk.Window) *gtk.Dialog {
 	connDialogCancelBtn := getObject("connDialogCancelBtn").(*gtk.Button)
 	connDialogCancelBtn.Connect("clicked", onConnDialogCancelBtnClicked(connDialog))
 
-	connAddBtn := getObject("connAddBtn").(*gtk.Button)
-	connAddBtn.Connect("clicked", onConnAddBtnClicked)
+	getObject("connAddBtn").(*gtk.Button).Connect("clicked", onConnAddBtnClicked)
+	getObject("connCopyBtn").(*gtk.Button).Connect("clicked", onConnCopyBtnClicked)
+	getObject("connDeleteBtn").(*gtk.Button).Connect("clicked", onConnDeleteBtnClicked)
 
 	connBtn := getObject("connBtn").(*gtk.Button)
 	connBtn.Connect("clicked", onConnBtnClicked(connDialog))
@@ -50,21 +51,21 @@ func InitConnDialog(mainWindow *gtk.Window) *gtk.Dialog {
 //TODO cache it for session
 func GetSelectedConn() *core.JsonConnInfo {
 	//TODO leave it for test
-	return &core.JsonConnInfo{
-		Name:     "kelp-nightly",
-		Host:     "172.0.30.173",
-		Port:     32050,
-		User:     "zookeeper",
-		Password: "z00k33p3r",
-	}
-	//connList := getObject("connList").(*gtk.ListBox)
-	//connName := getSelectedConnName(connList)
-	//connInfo := ConnRepo.Find(connName)
-	//if connInfo == nil {
-	//	log.Panicf("'%v' connection setting not found. Should never happened", connName)
+	//return &core.JsonConnInfo{
+	//	Name:     "kelp-nightly",
+	//	Host:     "172.0.30.173",
+	//	Port:     32050,
+	//	User:     "zookeeper",
+	//	Password: "z00k33p3r",
 	//}
-	//
-	//return connInfo
+	connList := getConnListBox()
+	connName := getSelectedConnName(connList)
+	connInfo := ConnRepo.Find(connName)
+	if connInfo == nil {
+		log.Panicf("'%v' connection setting not found. Should never happened", connName)
+	}
+
+	return connInfo
 }
 
 func getSelectedConnName(connList *gtk.ListBox) string {
@@ -117,14 +118,18 @@ func initConnListBox() {
 func onConnListBoxDoubleClick(listBox *gtk.ListBox, e *gdk.Event) {
 	event := &gdk.EventKey{Event: e}
 	mouseButton := (*C.GdkEventButton)(unsafe.Pointer(event.Event.GdkEvent)).button
+	row := listBox.GetSelectedRow()
 
-	if mouseButton == 1 {
-		row := listBox.GetSelectedRow()
+	// row is nil when conn list is empty
+	if row != nil && mouseButton == 1 {
 		child, _ := row.GetChild()
 		connName, _ := child.GetTooltipText()
+		// didn't find a way how to register double button click
+		// looks like GO GTK adapter doesn't support such event
+		// implement my own bicycle
 		if time.Now().UnixNano()-lastBtnClickTime < DoubleClickedBtnPeriod && lastSelectedConnName == connName {
 			log.Infof("Selected conn: %s", connName)
-			onConnBtnClicked(getObject("connDialog").(*gtk.Dialog))()
+			onConnBtnClicked(getConnDialog())()
 		}
 
 		lastBtnClickTime = time.Now().UnixNano()
@@ -132,12 +137,22 @@ func onConnListBoxDoubleClick(listBox *gtk.ListBox, e *gdk.Event) {
 	}
 }
 
-func getConnListBox() *gtk.ListBox {
-	return getObject("connList").(*gtk.ListBox)
-}
-
 func onConnAddBtnClicked() {
 	log.Print("Conn add btn clicked")
+}
+
+func onConnCopyBtnClicked() {
+	log.Print("Conn add btn clicked")
+}
+
+func onConnDeleteBtnClicked() {
+	selectedConn := GetSelectedConn()
+	resp := showConfirmDialog(getConnDialog(), "Are you sure you want to delete "+selectedConn.Name+"?")
+	if resp == gtk.RESPONSE_YES {
+		ConnRepo.Delete(selectedConn)
+		connListBox := getConnListBox()
+		connListBox.Remove(connListBox.GetSelectedRow())
+	}
 }
 
 func onConnBtnClicked(connDialog *gtk.Dialog) func() {
@@ -152,4 +167,12 @@ func onConnDialogCancelBtnClicked(connDialog *gtk.Dialog) func() {
 	return func() {
 		connDialog.Hide()
 	}
+}
+
+func getConnDialog() *gtk.Dialog {
+	return getObject("connDialog").(*gtk.Dialog)
+}
+
+func getConnListBox() *gtk.ListBox {
+	return getObject("connList").(*gtk.ListBox)
 }

@@ -25,10 +25,15 @@ func OnAppActivate(app *gtk.Application) func() {
 		mainWindow := getObject("mainWindow").(*gtk.Window)
 		InitMainWindow(mainWindow)
 
-		//InitConnDialog(mainWindow)
+		InitConnDialog(mainWindow)
 
 		app.AddWindow(mainWindow)
 	}
+}
+
+func showConfirmDialog(parent gtk.IWindow, text string) gtk.ResponseType {
+	dialog := gtk.MessageDialogNew(parent, gtk.DIALOG_MODAL, gtk.MESSAGE_QUESTION, gtk.BUTTONS_YES_NO, text)
+	return dialog.Run()
 }
 
 func getObject(objectName string) glib.IObject {

@@ -14,11 +14,7 @@ type ConnRepository interface {
 	Upsert(connInfo *JsonConnInfo)
 	Find(connName string) *JsonConnInfo
 	FindAll() []*JsonConnInfo
-	Delete(connName string)
-}
-
-type Connections struct {
-	conns []*JsonConnInfo /* `json:"connections"`*/
+	Delete(connInfo *JsonConnInfo)
 }
 
 type JsonConnRepository struct {
@@ -57,27 +53,27 @@ func (c *JsonConnRepository) Find(connName string) *JsonConnInfo {
 }
 
 func (c *JsonConnRepository) FindAll() []*JsonConnInfo {
-	return readConfig().conns
+	return readConnections()
 }
 
-func (c *JsonConnRepository) Delete(connName string) {
+func (c *JsonConnRepository) Delete(connInfo *JsonConnInfo) {
 
 }
 
-func readConfig() *Connections {
-	var config Connections
+func readConnections() []*JsonConnInfo {
+	connInfos := make([]*JsonConnInfo, 0)
 
 	connConfigJson, err := os.Open(ConnConfigFilePath)
 	util.CheckError(err)
+	defer connConfigJson.Close()
 
 	connConfigBytes, err := ioutil.ReadAll(connConfigJson)
 	util.CheckError(err)
 
-	err = json.Unmarshal(connConfigBytes, &config)
+	err = json.Unmarshal(connConfigBytes, &connInfos)
 	if err != nil {
-		log.WithError(err).Errorf("Failed to unmarshall Zooverseer config")
+		log.WithError(err).Errorf("Failed to read connections config")
 	}
-	defer connConfigJson.Close()
 
-	return &config
+	return connInfos
 }

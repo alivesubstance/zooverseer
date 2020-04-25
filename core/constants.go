@@ -4,10 +4,11 @@ const AppId = "com.github.alivesubstance.zooverseer"
 
 // todo change to relative path
 const (
-	GladeFilePath      = "/home/mirian/code/go/src/github.com/alivesubstance/zooverseer/assets/main.glade"
-	ConnConfigFilePath = "/home/mirian/code/go/src/github.com/alivesubstance/zooverseer/assets/zooverseer.json"
+	GladeFilePath      = "/home/mirian/code/zooverseer/assets/main.glade"
+	ConnConfigFilePath = "/home/mirian/code/zooverseer/assets/connections.json"
 )
 
+// todo Move constants to config
 // Zk Connection
 const (
 	ConnCacheExpireAfterAccessMinutes = 20
