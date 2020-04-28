@@ -3,9 +3,9 @@ package zk
 import (
 	"fmt"
 	"github.com/alivesubstance/zooverseer/core"
-	"github.com/alivesubstance/zooverseer/util"
 	"github.com/avast/retry-go"
 	goCache "github.com/goburrow/cache"
+	"github.com/pkg/errors"
 	goZk "github.com/samuel/go-zookeeper/zk"
 	log "github.com/sirupsen/logrus"
 	"time"
@@ -25,12 +25,13 @@ func init() {
 		value.(*goZk.Conn).Close()
 	}
 
-	stats := goCache.Stats{}
+	stats := &goCache.Stats{}
 	c := goCache.NewLoadingCache(connCreateFunc,
 		goCache.WithExpireAfterAccess(core.ConnCacheExpireAfterAccessMinutes*time.Minute),
 		goCache.WithRemovalListener(connRemoveListener),
 	)
-	c.Stats(&stats)
+	// TODO looks like stats doesn't collect numbers
+	c.Stats(stats)
 
 	go func() {
 		time.Sleep(core.ConnCacheStatsPeriodMinutes * time.Minute)
@@ -40,26 +41,29 @@ func init() {
 	ConnCache = c
 }
 
-func connect(connInfo core.JsonConnInfo) (*goZk.Conn, error) {
+func connect(connInfo core.ConnInfo) (*goZk.Conn, error) {
 	log.Infof("Connecting to %s", connInfo.String())
 	goZk.DefaultLogger = &infoLogger{}
 
 	servers := getServers(connInfo)
+	//TODO support connection timeout
 	conn, _, err := goZk.Connect(servers, time.Second)
-	util.CheckErrorWithMsg(fmt.Sprintf("Failed to connect to %s\n", servers), err)
+	if err != nil {
+		return nil, errors.Wrapf(err, "Failed to connect to %s\n", servers)
+	}
 
 	if len(connInfo.User) != 0 && len(connInfo.Password) != 0 {
 		authExp := fmt.Sprint(connInfo.User, ":", connInfo.Password)
 		err := conn.AddAuth("digest", []byte(authExp))
 		if err != nil {
-			log.WithError(err).Errorf("Failed to add auth for user %s", connInfo.User)
+			return nil, errors.Wrapf(err, "Failed to add auth for user %s", connInfo.User)
 		}
 	}
 
 	return conn, err
 }
 
-func getServers(connInfo core.JsonConnInfo) []string {
+func getServers(connInfo core.ConnInfo) []string {
 	servers := make([]string, 1)
 	servers[0] = fmt.Sprintf("%v:%v", connInfo.Host, connInfo.Port)
 	return servers
@@ -67,7 +71,7 @@ func getServers(connInfo core.JsonConnInfo) []string {
 
 func connCreateFunc(key goCache.Key) (goCache.Value, error) {
 	var validConn *goZk.Conn
-	connInfo := key.(core.JsonConnInfo)
+	connInfo := key.(core.ConnInfo)
 	err := retry.Do(
 		func() error {
 			conn, err := connect(connInfo)

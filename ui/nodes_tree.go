@@ -50,16 +50,14 @@ func ClearNodeTree() {
 	ZkPathByTreePath = make(map[string]string)
 }
 
-func ShowTreeRootNodes() {
+func ShowTreeRootNodes() error {
 	rootChildren, err := ZkRepo.GetRootNodeChildren(GetSelectedConn())
-	if err != nil {
-		log.WithError(err).Error("Failed to get read ZK root node")
+	if err == nil {
+		for _, rootChild := range rootChildren {
+			addSubRow(nil, rootChild)
+		}
 	}
-
-	// add root children to tree
-	for _, rootChild := range rootChildren {
-		addSubRow(nil, rootChild)
-	}
+	return err
 }
 
 func onTreeRowSelected(treeSelection *gtk.TreeSelection) {

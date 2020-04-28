@@ -6,6 +6,7 @@ const AppId = "com.github.alivesubstance.zooverseer"
 const (
 	GladeFilePath      = "/home/mirian/code/zooverseer/assets/main.glade"
 	ConnConfigFilePath = "/home/mirian/code/zooverseer/assets/connections.json"
+	CssStyleFilePath   = "/home/mirian/code/zooverseer/assets/style.css"
 )
 
 // todo Move constants to config
@@ -13,7 +14,7 @@ const (
 const (
 	ConnCacheExpireAfterAccessMinutes = 20
 	ConnCacheStatsPeriodMinutes       = 5
-	ConnRetryAttempts                 = 3
+	ConnRetryAttempts                 = 1
 	ConnRetryDelay                    = 1000
 )
 
@@ -21,7 +22,7 @@ const (
 const (
 	ZkCacheExpireAfterAccessMinutes = 10
 	ZkCacheStatsPeriodMinutes       = 5
-	ZkOpRetryAttempts               = 3
+	ZkOpRetryAttempts               = 1
 	ZkOpRetryDelay                  = 500
 )
 

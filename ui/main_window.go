@@ -12,6 +12,9 @@ func InitMainWindow(mainWindow *gtk.Window) {
 
 	mainWindow.SetTitle("Zooverseer")
 	mainWindow.ShowAll()
+
+	// todo for test purpose only
+	mainWindow.Move(1500, 0)
 }
 
 func initMenuSignals() {

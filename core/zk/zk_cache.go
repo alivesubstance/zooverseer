@@ -26,9 +26,10 @@ type CachingRepository struct {
 }
 
 func init() {
-	stats := goCache.Stats{}
+	stats := &goCache.Stats{}
 	cache = goCache.New(goCache.WithExpireAfterAccess(core.ZkCacheExpireAfterAccessMinutes * time.Minute))
-	cache.Stats(&stats)
+	// TODO looks like stats doesn't collect numbers
+	cache.Stats(stats)
 
 	go func() {
 		time.Sleep(core.ZkCacheStatsPeriodMinutes * time.Minute)
@@ -36,7 +37,7 @@ func init() {
 	}()
 }
 
-func (c *CachingRepository) GetRootNodeChildren(connInfo *core.JsonConnInfo) ([]*Node, error) {
+func (c *CachingRepository) GetRootNodeChildren(connInfo *core.ConnInfo) ([]*Node, error) {
 	var err error
 	var node Node
 
@@ -56,7 +57,7 @@ func (c *CachingRepository) GetRootNodeChildren(connInfo *core.JsonConnInfo) ([]
 	return children.([]*Node), nil
 }
 
-func (c *CachingRepository) Get(path string, connInfo *core.JsonConnInfo) (*Node, error) {
+func (c *CachingRepository) Get(path string, connInfo *core.ConnInfo) (*Node, error) {
 	var err error
 	node, _ := cache.GetIfPresent(path)
 	if node == nil {
@@ -73,7 +74,7 @@ func (c *CachingRepository) Get(path string, connInfo *core.JsonConnInfo) (*Node
 	return node.(*Node), err
 }
 
-func (c *CachingRepository) GetMeta(path string, connInfo *core.JsonConnInfo) (*goZk.Stat, error) {
+func (c *CachingRepository) GetMeta(path string, connInfo *core.ConnInfo) (*goZk.Stat, error) {
 	var err error
 	var meta *goZk.Stat
 	node, _ := cache.GetIfPresent(path)
@@ -93,7 +94,7 @@ func (c *CachingRepository) GetMeta(path string, connInfo *core.JsonConnInfo) (*
 	return meta, err
 }
 
-func (c *CachingRepository) GetValue(path string, connInfo *core.JsonConnInfo) (*Node, error) {
+func (c *CachingRepository) GetValue(path string, connInfo *core.ConnInfo) (*Node, error) {
 	var err error
 	node, _ := cache.GetIfPresent(path)
 	if node == nil {
@@ -118,7 +119,7 @@ func (c *CachingRepository) GetValue(path string, connInfo *core.JsonConnInfo) (
 	return node.(*Node), err
 }
 
-func (c *CachingRepository) GetChildren(path string, connInfo *core.JsonConnInfo) ([]*Node, error) {
+func (c *CachingRepository) GetChildren(path string, connInfo *core.ConnInfo) ([]*Node, error) {
 	var err error
 	node, _ := cache.GetIfPresent(path)
 	if node == nil {

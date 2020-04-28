@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-var connInfo = &core.JsonConnInfo{
+var connInfo = &core.ConnInfo{
 	Host:     "10.1.1.112",
 	Port:     2181,
 	User:     "zookeeper",
@@ -73,7 +73,7 @@ func TestGetChildren(t *testing.T) {
 	}
 }
 
-func exists(connInfo *core.JsonConnInfo, path string) {
+func exists(connInfo *core.ConnInfo, path string) {
 	stat, _ := ZkRepo.GetMeta(path, connInfo)
 	log.Infof("Path %s has children: %v", path, stat.NumChildren)
 }

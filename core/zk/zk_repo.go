@@ -5,6 +5,7 @@ import (
 	"github.com/alivesubstance/zooverseer/core"
 	"github.com/alivesubstance/zooverseer/util"
 	"github.com/avast/retry-go"
+	"github.com/pkg/errors"
 	zkGo "github.com/samuel/go-zookeeper/zk"
 	log "github.com/sirupsen/logrus"
 	gopath "path"
@@ -31,19 +32,19 @@ var retryOptions = []retry.Option{
 
 //TODO measure timings for each operation
 type Accessor interface {
-	Get(path string, connInfo *core.JsonConnInfo) (*Node, error)
-	GetMeta(path string, connInfo *core.JsonConnInfo) (*zkGo.Stat, error)
+	Get(path string, connInfo *core.ConnInfo) (*Node, error)
+	GetMeta(path string, connInfo *core.ConnInfo) (*zkGo.Stat, error)
 	// Returns node value and metadata
-	GetValue(path string, connInfo *core.JsonConnInfo) (*Node, error)
-	GetChildren(path string, connInfo *core.JsonConnInfo) ([]*Node, error)
-	GetRootNodeChildren(connInfo *core.JsonConnInfo) ([]*Node, error)
+	GetValue(path string, connInfo *core.ConnInfo) (*Node, error)
+	GetChildren(path string, connInfo *core.ConnInfo) ([]*Node, error)
+	GetRootNodeChildren(connInfo *core.ConnInfo) ([]*Node, error)
 }
 
 type Repository struct {
 	Accessor
 }
 
-func (repo *Repository) GetRootNodeChildren(connInfo *core.JsonConnInfo) ([]*Node, error) {
+func (repo *Repository) GetRootNodeChildren(connInfo *core.ConnInfo) ([]*Node, error) {
 	absolutePathCreator := func(path string, childName string) string {
 		return fmt.Sprintf("/%s", childName)
 	}
@@ -51,7 +52,7 @@ func (repo *Repository) GetRootNodeChildren(connInfo *core.JsonConnInfo) ([]*Nod
 	return doGetChildren(nil, core.NodeRootName, connInfo, absolutePathCreator)
 }
 
-func (repo *Repository) Get(path string, connInfo *core.JsonConnInfo) (*Node, error) {
+func (repo *Repository) Get(path string, connInfo *core.ConnInfo) (*Node, error) {
 	log.Info("Get data for " + path)
 
 	node, err := repo.GetValue(path, connInfo)
@@ -70,7 +71,7 @@ func (repo *Repository) Get(path string, connInfo *core.JsonConnInfo) (*Node, er
 	return node, nil
 }
 
-func (repo *Repository) GetMeta(path string, connInfo *core.JsonConnInfo) (*zkGo.Stat, error) {
+func (repo *Repository) GetMeta(path string, connInfo *core.ConnInfo) (*zkGo.Stat, error) {
 	conn, err := getConn(connInfo)
 	if err != nil {
 		log.WithError(err).Errorf("Failed to check existing for %s", path)
@@ -92,7 +93,7 @@ func (repo *Repository) GetMeta(path string, connInfo *core.JsonConnInfo) (*zkGo
 	return meta, err
 }
 
-func (repo *Repository) GetValue(path string, connInfo *core.JsonConnInfo) (*Node, error) {
+func (repo *Repository) GetValue(path string, connInfo *core.ConnInfo) (*Node, error) {
 	log.Debug("Looking for value for " + path)
 
 	conn, err := getConn(connInfo)
@@ -125,7 +126,7 @@ func (repo *Repository) GetValue(path string, connInfo *core.JsonConnInfo) (*Nod
 	return node, nil
 }
 
-func (repo *Repository) GetChildren(path string, connInfo *core.JsonConnInfo) ([]*Node, error) {
+func (repo *Repository) GetChildren(path string, connInfo *core.ConnInfo) ([]*Node, error) {
 	absolutePathCreator := func(path string, childName string) string {
 		return fmt.Sprintf("%s/%s", path, childName)
 	}
@@ -133,7 +134,7 @@ func (repo *Repository) GetChildren(path string, connInfo *core.JsonConnInfo) ([
 }
 
 func doGetChildren(
-	zkRepo *Repository, path string, connInfo *core.JsonConnInfo, absolutePathCreator func(path string, childName string) string,
+	zkRepo *Repository, path string, connInfo *core.ConnInfo, absolutePathCreator func(path string, childName string) string,
 ) ([]*Node, error) {
 	log.Tracef("Looking for children for %s", path)
 
@@ -165,7 +166,7 @@ func doGetChildren(
 func getChildrenMeta(
 	zkRepo *Repository,
 	path string,
-	connInfo *core.JsonConnInfo,
+	connInfo *core.ConnInfo,
 	absolutePathCreator func(path string, childName string) string,
 	childrenNames []string,
 ) ([]*Node, error) {
@@ -174,7 +175,7 @@ func getChildrenMeta(
 	nodes := make([]*Node, len(childrenNames))
 	for i, childName := range childrenNames {
 		wg.Add(1)
-		go func(idx int, path string, childName string, connInfo *core.JsonConnInfo) {
+		go func(idx int, path string, childName string, connInfo *core.ConnInfo) {
 			defer wg.Done()
 
 			absolutePath := absolutePathCreator(path, childName)
@@ -209,7 +210,7 @@ func sortNodes(nodes []*Node) []*Node {
 	return nodes
 }
 
-func getConn(connInfo *core.JsonConnInfo) (*zkGo.Conn, error) {
+func getConn(connInfo *core.ConnInfo) (*zkGo.Conn, error) {
 	//todo stupid cache doesn't lock loader function when call it after it didn't find entry it cache
 	connCreateLock.Lock()
 	defer connCreateLock.Unlock()
@@ -218,8 +219,7 @@ func getConn(connInfo *core.JsonConnInfo) (*zkGo.Conn, error) {
 	connInfoValue := *connInfo
 	conn, err := ConnCache.Get(connInfoValue)
 	if err != nil {
-		log.WithError(err).Errorf("Failed to get connection for %s", connInfo.String())
-		return nil, err
+		return nil, errors.Wrapf(err, "Failed to get connection for %s", connInfo.String())
 	}
 
 	return conn.(*zkGo.Conn), nil
