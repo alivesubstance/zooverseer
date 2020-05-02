@@ -19,7 +19,8 @@ import (
 var (
 	NodeTreeStore    *gtk.TreeStore
 	ZkPathByTreePath = make(map[string]string)
-	ZkRepo           = zk.CachingRepository{}
+	ZkCachingRepo    = zk.CachingRepository{}
+	ZkRepo           = zk.Repository{}
 )
 
 func InitNodeTree() {
@@ -46,12 +47,12 @@ func InitNodeTree() {
 
 func ClearNodeTree() {
 	NodeTreeStore.Clear()
-	ZkRepo.InvalidateAll()
+	ZkCachingRepo.InvalidateAll()
 	ZkPathByTreePath = make(map[string]string)
 }
 
 func ShowTreeRootNodes() error {
-	rootChildren, err := ZkRepo.GetRootNodeChildren(GetSelectedConn())
+	rootChildren, err := ZkCachingRepo.GetRootNodeChildren(GetSelectedConn())
 	if err == nil {
 		for _, rootChild := range rootChildren {
 			addSubRow(nil, rootChild)
@@ -77,7 +78,7 @@ func onTestExpandRow(treeView *gtk.TreeView, parentIter *gtk.TreeIter, treePath 
 	log.Debugf("Add %s children", parentGoValue)
 
 	zkPath := ZkPathByTreePath[treePath.String()]
-	children, err := ZkRepo.GetChildren(zkPath, GetSelectedConn())
+	children, err := ZkCachingRepo.GetChildren(zkPath, GetSelectedConn())
 	if err != nil {
 		//TODO show error dialog
 		log.WithError(err).Errorf("Failed to get data and children for %s", zkPath)

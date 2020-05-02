@@ -14,15 +14,16 @@ const (
 const (
 	ConnCacheExpireAfterAccessMinutes = 20
 	ConnCacheStatsPeriodMinutes       = 5
-	ConnRetryAttempts                 = 1
+	ConnRetryAttempts                 = 3
 	ConnRetryDelay                    = 1000
+	ConnTimeoutSec                    = 5
 )
 
 // Zk operations
 const (
 	ZkCacheExpireAfterAccessMinutes = 10
 	ZkCacheStatsPeriodMinutes       = 5
-	ZkOpRetryAttempts               = 1
+	ZkOpRetryAttempts               = 3
 	ZkOpRetryDelay                  = 500
 )
 

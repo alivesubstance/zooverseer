@@ -46,10 +46,13 @@ func connect(connInfo core.ConnInfo) (*goZk.Conn, error) {
 	goZk.DefaultLogger = &infoLogger{}
 
 	servers := getServers(connInfo)
-	//TODO support connection timeout
-	conn, _, err := goZk.Connect(servers, time.Second)
+	conn, _, err := goZk.Connect(servers, core.ConnTimeoutSec*time.Second)
 	if err != nil {
-		return nil, errors.Wrapf(err, "Failed to connect to %s\n", servers)
+		return nil, err
+	}
+	err = validateConn(conn, servers)
+	if err != nil {
+		return nil, err
 	}
 
 	if len(connInfo.User) != 0 && len(connInfo.Password) != 0 {
@@ -61,6 +64,19 @@ func connect(connInfo core.ConnInfo) (*goZk.Conn, error) {
 	}
 
 	return conn, err
+}
+
+func validateConn(conn *goZk.Conn, servers []string) error {
+	data, _, err := conn.Get(core.NodeRootName)
+	if data != nil && err == nil {
+		return nil
+	}
+
+	// invalid connection should be closed. there is inner go routine
+	// that try reconnect indefinitely. it happens f.i. in case of failed dns resolving.
+	// see github.com/samuel/go-zookeeper/zk/conn.go:361
+	conn.Close()
+	return errors.Wrapf(err, "Failed to connect to %s", servers)
 }
 
 func getServers(connInfo core.ConnInfo) []string {

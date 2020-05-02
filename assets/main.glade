@@ -44,7 +44,7 @@
             <property name="can_focus">False</property>
             <property name="layout_style">end</property>
             <child>
-              <object class="GtkButton" id="conTestBtn">
+              <object class="GtkButton" id="connTestBtn">
                 <property name="label" translatable="yes">Test</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
@@ -213,6 +213,8 @@
                 <property name="width_request">200</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
+                <property name="visibility">False</property>
+                <property name="invisible_char">*</property>
                 <property name="input_purpose">password</property>
               </object>
               <packing>

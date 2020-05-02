@@ -39,6 +39,10 @@ func createInfoDialog(parent gtk.IWindow, text string) *gtk.MessageDialog {
 	return gtk.MessageDialogNew(parent, gtk.DIALOG_MODAL, gtk.MESSAGE_INFO, gtk.BUTTONS_OK, text)
 }
 
+func createWarnDialog(parent gtk.IWindow, text string) *gtk.MessageDialog {
+	return gtk.MessageDialogNew(parent, gtk.DIALOG_MODAL, gtk.MESSAGE_WARNING, gtk.BUTTONS_OK, text)
+}
+
 func createErrorDialog(parent gtk.IWindow, text string) *gtk.MessageDialog {
 	return gtk.MessageDialogNew(parent, gtk.DIALOG_MODAL, gtk.MESSAGE_ERROR, gtk.BUTTONS_OK, text)
 }
@@ -62,7 +66,7 @@ func getTreeSelectedValue(treeSelection *gtk.TreeSelection) *zk.Node {
 		zkPath := ZkPathByTreePath[treePath.String()]
 		log.Tracef("Selected tree path: %s", zkPath)
 
-		node, _ := ZkRepo.GetValue(zkPath, GetSelectedConn())
+		node, _ := ZkCachingRepo.GetValue(zkPath, GetSelectedConn())
 		if node == nil {
 			log.Errorf("Value nil for %s", zkPath)
 		}

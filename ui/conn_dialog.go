@@ -8,8 +8,10 @@ import (
 	"fmt"
 	"github.com/alivesubstance/zooverseer/core"
 	"github.com/alivesubstance/zooverseer/util"
+	"github.com/avast/retry-go"
 	"github.com/gotk3/gotk3/gdk"
 	"github.com/gotk3/gotk3/gtk"
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"strconv"
 )
@@ -21,11 +23,11 @@ const (
 
 var ConnRepo core.ConnRepository = &core.JsonConnRepository{}
 
-var (
-	lastBtnClickTime       = int64(0)
-	lastSelectedConnName   string
-	DoubleClickedBtnPeriod = int64(500 * 1e6)
-)
+//var (
+//	lastBtnClickTime       = int64(0)
+//	lastSelectedConnName   string
+//	DoubleClickedBtnPeriod = int64(500 * 1e6)
+//)
 
 func InitConnDialog(mainWindow *gtk.Window) *gtk.Dialog {
 	getObject("connPortEntry").(*gtk.Entry).SetWidthChars(10)
@@ -44,6 +46,9 @@ func InitConnDialog(mainWindow *gtk.Window) *gtk.Dialog {
 
 	connDeleteBtn := getObject("connDeleteBtn").(*gtk.Button)
 	connDeleteBtn.Connect("clicked", onConnDeleteBtnClicked)
+
+	connTestBtn := getObject("connTestBtn").(*gtk.Button)
+	connTestBtn.Connect("clicked", onConnTestBtnClicked)
 
 	connInfos := ConnRepo.FindAll()
 	if len(connInfos) == 0 {
@@ -92,10 +97,6 @@ func GetSelectedConn() *core.ConnInfo {
 	//}
 	connList := getConnListBox()
 	connName := getSelectedConnName(connList)
-	if len(connName) == 0 {
-		return nil
-	}
-
 	return ConnRepo.Find(connName)
 }
 
@@ -107,7 +108,7 @@ func getSelectedConnName(connList *gtk.ListBox) string {
 
 	child, err := selectedRow.GetChild()
 	if err != nil {
-		log.WithError(err).Errorf("Failed to get list box selected child")
+		log.WithError(err).Panicf("Failed to get list box selected child")
 	}
 
 	connName, _ := child.GetTooltipText()
@@ -137,7 +138,7 @@ func drawConnInfo(connInfo *core.ConnInfo, withMandatory bool) {
 
 	if len(connInfo.User) != 0 && len(connInfo.Password) != 0 {
 		getObject("connUserEntry").(*gtk.Entry).SetText(connInfo.User)
-		getObject("connPwdEntry").(*gtk.Entry).SetText("******")
+		getObject("connPwdEntry").(*gtk.Entry).SetText(connInfo.Password)
 	} else {
 		getObject("connUserEntry").(*gtk.Entry).SetText("")
 		getObject("connPwdEntry").(*gtk.Entry).SetText("")
@@ -165,7 +166,7 @@ func initConnListBox() {
 func addConnListBoxItem(conn *core.ConnInfo) {
 	label, err := gtk.LabelNew(conn.Name)
 	util.CheckError(err)
-	// set tooltip to hold connection name and to be used further
+	// set tooltip to hold connection name for further using
 	// to get connection settings by name.
 	// looks like go gtk implementation doesn't have separate method
 	// to get label text and tooltip is the only way I've found to fetch
@@ -220,6 +221,15 @@ func onConnAddBtnClicked() {
 }
 
 func onConnSaveBtnClicked() {
+	connInfo := validateAndGetConn()
+	if connInfo == nil {
+		return
+	}
+	ConnRepo.Upsert(connInfo)
+	initConnListBox()
+}
+
+func validateAndGetConn() *core.ConnInfo {
 	connNameEntry := getObject("connNameEntry").(*gtk.Entry)
 	connName, _ := connNameEntry.GetText()
 	if len(connName) > 0 && isConnExists(connName) {
@@ -230,7 +240,7 @@ func onConnSaveBtnClicked() {
 		dialog.Run()
 		dialog.Hide()
 
-		return
+		return nil
 	}
 	connHostEntry := getObject("connHostEntry").(*gtk.Entry)
 	connHost, _ := connHostEntry.GetText()
@@ -246,7 +256,7 @@ func onConnSaveBtnClicked() {
 		dialog.Run()
 		dialog.Hide()
 
-		return
+		return nil
 	}
 
 	connUserEntry := getObject("connUserEntry").(*gtk.Entry)
@@ -268,7 +278,7 @@ func onConnSaveBtnClicked() {
 		context, _ = connPwdEntry.GetStyleContext()
 		context.AddClass(CssClassMandatory)
 
-		return
+		return nil
 	}
 
 	context, _ := connNameEntry.GetStyleContext()
@@ -288,7 +298,7 @@ func onConnSaveBtnClicked() {
 		)
 		dialog.Run()
 		dialog.Hide()
-		return
+		return nil
 	}
 
 	context, _ = connPortEntry.GetStyleContext()
@@ -301,8 +311,7 @@ func onConnSaveBtnClicked() {
 		User:     connUser,
 		Password: connPwd,
 	}
-	ConnRepo.Upsert(connInfo)
-	initConnListBox()
+	return connInfo
 }
 
 func isConnExists(connName string) bool {
@@ -351,6 +360,41 @@ func onConnDialogCancelBtnClicked(connDialog *gtk.Dialog) func() {
 	return func() {
 		connDialog.Hide()
 	}
+}
+
+func onConnTestBtnClicked() {
+	connInfo := getConnForm()
+	var dialog *gtk.MessageDialog
+
+	_, err := ZkRepo.GetValue(core.NodeRootName, connInfo)
+	if err == nil {
+		dialog = createInfoDialog(getConnDialog(), "Successfully connected to "+connInfo.Name)
+	} else {
+		cause := errors.Cause(err).(retry.Error)
+		wrappedErrors := cause.WrappedErrors()
+		errMsg := wrappedErrors[len(wrappedErrors)-1].Error()
+		dialog = createWarnDialog(getConnDialog(), errMsg)
+	}
+	dialog.Run()
+	dialog.Hide()
+}
+
+func getConnForm() *core.ConnInfo {
+	connName, _ := getObject("connNameEntry").(*gtk.Entry).GetText()
+	connHost, _ := getObject("connHostEntry").(*gtk.Entry).GetText()
+	connPort, _ := getObject("connPortEntry").(*gtk.Entry).GetText()
+	connUser, _ := getObject("connUserEntry").(*gtk.Entry).GetText()
+	connPwd, _ := getObject("connPwdEntry").(*gtk.Entry).GetText()
+
+	connPortInt, _ := strconv.Atoi(connPort)
+	connInfo := &core.ConnInfo{
+		Name:     connName,
+		Host:     connHost,
+		Port:     connPortInt,
+		User:     connUser,
+		Password: connPwd,
+	}
+	return connInfo
 }
 
 func getConnDialog() *gtk.Dialog {
