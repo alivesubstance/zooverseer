@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/alivesubstance/zooverseer/util"
+	"github.com/jinzhu/copier"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"os"
@@ -31,6 +32,16 @@ type ConnInfo struct {
 
 func (c *ConnInfo) String() string {
 	return fmt.Sprintf("%s(%s:%d)", c.Name, c.Host, c.Port)
+}
+
+func (c *ConnInfo) Copy() *ConnInfo {
+	connCopy := &ConnInfo{}
+	err := copier.Copy(&connCopy, c)
+	if err != nil {
+		log.WithError(err).Errorf("Copy")
+	}
+
+	return connCopy
 }
 
 func (c *JsonConnRepository) Upsert(connInfo *ConnInfo) {

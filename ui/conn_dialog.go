@@ -13,6 +13,7 @@ import (
 	"github.com/gotk3/gotk3/gtk"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
+	"sort"
 	"strconv"
 )
 
@@ -125,6 +126,8 @@ func drawConnInfo(connInfo *core.ConnInfo, withMandatory bool) {
 	connPortEntry := getObject("connPortEntry").(*gtk.Entry)
 	if connInfo.Port != 0 {
 		connPortEntry.SetText(fmt.Sprintf("%v", connInfo.Port))
+	} else {
+		connPortEntry.SetText("")
 	}
 
 	if withMandatory {
@@ -157,7 +160,11 @@ func initConnListBox() {
 	children.Foreach(func(item interface{}) {
 		connListBox.Remove(item.(gtk.IWidget))
 	})
-	for _, connInfo := range ConnRepo.FindAll() {
+	connInfos := ConnRepo.FindAll()
+	sort.Slice(connInfos, func(i, j int) bool {
+		return connInfos[i].Name < connInfos[j].Name
+	})
+	for _, connInfo := range connInfos {
 		addConnListBoxItem(connInfo)
 	}
 	connListBox.ShowAll()
@@ -185,7 +192,13 @@ func onConnListBoxRowSelected() {
 		return
 	}
 
+	setConnListBoxBtnsSensitivity(true)
 	drawConnInfo(selectedConn, false)
+}
+
+func setConnListBoxBtnsSensitivity(value bool) {
+	getObject("connCopyBtn").(*gtk.Button).SetSensitive(value)
+	getObject("connDeleteBtn").(*gtk.Button).SetSensitive(value)
 }
 
 // TODO Double click handle has a bug. To reproduce:
@@ -217,6 +230,7 @@ func onConnListBoxRowSelected() {
 
 func onConnAddBtnClicked() {
 	getConnListBox().UnselectAll()
+	setConnListBoxBtnsSensitivity(false)
 	drawConnInfo(&core.ConnInfo{Name: ConnNameDraft}, true)
 }
 
@@ -232,16 +246,7 @@ func onConnSaveBtnClicked() {
 func validateAndGetConn() *core.ConnInfo {
 	connNameEntry := getObject("connNameEntry").(*gtk.Entry)
 	connName, _ := connNameEntry.GetText()
-	if len(connName) > 0 && isConnExists(connName) {
-		dialog := createInfoDialog(
-			getConnDialog(),
-			"Connection name '"+connName+"' is not unique. Please choose another name",
-		)
-		dialog.Run()
-		dialog.Hide()
 
-		return nil
-	}
 	connHostEntry := getObject("connHostEntry").(*gtk.Entry)
 	connHost, _ := connHostEntry.GetText()
 
@@ -325,7 +330,13 @@ func isConnExists(connName string) bool {
 }
 
 func onConnCopyBtnClicked() {
-	log.Print("Conn add btn clicked")
+	connInfo := GetSelectedConn()
+	connInfoCopy := connInfo.Copy()
+	connInfoCopy.Name += " - copy"
+
+	getConnListBox().UnselectAll()
+	setConnListBoxBtnsSensitivity(false)
+	drawConnInfo(connInfoCopy, false)
 }
 
 func onConnDeleteBtnClicked() {
