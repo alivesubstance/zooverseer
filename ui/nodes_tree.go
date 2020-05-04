@@ -12,6 +12,7 @@ import (
 	"github.com/gotk3/gotk3/gdk"
 	"github.com/gotk3/gotk3/glib"
 	"github.com/gotk3/gotk3/gtk"
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"unsafe"
 )
@@ -23,26 +24,24 @@ var (
 	ZkRepo           = zk.Repository{}
 )
 
-func InitNodeTree() {
-	treeView := getObject("nodesTreeView").(*gtk.TreeView)
-	treeView.AppendColumn(createTextColumn("Node", core.NodeColumn))
-	treeView.Connect("test-expand-row", onTestExpandRow)
-	treeView.Connect("button-press-event", onButtonPressEvent)
+func initNodeTree() {
+	nodesTreeView := getNodesTreeView()
+	nodesTreeView.AppendColumn(createTextColumn("Node", core.NodeColumn))
+	nodesTreeView.Connect("test-expand-row", onTestExpandRow)
+	nodesTreeView.Connect("button-press-event", onButtonPressEvent)
 
-	treeSelection, _ := treeView.GetSelection()
-	treeSelection.SetMode(gtk.SELECTION_SINGLE)
-	treeSelection.Connect("changed", onTreeRowSelected)
-
-	nodesTreeView := getObject("nodesTreeView").(*gtk.TreeView)
 	newTreeStore, err := gtk.TreeStoreNew(glib.TYPE_STRING)
 	util.CheckError(err)
 
 	NodeTreeStore = newTreeStore
 	nodesTreeView.SetModel(NodeTreeStore)
 
-	InitContextMenu()
+	treeSelection, _ := nodesTreeView.GetSelection()
+	treeSelection.SetMode(gtk.SELECTION_SINGLE)
+	treeSelection.Connect("changed", onTreeRowSelected)
+
 	//TODO test. remove once conn dialog will be used
-	//ShowTreeRootNodes()
+	ShowTreeRootNodes()
 }
 
 func ClearNodeTree() {
@@ -61,11 +60,38 @@ func ShowTreeRootNodes() error {
 	return err
 }
 
-func onTreeRowSelected(treeSelection *gtk.TreeSelection) {
-	node := getTreeSelectedValue(treeSelection)
-	if node != nil {
-		setNodeValue(node)
+func getTreeSelectedNode(treeSelection *gtk.TreeSelection) (*zk.Node, error) {
+	model, iter, ok := treeSelection.GetSelected()
+	if !ok {
+		return nil, errors.New("Failed to get tree selected")
 	}
+
+	treePath, err := model.(*gtk.TreeModel).GetPath(iter)
+	if err != nil {
+		return nil, errors.Wrapf(err, "Could not get path from model: %s\n", treePath)
+	}
+
+	zkPath := ZkPathByTreePath[treePath.String()]
+	log.Tracef("Selected tree path: %s", zkPath)
+
+	node, err := ZkCachingRepo.GetValue(zkPath, GetSelectedConn())
+	if err != nil {
+		return nil, errors.Wrapf(err, "Value nil for %s", zkPath)
+	}
+	return node, nil
+}
+
+func onTreeRowSelected(treeSelection *gtk.TreeSelection) {
+	node, err := getTreeSelectedNode(treeSelection)
+	if err != nil {
+		log.WithError(err).Error("Failed to get tree selected node")
+		dialog := createWarnDialog(getMainWindow(), "Unable to fetch node value: "+errors.Cause(err).Error())
+		dialog.Run()
+		dialog.Hide()
+		return
+	}
+
+	notebook.showPage(node, getNotebook().GetCurrentPage())
 }
 
 func onTestExpandRow(treeView *gtk.TreeView, parentIter *gtk.TreeIter, treePath *gtk.TreePath) {
@@ -194,4 +220,8 @@ func isMouse2ButtonClicked(e *gdk.Event) bool {
 	event := &gdk.EventKey{Event: e}
 	mouseButton := (*C.GdkEventButton)(unsafe.Pointer(event.Event.GdkEvent)).button
 	return uint(mouseButton) == 3
+}
+
+func getNodesTreeView() *gtk.TreeView {
+	return getObject("nodesTreeView").(*gtk.TreeView)
 }

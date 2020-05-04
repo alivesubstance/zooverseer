@@ -38,6 +38,7 @@ type Accessor interface {
 	GetValue(path string, connInfo *core.ConnInfo) (*Node, error)
 	GetChildren(path string, connInfo *core.ConnInfo) ([]*Node, error)
 	GetRootNodeChildren(connInfo *core.ConnInfo) ([]*Node, error)
+	Save(parent string, child *Node) error
 }
 
 type Repository struct {
@@ -120,6 +121,7 @@ func (repo *Repository) GetValue(path string, connInfo *core.ConnInfo) (*Node, e
 	}
 
 	node := &Node{
+		Name:  gopath.Base(path),
 		Value: util.BytesToString(value),
 		Meta:  meta,
 	}
@@ -132,6 +134,15 @@ func (repo *Repository) GetChildren(path string, connInfo *core.ConnInfo) ([]*No
 	}
 	return doGetChildren(repo, path, connInfo, absolutePathCreator)
 }
+
+//func (repo *Repository) Save(parent string, node *Node, connInfo *core.ConnInfo) error {
+//conn, err := getConn(connInfo)
+//if err != nil {
+//	return err
+//}
+
+//conn.Create(parent + "/" + node.Name, "", zkGo.FlagSequence, )
+//}
 
 func doGetChildren(
 	zkRepo *Repository, path string, connInfo *core.ConnInfo, absolutePathCreator func(path string, childName string) string,

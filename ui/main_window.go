@@ -6,18 +6,19 @@ import (
 )
 
 func InitMainWindow(mainWindow *gtk.Window) {
-	InitNodeTree()
+	// todo for test purpose only
+	mainWindow.Move(0, 0)
 
-	initMenuSignals()
+	initNodeTree()
+	notebook.init()
+	initMainMenu()
+	initContextMenu()
 
 	mainWindow.SetTitle("Zooverseer")
 	mainWindow.ShowAll()
-
-	// todo for test purpose only
-	mainWindow.Move(1500, 0)
 }
 
-func initMenuSignals() {
+func initMainMenu() {
 	menuConnect := getObject("menuConnect").(*gtk.MenuItem)
 	menuConnect.Connect("activate", func() {
 		connDialog := getObject("connDialog").(*gtk.Dialog)

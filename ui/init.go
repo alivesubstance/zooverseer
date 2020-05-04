@@ -2,7 +2,6 @@ package ui
 
 import (
 	"github.com/alivesubstance/zooverseer/core"
-	"github.com/alivesubstance/zooverseer/core/zk"
 	"github.com/alivesubstance/zooverseer/util"
 	"github.com/gotk3/gotk3/glib"
 	"github.com/gotk3/gotk3/gtk"
@@ -22,13 +21,17 @@ func OnAppActivate(app *gtk.Application) func() {
 
 		Builder = builder
 
-		mainWindow := getObject("mainWindow").(*gtk.Window)
+		mainWindow := getMainWindow()
 		InitMainWindow(mainWindow)
 
-		InitConnDialog(mainWindow)
+		//InitConnDialog(mainWindow)
 
 		app.AddWindow(mainWindow)
 	}
+}
+
+func getMainWindow() *gtk.Window {
+	return getObject("mainWindow").(*gtk.Window)
 }
 
 func createConfirmDialog(parent gtk.IWindow, text string) *gtk.MessageDialog {
@@ -43,6 +46,12 @@ func createWarnDialog(parent gtk.IWindow, text string) *gtk.MessageDialog {
 	return gtk.MessageDialogNew(parent, gtk.DIALOG_MODAL, gtk.MESSAGE_WARNING, gtk.BUTTONS_OK, text)
 }
 
+func createAndRunWarnDialog(parent gtk.IWindow, text string) {
+	dlg := gtk.MessageDialogNew(parent, gtk.DIALOG_MODAL, gtk.MESSAGE_WARNING, gtk.BUTTONS_OK, text)
+	dlg.Run()
+	dlg.Hide()
+}
+
 func createErrorDialog(parent gtk.IWindow, text string) *gtk.MessageDialog {
 	return gtk.MessageDialogNew(parent, gtk.DIALOG_MODAL, gtk.MESSAGE_ERROR, gtk.BUTTONS_OK, text)
 }
@@ -52,26 +61,4 @@ func getObject(objectName string) glib.IObject {
 	util.CheckError(err)
 
 	return object
-}
-
-func getTreeSelectedValue(treeSelection *gtk.TreeSelection) *zk.Node {
-	model, iter, ok := treeSelection.GetSelected()
-	if ok {
-		treePath, err := model.(*gtk.TreeModel).GetPath(iter)
-		if err != nil {
-			log.WithError(err).Errorf("Could not get path from model: %s\n", treePath)
-			return nil
-		}
-
-		zkPath := ZkPathByTreePath[treePath.String()]
-		log.Tracef("Selected tree path: %s", zkPath)
-
-		node, _ := ZkCachingRepo.GetValue(zkPath, GetSelectedConn())
-		if node == nil {
-			log.Errorf("Value nil for %s", zkPath)
-		}
-		return node
-	}
-
-	return nil
 }

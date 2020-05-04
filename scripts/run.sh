@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# see https://wiki.archlinux.de/title/GNOME#Zugangshilfen
+export NO_AT_BRIDGE=1
+
 #PATH="${PATH}:./bin"
 ASSETS_DIR="../assets"
 #BIN_DIR="../bin"

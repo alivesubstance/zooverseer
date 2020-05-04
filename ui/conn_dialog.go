@@ -67,6 +67,21 @@ func InitConnDialog(mainWindow *gtk.Window) *gtk.Dialog {
 	return connDialog
 }
 
+//TODO cache it for session
+func GetSelectedConn() *core.ConnInfo {
+	//TODO leave it for test
+	return &core.ConnInfo{
+		Name:     "localhost",
+		Host:     "127.0.0.1",
+		Port:     2181,
+		User:     "zookeeper",
+		Password: "z00k33p3r",
+	}
+	//connList := getConnListBox()
+	//connName := getSelectedConnName(connList)
+	//return ConnRepo.Find(connName)
+}
+
 func initCssProvider() {
 	providerNew, err := gtk.CssProviderNew()
 	if err != nil {
@@ -84,21 +99,6 @@ func initCssProvider() {
 	}
 
 	gtk.AddProviderForScreen(defaultScreen, providerNew, gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
-}
-
-//TODO cache it for session
-func GetSelectedConn() *core.ConnInfo {
-	//TODO leave it for test
-	//return &core.ConnInfo{
-	//	Name:     "kelp-nightly",
-	//	Host:     "172.0.30.173",
-	//	Port:     32050,
-	//	User:     "zookeeper",
-	//	Password: "z00k33p3r",
-	//}
-	connList := getConnListBox()
-	connName := getSelectedConnName(connList)
-	return ConnRepo.Find(connName)
 }
 
 func getSelectedConnName(connList *gtk.ListBox) string {
