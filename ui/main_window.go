@@ -5,14 +5,16 @@ import (
 	"github.com/gotk3/gotk3/gtk"
 )
 
+var createNodeDlg *CreateNodeDlg
+
 func InitMainWindow(mainWindow *gtk.Window) {
-	// todo for test purpose only
-	mainWindow.Move(0, 0)
+	createNodeDlg = NewCreateNodeDlg(mainWindow)
 
 	initNodeTree()
 	notebook.init()
 	initMainMenu()
 	initContextMenu()
+	initNodeActionSignal()
 
 	mainWindow.SetTitle("Zooverseer")
 	mainWindow.ShowAll()
@@ -24,4 +26,12 @@ func initMainMenu() {
 		connDialog := getObject("connDialog").(*gtk.Dialog)
 		connDialog.Show()
 	})
+}
+
+func initNodeActionSignal() {
+	getObject("nodeCreateBtn").(*gtk.Button).Connect("clicked", onNodeCreateBtnClicked)
+}
+
+func onNodeCreateBtnClicked() {
+	createNodeDlg.showAll()
 }

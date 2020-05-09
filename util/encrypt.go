@@ -1,4 +1,4 @@
-package core
+package util
 
 import (
 	"crypto/aes"
@@ -6,21 +6,20 @@ import (
 	"crypto/md5"
 	"crypto/rand"
 	"encoding/hex"
-	"github.com/alivesubstance/zooverseer/util"
 )
 
 const salt = "8d84b9363adf51458a3e67672176bcfd"
 
 func Encrypt(passphrase string) string {
 	block, err := aes.NewCipher([]byte(createHash(salt)))
-	util.CheckError(err)
+	CheckError(err)
 
 	gcm, err := cipher.NewGCM(block)
-	util.CheckError(err)
+	CheckError(err)
 
 	nonce := make([]byte, gcm.NonceSize())
 	_, err = rand.Read(nonce)
-	util.CheckError(err)
+	CheckError(err)
 
 	ciphertext := gcm.Seal(nonce, nonce, []byte(passphrase), nil)
 
@@ -38,7 +37,7 @@ func Decrypt(cipherText string) string {
 	}
 
 	cipherBytes, err := hex.DecodeString(cipherText)
-	util.CheckError(err)
+	CheckError(err)
 
 	plaintext, err := gcm.Open(
 		nil,

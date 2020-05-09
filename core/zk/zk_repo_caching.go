@@ -37,31 +37,30 @@ func init() {
 	}()
 }
 
-func (c *CachingRepository) GetRootNodeChildren(connInfo *core.ConnInfo) ([]*Node, error) {
-	var err error
-	var node Node
-
-	children, _ := cache.GetIfPresent(core.NodeRootName)
-	if children == nil {
-		children, err = repository.GetRootNodeChildren(connInfo)
-		if children != nil {
-			node = Node{Name: core.NodeRootName, Children: children.([]*Node)}
-			cache.Put(core.NodeRootName, &node)
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	return children.([]*Node), nil
+func (c *CachingRepository) SetConnInfo(connInfo *core.ConnInfo) {
+	repository.SetConnInfo(connInfo)
 }
 
-func (c *CachingRepository) Get(path string, connInfo *core.ConnInfo) (*Node, error) {
+func (c *CachingRepository) GetRootNode() (*Node, error) {
+	var err error
+
+	rootNode, _ := cache.GetIfPresent(core.NodeRootName)
+	if rootNode == nil {
+		rootNode, err = repository.GetRootNode()
+		if err != nil {
+			return nil, err
+		}
+		cache.Put(core.NodeRootName, rootNode)
+	}
+
+	return rootNode.(*Node), nil
+}
+
+func (c *CachingRepository) Get(path string) (*Node, error) {
 	var err error
 	node, _ := cache.GetIfPresent(path)
 	if node == nil {
-		node, err = repository.Get(path, connInfo)
+		node, err = repository.Get(path)
 		if node != nil {
 			cache.Put(path, node)
 		}
@@ -74,17 +73,17 @@ func (c *CachingRepository) Get(path string, connInfo *core.ConnInfo) (*Node, er
 	return node.(*Node), err
 }
 
-func (c *CachingRepository) GetMeta(path string, connInfo *core.ConnInfo) (*goZk.Stat, error) {
+func (c *CachingRepository) GetMeta(path string) (*goZk.Stat, error) {
 	var err error
 	var meta *goZk.Stat
 	node, _ := cache.GetIfPresent(path)
 	if node == nil {
-		meta, err = repository.GetMeta(path, connInfo)
+		meta, err = repository.GetMeta(path)
 		if meta != nil {
 			cache.Put(path, &Node{Meta: meta})
 		}
 	} else if node.(*Node).Meta == nil {
-		meta, err = repository.GetMeta(path, connInfo)
+		meta, err = repository.GetMeta(path)
 		if meta != nil {
 			node.(*Node).Meta = meta
 			cache.Put(path, node)
@@ -94,16 +93,16 @@ func (c *CachingRepository) GetMeta(path string, connInfo *core.ConnInfo) (*goZk
 	return meta, err
 }
 
-func (c *CachingRepository) GetValue(path string, connInfo *core.ConnInfo) (*Node, error) {
+func (c *CachingRepository) GetValue(path string) (*Node, error) {
 	var err error
 	node, _ := cache.GetIfPresent(path)
 	if node == nil {
-		node, err = repository.GetValue(path, connInfo)
+		node, err = repository.GetValue(path)
 		if node != nil {
 			cache.Put(path, node)
 		}
 	} else if len(node.(*Node).Value) == 0 {
-		valueNode, valueNodeErr := repository.GetValue(path, connInfo)
+		valueNode, valueNodeErr := repository.GetValue(path)
 		err = valueNodeErr
 		if valueNode != nil {
 			node.(*Node).Value = valueNode.Value
@@ -119,18 +118,18 @@ func (c *CachingRepository) GetValue(path string, connInfo *core.ConnInfo) (*Nod
 	return node.(*Node), err
 }
 
-func (c *CachingRepository) GetChildren(path string, connInfo *core.ConnInfo) ([]*Node, error) {
+func (c *CachingRepository) GetChildren(path string) ([]*Node, error) {
 	var err error
 	node, _ := cache.GetIfPresent(path)
 	if node == nil {
-		children, childrenErr := repository.GetChildren(path, connInfo)
+		children, childrenErr := repository.GetChildren(path)
 		err = childrenErr
 		if children != nil {
 			node = &Node{Children: children}
 			cache.Put(path, node)
 		}
 	} else if node.(*Node).Children == nil {
-		children, childrenErr := repository.GetChildren(path, connInfo)
+		children, childrenErr := repository.GetChildren(path)
 		err = childrenErr
 		if children != nil {
 			node.(*Node).Children = children
@@ -151,4 +150,8 @@ func (c *CachingRepository) Invalidate(path string) {
 
 func (c *CachingRepository) InvalidateAll() {
 	cache.InvalidateAll()
+}
+
+func (r *CachingRepository) Save(parentPath string, childName string, acl []goZk.ACL) error {
+	return repository.Save(parentPath, childName, acl)
 }

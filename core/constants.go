@@ -1,5 +1,7 @@
 package core
 
+import goZk "github.com/samuel/go-zookeeper/zk"
+
 const AppId = "com.github.alivesubstance.zooverseer"
 
 // todo change to relative path
@@ -33,6 +35,8 @@ const (
 	NodeRootName = "/"
 	NodeDummy    = "__dummy" // Dummy node to be used as real node children placeholder
 )
+
+var AclWorldAnyone = goZk.WorldACL(goZk.PermAll)
 
 //TODO tested and worked with relative path. Use run.sh to build and run app
 //const (

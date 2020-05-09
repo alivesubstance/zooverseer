@@ -22,6 +22,10 @@ func BytesToString(data []byte) string {
 	return string(data[:])
 }
 
+func StringToBytes(data string) []byte {
+	return []byte(data)
+}
+
 func Int64ToStr(value int64) string {
 	return strconv.FormatInt(value, 10)
 }

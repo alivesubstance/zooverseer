@@ -4,7 +4,6 @@ import (
 	zk2 "github.com/alivesubstance/zooverseer/core/zk"
 	"github.com/alivesubstance/zooverseer/util"
 	"github.com/gotk3/gotk3/gtk"
-	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -28,8 +27,6 @@ func (n *Notebook) init() {
 }
 
 func (n *Notebook) onNotebookSwitchPage(notebook *gtk.Notebook, widget *gtk.Widget, page int) {
-	log.Tracef("Switch to page %v", page)
-
 	treeSelection, err := getNodesTreeView().GetSelection()
 	if err != nil {
 		createAndRunWarnDialog(getMainWindow(), "Unable to get tree selection: "+err.Error())
@@ -46,8 +43,6 @@ func (n *Notebook) onNotebookSwitchPage(notebook *gtk.Notebook, widget *gtk.Widg
 }
 
 func (n *Notebook) showPage(node *zk2.Node, page int) {
-	log.Tracef("Show page %v for %s", page, node.Name)
-
 	switch page {
 	case PageData:
 		n.showPageData(node)

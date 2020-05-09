@@ -2,6 +2,7 @@ package ui
 
 import (
 	"github.com/alivesubstance/zooverseer/core"
+	"github.com/alivesubstance/zooverseer/core/zk"
 	"github.com/alivesubstance/zooverseer/util"
 	"github.com/gotk3/gotk3/glib"
 	"github.com/gotk3/gotk3/gtk"
@@ -10,7 +11,8 @@ import (
 
 // there are rumors that global variable is evil. why?
 var (
-	Builder *gtk.Builder
+	Builder       *gtk.Builder
+	ZkCachingRepo = zk.CachingRepository{}
 )
 
 func OnAppActivate(app *gtk.Application) func() {
@@ -24,7 +26,7 @@ func OnAppActivate(app *gtk.Application) func() {
 		mainWindow := getMainWindow()
 		InitMainWindow(mainWindow)
 
-		//InitConnDialog(mainWindow)
+		InitConnDialog(mainWindow)
 
 		app.AddWindow(mainWindow)
 	}

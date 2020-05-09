@@ -11,8 +11,8 @@ func initContextMenu() {
 
 	})
 
-	getObject("newNodeDlgOkBtn").(*gtk.Button).Connect("activate", onNewNodeDlgOkBtn)
-	getObject("newNodeDlgCancelBtn").(*gtk.Button).Connect("activate", onNewNodeDlgCancelBtn)
+	getObject("createNodeDlgOkBtn").(*gtk.Button).Connect("activate", onNewNodeDlgOkBtn)
+	getObject("createNodeDlgCancelBtn").(*gtk.Button).Connect("activate", onNewNodeDlgCancelBtn)
 
 	getObject("popupMenuAdd").(*gtk.MenuItem).Connect("activate", onAddNewNode)
 	getObject("popupMenuCopyValue").(*gtk.MenuItem).Connect("activate", onCopyValue)

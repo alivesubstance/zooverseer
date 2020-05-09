@@ -33,7 +33,7 @@ var ConnRepo core.ConnRepository = &core.JsonConnRepository{}
 func InitConnDialog(mainWindow *gtk.Window) *gtk.Dialog {
 	getObject("connPortEntry").(*gtk.Entry).SetWidthChars(10)
 
-	connDialog := getObject("connDialog").(*gtk.Dialog)
+	connDialog := getConnDialog()
 	connDialog.SetTransientFor(mainWindow)
 	connDialog.SetPosition(gtk.WIN_POS_CENTER_ON_PARENT)
 
@@ -58,7 +58,7 @@ func InitConnDialog(mainWindow *gtk.Window) *gtk.Dialog {
 		connDeleteBtn.SetSensitive(false)
 	}
 
-	getObject("connBtn").(*gtk.Button).Connect("clicked", onConnBtnClicked(connDialog))
+	getObject("connBtn").(*gtk.Button).Connect("clicked", onConnBtnClicked)
 
 	initConnListBox()
 	initCssProvider()
@@ -68,15 +68,9 @@ func InitConnDialog(mainWindow *gtk.Window) *gtk.Dialog {
 }
 
 //TODO cache it for session
-func GetSelectedConn() *core.ConnInfo {
+func getSelectedConn() *core.ConnInfo {
 	//TODO leave it for test
-	return &core.ConnInfo{
-		Name:     "localhost",
-		Host:     "127.0.0.1",
-		Port:     2181,
-		User:     "zookeeper",
-		Password: "z00k33p3r",
-	}
+	return &core.ConnInfo{Name: "localhost", Host: "127.0.0.1", Port: 2181}
 	//connList := getConnListBox()
 	//connName := getSelectedConnName(connList)
 	//return ConnRepo.Find(connName)
@@ -187,7 +181,7 @@ func addConnListBoxItem(conn *core.ConnInfo) {
 }
 
 func onConnListBoxRowSelected() {
-	selectedConn := GetSelectedConn()
+	selectedConn := getSelectedConn()
 	if selectedConn == nil {
 		return
 	}
@@ -330,7 +324,7 @@ func isConnExists(connName string) bool {
 }
 
 func onConnCopyBtnClicked() {
-	connInfo := GetSelectedConn()
+	connInfo := getSelectedConn()
 	connInfoCopy := connInfo.Copy()
 	connInfoCopy.Name += " - copy"
 
@@ -340,7 +334,7 @@ func onConnCopyBtnClicked() {
 }
 
 func onConnDeleteBtnClicked() {
-	selectedConn := GetSelectedConn()
+	selectedConn := getSelectedConn()
 	dialog := createConfirmDialog(getConnDialog(), "Are you sure you want to delete "+selectedConn.Name+"?")
 	resp := dialog.Run()
 	if resp == gtk.RESPONSE_YES {
@@ -352,19 +346,20 @@ func onConnDeleteBtnClicked() {
 	dialog.Hide()
 }
 
-func onConnBtnClicked(connDialog *gtk.Dialog) func() {
-	return func() {
-		ClearNodeTree()
-		err := ShowTreeRootNodes()
-		if err != nil {
-			connInfo := GetSelectedConn()
-			dialog := createErrorDialog(getConnDialog(), "Unable to connect to "+connInfo.Name)
-			dialog.Run()
-			dialog.Hide()
-			return
-		}
-		connDialog.Hide()
+func onConnBtnClicked() {
+	ClearNodeTree()
+
+	connInfo := getSelectedConn()
+	ZkCachingRepo.SetConnInfo(connInfo)
+
+	err := ShowTreeRootNodes()
+	if err != nil {
+		dialog := createErrorDialog(getConnDialog(), "Unable to connect to "+connInfo.Name)
+		dialog.Run()
+		dialog.Hide()
+		return
 	}
+	getConnDialog().Hide()
 }
 
 func onConnDialogCancelBtnClicked(connDialog *gtk.Dialog) func() {
@@ -377,7 +372,7 @@ func onConnTestBtnClicked() {
 	connInfo := getConnForm()
 	var dialog *gtk.MessageDialog
 
-	_, err := ZkRepo.GetValue(core.NodeRootName, connInfo)
+	_, err := ZkRepo.GetValue(core.NodeRootName)
 	if err == nil {
 		dialog = createInfoDialog(getConnDialog(), "Successfully connected to "+connInfo.Name)
 	} else {

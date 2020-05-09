@@ -6,7 +6,7 @@ import (
 	"github.com/alivesubstance/zooverseer/util"
 	"github.com/avast/retry-go"
 	"github.com/pkg/errors"
-	zkGo "github.com/samuel/go-zookeeper/zk"
+	goZk "github.com/samuel/go-zookeeper/zk"
 	log "github.com/sirupsen/logrus"
 	gopath "path"
 	"sync"
@@ -18,8 +18,9 @@ var connCreateLock = sync.Mutex{}
 type Node struct {
 	Name     string
 	Value    string
-	Meta     *zkGo.Stat
+	Meta     *goZk.Stat
 	Children []*Node
+	Acl      []goZk.ACL
 }
 
 var retryOptions = []retry.Option{
@@ -32,36 +33,53 @@ var retryOptions = []retry.Option{
 
 //TODO measure timings for each operation
 type Accessor interface {
-	Get(path string, connInfo *core.ConnInfo) (*Node, error)
-	GetMeta(path string, connInfo *core.ConnInfo) (*zkGo.Stat, error)
+	SetConnInfo(connInfo *core.ConnInfo)
+	Get(path string) (*Node, error)
+	GetMeta(path string) (*goZk.Stat, error)
 	// Returns node value and metadata
-	GetValue(path string, connInfo *core.ConnInfo) (*Node, error)
-	GetChildren(path string, connInfo *core.ConnInfo) ([]*Node, error)
-	GetRootNodeChildren(connInfo *core.ConnInfo) ([]*Node, error)
-	Save(parent string, child *Node) error
+	GetValue(path string) (*Node, error)
+	GetChildren(path string) ([]*Node, error)
+	GetRootNode() (*Node, error)
+	Save(parentPath string, childName string, acl []goZk.ACL) error
 }
 
 type Repository struct {
 	Accessor
+
+	connInfo *core.ConnInfo
 }
 
-func (repo *Repository) GetRootNodeChildren(connInfo *core.ConnInfo) ([]*Node, error) {
+func (r *Repository) Init(connInfo *core.ConnInfo) {
+	r.connInfo = connInfo
+}
+
+func (r *Repository) SetConnInfo(connInfo *core.ConnInfo) {
+	r.connInfo = connInfo
+}
+
+func (r *Repository) GetRootNode() (*Node, error) {
 	absolutePathCreator := func(path string, childName string) string {
 		return fmt.Sprintf("/%s", childName)
 	}
 
-	return doGetChildren(nil, core.NodeRootName, connInfo, absolutePathCreator)
-}
-
-func (repo *Repository) Get(path string, connInfo *core.ConnInfo) (*Node, error) {
-	log.Info("Get data for " + path)
-
-	node, err := repo.GetValue(path, connInfo)
+	var err error
+	rootNode, err := r.GetValue(core.NodeRootName)
+	children, err := r.doGetChildren(core.NodeRootName, absolutePathCreator)
 	if err != nil {
 		return nil, err
 	}
 
-	children, err := repo.GetChildren(path, connInfo)
+	rootNode.Children = children
+	return rootNode, nil
+}
+
+func (r *Repository) Get(path string) (*Node, error) {
+	node, err := r.GetValue(path)
+	if err != nil {
+		return nil, err
+	}
+
+	children, err := r.GetChildren(path)
 	if err != nil {
 		return nil, err
 	}
@@ -72,14 +90,14 @@ func (repo *Repository) Get(path string, connInfo *core.ConnInfo) (*Node, error)
 	return node, nil
 }
 
-func (repo *Repository) GetMeta(path string, connInfo *core.ConnInfo) (*zkGo.Stat, error) {
-	conn, err := getConn(connInfo)
+func (r *Repository) GetMeta(path string) (*goZk.Stat, error) {
+	conn, err := r.getConn()
 	if err != nil {
 		log.WithError(err).Errorf("Failed to check existing for %s", path)
 		return nil, err
 	}
 
-	var meta *zkGo.Stat
+	var meta *goZk.Stat
 	err = retry.Do(
 		func() error {
 			_, meta, err = conn.Exists(path)
@@ -94,16 +112,14 @@ func (repo *Repository) GetMeta(path string, connInfo *core.ConnInfo) (*zkGo.Sta
 	return meta, err
 }
 
-func (repo *Repository) GetValue(path string, connInfo *core.ConnInfo) (*Node, error) {
-	log.Debug("Looking for value for " + path)
-
-	conn, err := getConn(connInfo)
+func (r *Repository) GetValue(path string) (*Node, error) {
+	conn, err := r.getConn()
 	if err != nil {
 		return nil, err
 	}
 
 	var value []byte
-	var meta *zkGo.Stat
+	var meta *goZk.Stat
 	err = retry.Do(
 		func() error {
 			value, meta, err = conn.Get(path)
@@ -128,28 +144,36 @@ func (repo *Repository) GetValue(path string, connInfo *core.ConnInfo) (*Node, e
 	return node, nil
 }
 
-func (repo *Repository) GetChildren(path string, connInfo *core.ConnInfo) ([]*Node, error) {
+func (r *Repository) GetChildren(path string) ([]*Node, error) {
 	absolutePathCreator := func(path string, childName string) string {
 		return fmt.Sprintf("%s/%s", path, childName)
 	}
-	return doGetChildren(repo, path, connInfo, absolutePathCreator)
+	return r.doGetChildren(path, absolutePathCreator)
 }
 
-//func (repo *Repository) Save(parent string, node *Node, connInfo *core.ConnInfo) error {
-//conn, err := getConn(connInfo)
-//if err != nil {
-//	return err
-//}
+func (r *Repository) Save(parentPath string, childName string, acl []goZk.ACL) error {
+	conn, err := r.getConn()
+	if err != nil {
+		return err
+	}
 
-//conn.Create(parent + "/" + node.Name, "", zkGo.FlagSequence, )
-//}
+	path := parentPath + "/" + childName
+	if parentPath == core.NodeRootName {
+		path = "/" + childName
+	}
 
-func doGetChildren(
-	zkRepo *Repository, path string, connInfo *core.ConnInfo, absolutePathCreator func(path string, childName string) string,
+	_, err = conn.Create(path, util.StringToBytes(""), int32(0), acl)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *Repository) doGetChildren(
+	path string, absolutePathCreator func(path string, childName string) string,
 ) ([]*Node, error) {
-	log.Tracef("Looking for children for %s", path)
-
-	conn, err := getConn(connInfo)
+	conn, err := r.getConn()
 	if err != nil {
 		return nil, err
 	}
@@ -171,13 +195,11 @@ func doGetChildren(
 	}
 
 	// get metadata for each child. mostly to know is there are children in child node
-	return getChildrenMeta(zkRepo, path, connInfo, absolutePathCreator, childrenNames)
+	return r.getChildrenMeta(path, absolutePathCreator, childrenNames)
 }
 
-func getChildrenMeta(
-	zkRepo *Repository,
+func (r *Repository) getChildrenMeta(
 	path string,
-	connInfo *core.ConnInfo,
 	absolutePathCreator func(path string, childName string) string,
 	childrenNames []string,
 ) ([]*Node, error) {
@@ -186,11 +208,11 @@ func getChildrenMeta(
 	nodes := make([]*Node, len(childrenNames))
 	for i, childName := range childrenNames {
 		wg.Add(1)
-		go func(idx int, path string, childName string, connInfo *core.ConnInfo) {
+		go func(idx int, path string, childName string) {
 			defer wg.Done()
 
 			absolutePath := absolutePathCreator(path, childName)
-			meta, err := zkRepo.GetMeta(absolutePath, connInfo)
+			meta, err := r.GetMeta(absolutePath)
 			if err != nil {
 				log.WithError(err).Errorf("Failed to get node meta %s", absolutePath)
 				resultErr = err
@@ -200,7 +222,7 @@ func getChildrenMeta(
 				Name: childName,
 				Meta: meta,
 			}
-		}(i, path, childName, connInfo)
+		}(i, path, childName)
 	}
 	wg.Wait()
 
@@ -221,17 +243,17 @@ func sortNodes(nodes []*Node) []*Node {
 	return nodes
 }
 
-func getConn(connInfo *core.ConnInfo) (*zkGo.Conn, error) {
+func (r *Repository) getConn() (*goZk.Conn, error) {
 	//todo stupid cache doesn't lock loader function when call it after it didn't find entry it cache
 	connCreateLock.Lock()
 	defer connCreateLock.Unlock()
 
 	// dereferencing conn info to use struct copy(not a pointer) as a cache key
-	connInfoValue := *connInfo
+	connInfoValue := *r.connInfo
 	conn, err := ConnCache.Get(connInfoValue)
 	if err != nil {
-		return nil, errors.Wrapf(err, "Failed to get connection for %s", connInfo.String())
+		return nil, errors.Wrapf(err, "Failed to get connection for %s", r.connInfo.String())
 	}
 
-	return conn.(*zkGo.Conn), nil
+	return conn.(*goZk.Conn), nil
 }
