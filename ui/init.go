@@ -37,7 +37,10 @@ func getMainWindow() *gtk.Window {
 }
 
 func createConfirmDialog(parent gtk.IWindow, text string) *gtk.MessageDialog {
-	return gtk.MessageDialogNew(parent, gtk.DIALOG_MODAL, gtk.MESSAGE_QUESTION, gtk.BUTTONS_YES_NO, text)
+	dlg := gtk.MessageDialogNew(parent, gtk.DIALOG_MODAL, gtk.MESSAGE_QUESTION, gtk.BUTTONS_YES_NO, text)
+	//TODO doesn't work
+	//dlg.SetPosition(gtk.WIN_POS_CENTER_ON_PARENT)
+	return dlg
 }
 
 func createInfoDialog(parent gtk.IWindow, text string) *gtk.MessageDialog {

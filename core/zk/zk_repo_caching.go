@@ -145,6 +145,7 @@ func (c *CachingRepository) GetChildren(path string) ([]*Node, error) {
 }
 
 func (c *CachingRepository) Invalidate(path string) {
+	log.Tracef("Invalidate %s", path)
 	cache.Invalidate(path)
 }
 
@@ -152,6 +153,11 @@ func (c *CachingRepository) InvalidateAll() {
 	cache.InvalidateAll()
 }
 
-func (r *CachingRepository) Save(parentPath string, childName string, acl []goZk.ACL) error {
+func (c *CachingRepository) Save(parentPath string, childName string, acl []goZk.ACL) error {
 	return repository.Save(parentPath, childName, acl)
+}
+
+func (c *CachingRepository) Delete(path string, version int32) error {
+	c.Invalidate(path)
+	return repository.Delete(path, version)
 }

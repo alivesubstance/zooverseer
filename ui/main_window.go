@@ -30,8 +30,20 @@ func initMainMenu() {
 
 func initNodeActionSignal() {
 	getObject("nodeCreateBtn").(*gtk.Button).Connect("clicked", onNodeCreateBtnClicked)
+	getObject("nodeRefreshBtn").(*gtk.Button).Connect("clicked", onNodeRefreshBtnClicked)
+	getObject("nodeDeleteBtn").(*gtk.Button).Connect("clicked", onNodeDeleteBtnClicked)
 }
 
 func onNodeCreateBtnClicked() {
 	createNodeDlg.showAll()
+}
+
+func onNodeRefreshBtnClicked() {
+	selection, _ := getNodesTreeView().GetSelection()
+	parentPath, _ := getTreeSelectedZkPath(selection)
+	refreshNode(parentPath)
+}
+
+func onNodeDeleteBtnClicked() {
+	deleteSelectedNode()
 }

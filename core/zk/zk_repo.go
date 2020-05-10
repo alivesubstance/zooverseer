@@ -1,7 +1,6 @@
 package zk
 
 import (
-	"fmt"
 	"github.com/alivesubstance/zooverseer/core"
 	"github.com/alivesubstance/zooverseer/util"
 	"github.com/avast/retry-go"
@@ -41,6 +40,7 @@ type Accessor interface {
 	GetChildren(path string) ([]*Node, error)
 	GetRootNode() (*Node, error)
 	Save(parentPath string, childName string, acl []goZk.ACL) error
+	Delete(path string, version int32) error
 }
 
 type Repository struct {
@@ -58,13 +58,9 @@ func (r *Repository) SetConnInfo(connInfo *core.ConnInfo) {
 }
 
 func (r *Repository) GetRootNode() (*Node, error) {
-	absolutePathCreator := func(path string, childName string) string {
-		return fmt.Sprintf("/%s", childName)
-	}
-
 	var err error
 	rootNode, err := r.GetValue(core.NodeRootName)
-	children, err := r.doGetChildren(core.NodeRootName, absolutePathCreator)
+	children, err := r.GetChildren(core.NodeRootName)
 	if err != nil {
 		return nil, err
 	}
@@ -145,34 +141,6 @@ func (r *Repository) GetValue(path string) (*Node, error) {
 }
 
 func (r *Repository) GetChildren(path string) ([]*Node, error) {
-	absolutePathCreator := func(path string, childName string) string {
-		return fmt.Sprintf("%s/%s", path, childName)
-	}
-	return r.doGetChildren(path, absolutePathCreator)
-}
-
-func (r *Repository) Save(parentPath string, childName string, acl []goZk.ACL) error {
-	conn, err := r.getConn()
-	if err != nil {
-		return err
-	}
-
-	path := parentPath + "/" + childName
-	if parentPath == core.NodeRootName {
-		path = "/" + childName
-	}
-
-	_, err = conn.Create(path, util.StringToBytes(""), int32(0), acl)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (r *Repository) doGetChildren(
-	path string, absolutePathCreator func(path string, childName string) string,
-) ([]*Node, error) {
 	conn, err := r.getConn()
 	if err != nil {
 		return nil, err
@@ -195,14 +163,41 @@ func (r *Repository) doGetChildren(
 	}
 
 	// get metadata for each child. mostly to know is there are children in child node
-	return r.getChildrenMeta(path, absolutePathCreator, childrenNames)
+	return r.getChildrenMeta(path, childrenNames)
 }
 
-func (r *Repository) getChildrenMeta(
-	path string,
-	absolutePathCreator func(path string, childName string) string,
-	childrenNames []string,
-) ([]*Node, error) {
+func (r *Repository) Save(parentPath string, childName string, acl []goZk.ACL) error {
+	conn, err := r.getConn()
+	if err != nil {
+		return err
+	}
+
+	absPath := r.buildAbsPath(parentPath, childName)
+	_, err = conn.Create(absPath, util.StringToBytes(""), int32(0), acl)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *Repository) Delete(path string, version int32) error {
+	conn, err := r.getConn()
+	if err != nil {
+		return err
+	}
+
+	return conn.Delete(path, version)
+}
+
+func (r *Repository) buildAbsPath(parentPath string, childName string) string {
+	if parentPath == core.NodeRootName {
+		return "/" + childName
+	}
+	return parentPath + "/" + childName
+}
+
+func (r *Repository) getChildrenMeta(path string, childrenNames []string) ([]*Node, error) {
 	var resultErr error
 	var wg sync.WaitGroup
 	nodes := make([]*Node, len(childrenNames))
@@ -211,10 +206,10 @@ func (r *Repository) getChildrenMeta(
 		go func(idx int, path string, childName string) {
 			defer wg.Done()
 
-			absolutePath := absolutePathCreator(path, childName)
-			meta, err := r.GetMeta(absolutePath)
+			absPath := r.buildAbsPath(path, childName)
+			meta, err := r.GetMeta(absPath)
 			if err != nil {
-				log.WithError(err).Errorf("Failed to get node meta %s", absolutePath)
+				log.WithError(err).Errorf("Failed to get node meta %s", absPath)
 				resultErr = err
 			}
 

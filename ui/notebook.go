@@ -27,12 +27,7 @@ func (n *Notebook) init() {
 }
 
 func (n *Notebook) onNotebookSwitchPage(notebook *gtk.Notebook, widget *gtk.Widget, page int) {
-	treeSelection, err := getNodesTreeView().GetSelection()
-	if err != nil {
-		createAndRunWarnDialog(getMainWindow(), "Unable to get tree selection: "+err.Error())
-		return
-	}
-
+	treeSelection, _ := getNodesTreeView().GetSelection()
 	node, _ := getTreeSelectedNode(treeSelection)
 	if node == nil {
 		// nothing to show. no node is selected

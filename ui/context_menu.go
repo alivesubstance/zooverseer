@@ -43,12 +43,8 @@ func onNewNodeDlgCancelBtn() {
 }
 
 func onCopyValue() {
-	treeSelection, err := getNodesTreeView().GetSelection()
-	if err != nil {
-		log.WithError(err).Errorf("Failed to get nodes tree selection")
-		//TODO show warn dialog
-	}
-	node, err := getTreeSelectedNode(treeSelection)
+	treeSelection, _ := getNodesTreeView().GetSelection()
+	node, _ := getTreeSelectedNode(treeSelection)
 	if node != nil {
 		log.Tracef("Add text value to clipboard")
 		err := clipboard.WriteAll(node.Value)

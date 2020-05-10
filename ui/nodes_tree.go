@@ -14,6 +14,7 @@ import (
 	"github.com/gotk3/gotk3/gtk"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
+	gopath "path"
 	"unsafe"
 )
 
@@ -58,8 +59,12 @@ func ShowTreeRootNodes() error {
 
 func getTreeSelectedNode(treeSelection *gtk.TreeSelection) (*zk.Node, error) {
 	zkPath, err := getTreeSelectedZkPath(treeSelection)
-	if err != nil {
-		return nil, err
+	if len(zkPath) == 0 {
+		if err != nil {
+			return nil, err
+		}
+		// there is no error. nothing to selected. happens f.i. after node deletion
+		return nil, nil
 	}
 
 	node, err := ZkCachingRepo.GetValue(zkPath)
@@ -72,7 +77,7 @@ func getTreeSelectedNode(treeSelection *gtk.TreeSelection) (*zk.Node, error) {
 func getTreeSelectedZkPath(treeSelection *gtk.TreeSelection) (string, error) {
 	model, iter, ok := treeSelection.GetSelected()
 	if !ok {
-		return "", errors.New("Failed to get tree selected")
+		return "", nil
 	}
 
 	treePath, err := model.(*gtk.TreeModel).GetPath(iter)
@@ -95,7 +100,9 @@ func onTreeRowSelected(treeSelection *gtk.TreeSelection) {
 		return
 	}
 
-	notebook.showPage(node, getNotebook().GetCurrentPage())
+	if node != nil {
+		notebook.showPage(node, getNotebook().GetCurrentPage())
+	}
 }
 
 func onExpandRow(treeView *gtk.TreeView, parentIter *gtk.TreeIter, treePath *gtk.TreePath) {
@@ -105,7 +112,6 @@ func onExpandRow(treeView *gtk.TreeView, parentIter *gtk.TreeIter, treePath *gtk
 	//TODO add spinner in case of long running function
 	parentValue, _ := nodeTreeStore.GetValue(parentIter, core.NodeColumn)
 	parentGoValue, _ := parentValue.GoValue()
-	log.Tracef("Add %s children", parentGoValue)
 
 	zkPath := ZkPathByTreePath[treePath.String()]
 	children, err := ZkCachingRepo.GetChildren(zkPath)
@@ -114,6 +120,7 @@ func onExpandRow(treeView *gtk.TreeView, parentIter *gtk.TreeIter, treePath *gtk
 		log.WithError(err).Errorf("Failed to get data and children for %s", zkPath)
 	}
 
+	log.Tracef("Add %v children at %s", len(children), parentGoValue)
 	for i := range children {
 		addSubRow(parentIter, children[i])
 	}
@@ -121,7 +128,11 @@ func onExpandRow(treeView *gtk.TreeView, parentIter *gtk.TreeIter, treePath *gtk
 
 func removeRowChildren(parentIter *gtk.TreeIter) {
 	parentTreePath, _ := nodeTreeStore.GetPath(parentIter)
-	log.Tracef("Removing %s", parentTreePath)
+	children := nodeTreeStore.IterNChildren(parentIter)
+
+	parentZkPath := ZkPathByTreePath[parentTreePath.String()]
+	log.Tracef("Remove %v children at %s", children, parentZkPath)
+	ZkCachingRepo.Invalidate(parentZkPath)
 
 	hasChildren := nodeTreeStore.IterHasChild(parentIter)
 	if hasChildren {
@@ -133,10 +144,6 @@ func removeRowChildren(parentIter *gtk.TreeIter) {
 				if childrenRemoved {
 					childTreePath, _ := nodeTreeStore.GetPath(&child)
 					childTreePathStr := childTreePath.String()
-					zkPath := ZkPathByTreePath[childTreePathStr]
-
-					log.Tracef("Removing child %s", zkPath)
-					ZkCachingRepo.Invalidate(zkPath)
 					delete(ZkPathByTreePath, childTreePathStr)
 				} else {
 					break
@@ -149,7 +156,7 @@ func removeRowChildren(parentIter *gtk.TreeIter) {
 func addSubRow(parentIter *gtk.TreeIter, child *zk.Node) *gtk.TreeIter {
 	childIter := nodeTreeStore.Append(parentIter)
 	setNodeName(childIter, child.Name)
-	setNodeValue(child)
+	//setNodeValue(child)
 
 	if child.Meta.NumChildren > 0 {
 		// add dummy node value in order to force GtkTreeView show expander icon
@@ -169,7 +176,7 @@ func addSubRow(parentIter *gtk.TreeIter, child *zk.Node) *gtk.TreeIter {
 		}
 	}
 
-	log.Tracef("Adding %s", childZkPath)
+	log.Tracef("Add %s", childZkPath)
 	ZkPathByTreePath[childTreePath] = childZkPath
 
 	return childIter
@@ -246,5 +253,28 @@ func refreshNode(path string) {
 	parentTreeIter, _ := nodeTreeStore.GetIterFromString(treePath)
 	parentTreePath, _ := nodeTreeStore.GetPath(parentTreeIter)
 	onExpandRow(getNodesTreeView(), parentTreeIter, parentTreePath)
-	//getNodesTreeView().ExpandToPath(parentTreePath)
+	getNodesTreeView().ExpandToPath(parentTreePath)
+}
+
+func deleteSelectedNode() {
+	treeSelection, _ := getNodesTreeView().GetSelection()
+	zkPath, _ := getTreeSelectedZkPath(treeSelection)
+	dialog := createConfirmDialog(getConnDialog(), "Are you sure you want to delete "+gopath.Base(zkPath)+"?")
+	resp := dialog.Run()
+	dialog.Hide()
+	if resp == gtk.RESPONSE_YES {
+		node, _ := ZkCachingRepo.GetValue(zkPath)
+		err := ZkCachingRepo.Delete(zkPath, node.Meta.Version)
+		if err != nil {
+			msg := "Unable to delete node"
+			log.WithError(err).Error(msg)
+			warnDlg := createWarnDialog(getMainWindow(), msg+errors.Cause(err).Error())
+			warnDlg.Run()
+			warnDlg.Hide()
+			return
+		}
+
+		parentZkPath := gopath.Dir(zkPath)
+		refreshNode(parentZkPath)
+	}
 }
