@@ -30,7 +30,7 @@ func init() {
 		goCache.WithExpireAfterAccess(core.ConnCacheExpireAfterAccessMinutes*time.Minute),
 		goCache.WithRemovalListener(connRemoveListener),
 	)
-	// TODO looks like stats doesn't collect numbers
+	// todo looks like stats doesn't collect numbers
 	c.Stats(stats)
 
 	go func() {

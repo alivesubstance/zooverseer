@@ -67,9 +67,9 @@ func InitConnDialog(mainWindow *gtk.Window) *gtk.Dialog {
 	return connDialog
 }
 
-//TODO cache it for session
+//todo cache it for session
 func getSelectedConn() *core.ConnInfo {
-	//TODO leave it for test
+	//todo leave it for test
 	return &core.ConnInfo{Name: "localhost", Host: "127.0.0.1", Port: 2181}
 	//connList := getConnListBox()
 	//connName := getSelectedConnName(connList)
@@ -195,7 +195,7 @@ func setConnListBoxBtnsSensitivity(value bool) {
 	getObject("connDeleteBtn").(*gtk.Button).SetSensitive(value)
 }
 
-// TODO Double click handle has a bug. To reproduce:
+// todo Double click handle has a bug. To reproduce:
 // - create new connection
 // - remove it
 // - try to double click to another(not currently selected)

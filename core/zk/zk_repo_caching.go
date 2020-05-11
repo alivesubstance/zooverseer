@@ -28,7 +28,7 @@ type CachingRepository struct {
 func init() {
 	stats := &goCache.Stats{}
 	cache = goCache.New(goCache.WithExpireAfterAccess(core.ZkCacheExpireAfterAccessMinutes * time.Minute))
-	// TODO looks like stats doesn't collect numbers
+	// todo looks like stats doesn't collect numbers
 	cache.Stats(stats)
 
 	go func() {
@@ -106,7 +106,6 @@ func (c *CachingRepository) GetValue(path string) (*Node, error) {
 		err = valueNodeErr
 		if valueNode != nil {
 			node.(*Node).Value = valueNode.Value
-			node.(*Node).Meta = valueNode.Meta
 			cache.Put(path, node)
 		}
 	}
@@ -157,7 +156,7 @@ func (c *CachingRepository) Save(parentPath string, childName string, acl []goZk
 	return repository.Save(parentPath, childName, acl)
 }
 
-func (c *CachingRepository) Delete(path string, version int32) error {
+func (c *CachingRepository) Delete(path string, node *Node) error {
 	c.Invalidate(path)
-	return repository.Delete(path, version)
+	return repository.Delete(path, node)
 }

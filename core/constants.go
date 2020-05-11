@@ -18,15 +18,15 @@ const (
 	ConnCacheStatsPeriodMinutes       = 5
 	ConnRetryAttempts                 = 3
 	ConnRetryDelay                    = 1000
-	ConnTimeoutSec                    = 5
+	ConnTimeoutSec                    = 20
 )
 
 // Zk operations
 const (
 	ZkCacheExpireAfterAccessMinutes = 10
 	ZkCacheStatsPeriodMinutes       = 5
-	ZkOpRetryAttempts               = 3
-	ZkOpRetryDelay                  = 500
+	ZkOpRetryAttempts               = 1
+	ZkOpRetryDelay                  = 100
 )
 
 // Nodes tree and repository
@@ -38,7 +38,7 @@ const (
 
 var AclWorldAnyone = goZk.WorldACL(goZk.PermAll)
 
-//TODO tested and worked with relative path. Use run.sh to build and run app
+//todo tested and worked with relative path. Use run.sh to build and run app
 //const (
 //	AppId = "com.github.alivesubstance.zooverseer"
 //	ConfigDir = "./config"

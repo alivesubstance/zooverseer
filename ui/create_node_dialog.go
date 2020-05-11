@@ -49,7 +49,7 @@ func (c *CreateNodeDlg) onCancelBtnClicked() {
 
 func (c *CreateNodeDlg) setAcl(connInfo *core.ConnInfo) {
 	//digest:someuser:hashedpw:crdwa
-	//TODO remove once ACL support will be full
+	//todo remove once ACL support will be full
 	aclStr := ""
 	if len(connInfo.User) != 0 && len(connInfo.Password) != 0 {
 		aclStr = fmt.Sprintf("digest:%s:%s:%s", connInfo.User, util.Encrypt(connInfo.Password), "a")
@@ -59,7 +59,7 @@ func (c *CreateNodeDlg) setAcl(connInfo *core.ConnInfo) {
 
 func (c *CreateNodeDlg) getAcl() []zk.ACL {
 	//digest:someuser:hashedpw:crdwa
-	//TODO remove once ACL support will be full
+	//todo remove once ACL support will be full
 	connInfo := getSelectedConn()
 	if len(connInfo.User) == 0 && len(connInfo.Password) == 0 {
 		return core.AclWorldAnyone
@@ -68,6 +68,8 @@ func (c *CreateNodeDlg) getAcl() []zk.ACL {
 }
 
 func (c *CreateNodeDlg) showAll() {
+	c.getNameEntry().SetText("")
+	c.getNameEntry().GrabFocus()
 	c.setAcl(getSelectedConn())
 	c.getCreateNodeDlg().ShowAll()
 }

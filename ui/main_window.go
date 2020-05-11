@@ -6,15 +6,16 @@ import (
 )
 
 var createNodeDlg *CreateNodeDlg
+var nodeAction *NodeAction
 
 func InitMainWindow(mainWindow *gtk.Window) {
 	createNodeDlg = NewCreateNodeDlg(mainWindow)
+	nodeAction = NewNodeAction()
 
 	initNodeTree()
 	notebook.init()
 	initMainMenu()
 	initContextMenu()
-	initNodeActionSignal()
 
 	mainWindow.SetTitle("Zooverseer")
 	mainWindow.ShowAll()
@@ -26,24 +27,4 @@ func initMainMenu() {
 		connDialog := getObject("connDialog").(*gtk.Dialog)
 		connDialog.Show()
 	})
-}
-
-func initNodeActionSignal() {
-	getObject("nodeCreateBtn").(*gtk.Button).Connect("clicked", onNodeCreateBtnClicked)
-	getObject("nodeRefreshBtn").(*gtk.Button).Connect("clicked", onNodeRefreshBtnClicked)
-	getObject("nodeDeleteBtn").(*gtk.Button).Connect("clicked", onNodeDeleteBtnClicked)
-}
-
-func onNodeCreateBtnClicked() {
-	createNodeDlg.showAll()
-}
-
-func onNodeRefreshBtnClicked() {
-	selection, _ := getNodesTreeView().GetSelection()
-	parentPath, _ := getTreeSelectedZkPath(selection)
-	refreshNode(parentPath)
-}
-
-func onNodeDeleteBtnClicked() {
-	deleteSelectedNode()
 }

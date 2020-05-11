@@ -30,12 +30,11 @@ var retryOptions = []retry.Option{
 	}),
 }
 
-//TODO measure timings for each operation
+//todo measure timings for each operation
 type Accessor interface {
 	SetConnInfo(connInfo *core.ConnInfo)
 	Get(path string) (*Node, error)
 	GetMeta(path string) (*goZk.Stat, error)
-	// Returns node value and metadata
 	GetValue(path string) (*Node, error)
 	GetChildren(path string) ([]*Node, error)
 	GetRootNode() (*Node, error)
@@ -181,13 +180,38 @@ func (r *Repository) Save(parentPath string, childName string, acl []goZk.ACL) e
 	return nil
 }
 
-func (r *Repository) Delete(path string, version int32) error {
+func (r *Repository) Delete(path string, node *Node) error {
 	conn, err := r.getConn()
 	if err != nil {
 		return err
 	}
 
-	return conn.Delete(path, version)
+	if node.Meta == nil {
+		meta, err := r.GetMeta(path)
+		if err != nil {
+			return err
+		}
+		node.Meta = meta
+	}
+
+	if node.Meta.NumChildren > 0 {
+		children, err := r.GetChildren(path)
+		if err != nil {
+			return err
+		}
+
+		for _, child := range children {
+			childPath := path + "/" + child.Name
+			log.Tracef("Deleting child %s", childPath)
+			err := r.Delete(childPath, node)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	log.Tracef("Deleting %s", path)
+	return conn.Delete(path, node.Meta.Version)
 }
 
 func (r *Repository) buildAbsPath(parentPath string, childName string) string {

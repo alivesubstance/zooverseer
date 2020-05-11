@@ -10,7 +10,7 @@ import (
 	"os"
 )
 
-//TODO remove it and put conn_info_repo.go into conn_repo folder?
+//todo remove it and put conn_info_repo.go into conn_repo folder?
 type ConnRepository interface {
 	Upsert(connInfo *ConnInfo)
 	Find(connName string) *ConnInfo
