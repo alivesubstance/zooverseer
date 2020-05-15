@@ -7,15 +7,16 @@ import (
 
 var createNodeDlg *CreateNodeDlg
 var nodeAction *NodeAction
+var contextMenu *ContextMenu
 
 func InitMainWindow(mainWindow *gtk.Window) {
 	createNodeDlg = NewCreateNodeDlg(mainWindow)
 	nodeAction = NewNodeAction()
+	contextMenu = NewContextMenu()
 
 	initNodeTree()
 	notebook.init()
 	initMainMenu()
-	initContextMenu()
 
 	mainWindow.SetTitle("Zooverseer")
 	mainWindow.ShowAll()

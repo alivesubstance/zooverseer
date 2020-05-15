@@ -24,6 +24,8 @@ func (n *Notebook) init() {
 			n.onNotebookSwitchPage(notebook, widget, page)
 		},
 	)
+
+	getObject("saveDataBtn").(*gtk.Button).Connect("clicked", n.onSaveDataBtnClicked)
 }
 
 func (n *Notebook) onNotebookSwitchPage(notebook *gtk.Notebook, widget *gtk.Widget, page int) {
@@ -69,6 +71,23 @@ func (n *Notebook) showPageMetadata(node *zk2.Node) {
 
 func (n *Notebook) showPageAcl() {
 
+}
+
+func (n *Notebook) onSaveDataBtnClicked() {
+	buffer, _ := getObject("nodeDataTextView").(*gtk.TextView).GetBuffer()
+	text, err := buffer.GetText(buffer.GetStartIter(), buffer.GetEndIter(), false)
+	if err != nil {
+		createWarnDialog(getMainWindow(), "Unable to read node value: "+err.Error())
+	}
+
+	treeSelection, _ := getNodesTreeView().GetSelection()
+	node, _ := getTreeSelectedNode(treeSelection)
+	zkPath, _ := getTreeSelectedZkPath(treeSelection)
+	node.Value = text
+	err = ZkCachingRepo.SaveValue(zkPath, node)
+	if err != nil {
+		createWarnDialog(getMainWindow(), "Unable to save node value: "+err.Error())
+	}
 }
 
 func getNotebook() *gtk.Notebook {

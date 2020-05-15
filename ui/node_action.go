@@ -35,8 +35,8 @@ func (n *NodeAction) onNodeCreateBtnClicked() {
 
 func (n *NodeAction) onNodeRefreshBtnClicked() {
 	selection, _ := getNodesTreeView().GetSelection()
-	parentPath, _ := getTreeSelectedZkPath(selection)
-	refreshNode(parentPath)
+	parentZkPath, _ := getTreeSelectedZkPath(selection)
+	refreshNode(parentZkPath)
 }
 
 func (n *NodeAction) onNodeDeleteBtnClicked() {

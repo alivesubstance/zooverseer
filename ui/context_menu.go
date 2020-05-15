@@ -6,40 +6,46 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func initContextMenu() {
-	getObject("popupMenu").(*gtk.Menu).Connect("popped-up", func() {
+type ContextMenu struct {
+	addItem        *gtk.MenuItem
+	copyValueItem  *gtk.MenuItem
+	copyNameItem   *gtk.MenuItem
+	copyPathItem   *gtk.MenuItem
+	pasteValueItem *gtk.MenuItem
+	renameItem     *gtk.MenuItem
+	deleteItem     *gtk.MenuItem
+}
 
-	})
+func NewContextMenu() *ContextMenu {
+	contextMenu := &ContextMenu{}
+	contextMenu.addItem = getObject("contextMenuAdd").(*gtk.MenuItem)
+	contextMenu.addItem.Connect("activate", onAddNewNode)
 
-	getObject("createNodeDlgOkBtn").(*gtk.Button).Connect("activate", onNewNodeDlgOkBtn)
-	getObject("createNodeDlgCancelBtn").(*gtk.Button).Connect("activate", onNewNodeDlgCancelBtn)
+	contextMenu.copyValueItem = getObject("contextMenuCopyValue").(*gtk.MenuItem)
+	contextMenu.copyValueItem.Connect("activate", onCopyValue)
 
-	getObject("popupMenuAdd").(*gtk.MenuItem).Connect("activate", onAddNewNode)
-	getObject("popupMenuCopyValue").(*gtk.MenuItem).Connect("activate", onCopyValue)
-	getObject("popupMenuCopyValue").(*gtk.MenuItem).Connect("activate", onCopyValue)
+	contextMenu.copyNameItem = getObject("contextMenuCopyName").(*gtk.MenuItem)
+	contextMenu.copyNameItem.Connect("activate", onCopyValue)
+
+	contextMenu.copyPathItem = getObject("contextMenuCopyPath").(*gtk.MenuItem)
+	contextMenu.copyPathItem.Connect("activate", onCopyValue)
+
+	contextMenu.pasteValueItem = getObject("contextMenuPasteValue").(*gtk.MenuItem)
+	contextMenu.pasteValueItem.Connect("activate", onCopyValue)
+
+	contextMenu.renameItem = getObject("contextMenuRename").(*gtk.MenuItem)
+	contextMenu.renameItem.Connect("activate", onCopyValue)
+
+	contextMenu.deleteItem = getObject("contextMenuDeleteNode").(*gtk.MenuItem)
+	contextMenu.deleteItem.Connect("activate", onCopyValue)
+
+	contextMenu.enableButtons(false)
+
+	return contextMenu
 }
 
 func onAddNewNode() {
-	newNodeDlg := getNewNodeDlg()
-	newNodeDlg.ShowAll()
-}
-
-func onNewNodeDlgOkBtn() {
-	newNodeDlgEntry := getObject("newNodeDlgEntry").(*gtk.Entry)
-	text, _ := newNodeDlgEntry.GetText()
-	if len(text) == 0 {
-		dialog := createWarnDialog(getNewNodeDlg(), "New node name should be provided")
-		dialog.Run()
-		dialog.Hide()
-	} else {
-		//node := getNodesTreeSelectedValue()
-
-		getNewNodeDlg().Close()
-	}
-}
-
-func onNewNodeDlgCancelBtn() {
-	getNewNodeDlg().Close()
+	nodeAction.onNodeCreateBtnClicked()
 }
 
 func onCopyValue() {
@@ -54,6 +60,12 @@ func onCopyValue() {
 	}
 }
 
-func getNewNodeDlg() *gtk.Dialog {
-	return getObject("newNodeDlg").(*gtk.Dialog)
+func (n *ContextMenu) enableButtons(enabled bool) {
+	n.addItem.SetSensitive(enabled)
+	n.copyValueItem.SetSensitive(enabled)
+	n.copyNameItem.SetSensitive(enabled)
+	n.copyPathItem.SetSensitive(enabled)
+	n.pasteValueItem.SetSensitive(enabled)
+	n.renameItem.SetSensitive(enabled)
+	n.deleteItem.SetSensitive(enabled)
 }

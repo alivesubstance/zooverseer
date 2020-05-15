@@ -28,7 +28,7 @@ func initNodeTree() {
 	nodesTreeView := getNodesTreeView()
 	nodesTreeView.AppendColumn(createTextColumn("Node", core.NodeColumn))
 	nodesTreeView.Connect("test-expand-row", onExpandRow)
-	nodesTreeView.Connect("button-press-event", onButtonPressEvent)
+	nodesTreeView.Connect("button-press-event", onMouseButtonPress)
 
 	newTreeStore, err := gtk.TreeStoreNew(glib.TYPE_STRING)
 	util.CheckError(err)
@@ -79,6 +79,7 @@ func getTreeSelectedZkPath(treeSelection *gtk.TreeSelection) (string, error) {
 	model, iter, ok := treeSelection.GetSelected()
 	if !ok {
 		nodeAction.enableButtons(false)
+		contextMenu.enableButtons(false)
 		return "", nil
 	}
 
@@ -94,6 +95,7 @@ func getTreeSelectedZkPath(treeSelection *gtk.TreeSelection) (string, error) {
 
 func onTreeRowSelected(treeSelection *gtk.TreeSelection) {
 	nodeAction.enableButtons(true)
+	contextMenu.enableButtons(true)
 
 	node, err := getTreeSelectedNode(treeSelection)
 	if err != nil {
@@ -109,6 +111,7 @@ func onTreeRowSelected(treeSelection *gtk.TreeSelection) {
 	}
 }
 
+//todo test on 100+ children. works slowly
 func onExpandRow(treeView *gtk.TreeView, parentIter *gtk.TreeIter, treePath *gtk.TreePath) {
 	removeRowChildren(parentIter)
 
@@ -223,7 +226,7 @@ func createTextColumn(title string, id int) *gtk.TreeViewColumn {
 	return column
 }
 
-func onButtonPressEvent(b *gtk.TreeView, e *gdk.Event) {
+func onMouseButtonPress(b *gtk.TreeView, e *gdk.Event) {
 	if isMouse2ButtonClicked(e) {
 		menu := getObject("popupMenu").(*gtk.Menu)
 		menu.ShowAll()
@@ -245,10 +248,10 @@ func getNodesTreeView() *gtk.TreeView {
 	return getObject("nodesTreeView").(*gtk.TreeView)
 }
 
-func refreshNode(path string) {
+func refreshNode(zkPath string) {
 	var treePath string
-	for treePathKey, zkPath := range ZkPathByTreePath {
-		if zkPath == path {
+	for treePathKey, cachedZkPath := range ZkPathByTreePath {
+		if cachedZkPath == zkPath {
 			treePath = treePathKey
 			break
 		}
@@ -258,6 +261,9 @@ func refreshNode(path string) {
 	parentTreePath, _ := nodeTreeStore.GetPath(parentTreeIter)
 	onExpandRow(getNodesTreeView(), parentTreeIter, parentTreePath)
 	getNodesTreeView().ExpandToPath(parentTreePath)
+
+	node, _ := ZkCachingRepo.GetValue(zkPath)
+	notebook.showPage(node, PageData)
 }
 
 func deleteSelectedNode() {

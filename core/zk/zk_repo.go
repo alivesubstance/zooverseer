@@ -39,6 +39,7 @@ type Accessor interface {
 	GetChildren(path string) ([]*Node, error)
 	GetRootNode() (*Node, error)
 	Save(parentPath string, childName string, acl []goZk.ACL) error
+	SaveValue(parentPath string, node *Node) error
 	Delete(path string, version int32) error
 }
 
@@ -179,6 +180,23 @@ func (r *Repository) Save(parentPath string, childName string, acl []goZk.ACL) e
 
 	return nil
 }
+
+func (r *Repository) SaveValue(absPath string, node *Node) error {
+	conn, err := r.getConn()
+	if err != nil {
+		return err
+	}
+
+	_, err = conn.Set(absPath, util.StringToBytes(node.Value), node.Meta.Version)
+	return err
+}
+
+//todo create func like doWithConn(func action()) and
+//to hide
+// 	conn, err := r.getConn()
+//	if err != nil {
+//		return err
+//	}
 
 func (r *Repository) Delete(path string, node *Node) error {
 	conn, err := r.getConn()

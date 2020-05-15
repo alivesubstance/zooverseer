@@ -731,25 +731,27 @@
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <child>
-                          <object class="GtkButton">
+                          <object class="GtkButton" id="searchDataBtn">
                             <property name="visible">True</property>
+                            <property name="sensitive">False</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
-                            <property name="image">iconValueSave</property>
+                            <property name="tooltip_text" translatable="yes">Not implemented</property>
+                            <property name="image">iconValueSearch</property>
                           </object>
                           <packing>
                             <property name="position">0</property>
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkButton">
+                          <object class="GtkButton" id="saveDataBtn">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
-                            <property name="image">iconValueSearch</property>
+                            <property name="image">iconValueSave</property>
                           </object>
                           <packing>
-                            <property name="position">0</property>
+                            <property name="position">1</property>
                           </packing>
                         </child>
                       </object>
@@ -1167,7 +1169,7 @@
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <child>
-      <object class="GtkMenuItem" id="popupMenuAdd">
+      <object class="GtkMenuItem" id="contextMenuAdd">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="label" translatable="yes">Add</property>
@@ -1175,28 +1177,25 @@
       </object>
     </child>
     <child>
-      <object class="GtkImageMenuItem" id="popupMenuCut">
-        <property name="label">gtk-cut</property>
+      <object class="GtkMenuItem" id="contextMenuCut">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
+        <property name="label" translatable="yes">Cut</property>
         <property name="use_underline">True</property>
-        <property name="use_stock">True</property>
-        <signal name="activate" handler="on_popupMenuCut_activate" swapped="no"/>
       </object>
     </child>
     <child>
-      <object class="GtkImageMenuItem">
-        <property name="label">gtk-copy</property>
+      <object class="GtkMenuItem">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
+        <property name="label" translatable="yes">Copy</property>
         <property name="use_underline">True</property>
-        <property name="use_stock">True</property>
         <child type="submenu">
           <object class="GtkMenu">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <child>
-              <object class="GtkMenuItem" id="popupMenuCopyValue">
+              <object class="GtkMenuItem" id="contextMenuCopyValue">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="label" translatable="yes">Value</property>
@@ -1225,12 +1224,11 @@
       </object>
     </child>
     <child>
-      <object class="GtkImageMenuItem" id="contextMenuPasteValue">
-        <property name="label">gtk-paste</property>
+      <object class="GtkMenuItem" id="contextMenuPasteValue">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
+        <property name="label" translatable="yes">Paste</property>
         <property name="use_underline">True</property>
-        <property name="use_stock">True</property>
       </object>
     </child>
     <child>
@@ -1242,12 +1240,11 @@
       </object>
     </child>
     <child>
-      <object class="GtkImageMenuItem" id="contextMenuDeleteNode">
-        <property name="label">gtk-delete</property>
+      <object class="GtkMenuItem" id="contextMenuDeleteNode">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
+        <property name="label" translatable="yes">Delete</property>
         <property name="use_underline">True</property>
-        <property name="use_stock">True</property>
       </object>
     </child>
   </object>

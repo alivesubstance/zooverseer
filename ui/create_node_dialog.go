@@ -13,12 +13,12 @@ type CreateNodeDlg struct {
 }
 
 func NewCreateNodeDlg(mainWindow *gtk.Window) *CreateNodeDlg {
-	c := CreateNodeDlg{}
-	getObject("createNodeDlgOkBtn").(*gtk.Button).Connect("clicked", c.onOkBtnClicked)
-	getObject("createNodeDlgCancelBtn").(*gtk.Button).Connect("clicked", c.onCancelBtnClicked)
-	c.getCreateNodeDlg().SetTransientFor(mainWindow)
+	createNodeDlg := CreateNodeDlg{}
+	getObject("createNodeDlgOkBtn").(*gtk.Button).Connect("clicked", createNodeDlg.onOkBtnClicked)
+	getObject("createNodeDlgCancelBtn").(*gtk.Button).Connect("clicked", createNodeDlg.onCancelBtnClicked)
+	createNodeDlg.getCreateNodeDlg().SetTransientFor(mainWindow)
 
-	return &c
+	return &createNodeDlg
 }
 
 func (c *CreateNodeDlg) onOkBtnClicked() {
@@ -28,10 +28,10 @@ func (c *CreateNodeDlg) onOkBtnClicked() {
 	}
 
 	selection, _ := getNodesTreeView().GetSelection()
-	parentPath, _ := getTreeSelectedZkPath(selection)
+	parentZkPath, _ := getTreeSelectedZkPath(selection)
 
 	c.hide()
-	err := ZkCachingRepo.Save(parentPath, nodeName, c.getAcl())
+	err := ZkCachingRepo.Save(parentZkPath, nodeName, c.getAcl())
 	if err != nil {
 		msg := "Unable to create node: " + nodeName
 		log.WithError(err).Warn(msg)
@@ -39,7 +39,7 @@ func (c *CreateNodeDlg) onOkBtnClicked() {
 		dialog.Run()
 		dialog.Hide()
 	} else {
-		refreshNode(parentPath)
+		refreshNode(parentZkPath)
 	}
 }
 

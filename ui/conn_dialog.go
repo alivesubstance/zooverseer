@@ -71,6 +71,8 @@ func InitConnDialog(mainWindow *gtk.Window) *gtk.Dialog {
 func getSelectedConn() *core.ConnInfo {
 	//todo leave it for test
 	return &core.ConnInfo{Name: "localhost", Host: "127.0.0.1", Port: 2181}
+	//return &core.ConnInfo{Name: "scotia-nightly", Host: "172.0.30.173", Port: 32090}
+	//return &core.ConnInfo{Name: "sandbox-pleeco", Host: "10.1.1.112", Port: 2181, User: "zookeeper", Password: "z00k33p3r"}
 	//connList := getConnListBox()
 	//connName := getSelectedConnName(connList)
 	//return ConnRepo.Find(connName)
