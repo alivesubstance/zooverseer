@@ -1,6 +1,5 @@
 package ui
 
-import "C"
 import (
 	"github.com/gotk3/gotk3/gtk"
 )
@@ -16,16 +15,24 @@ func InitMainWindow(mainWindow *gtk.Window) {
 
 	initNodeTree()
 	notebook.init()
-	initMainMenu()
+	initMainMenu(mainWindow)
 
 	mainWindow.SetTitle("Zooverseer")
 	mainWindow.ShowAll()
 }
 
-func initMainMenu() {
-	menuConnect := getObject("menuConnect").(*gtk.MenuItem)
-	menuConnect.Connect("activate", func() {
+func initMainMenu(mainWindow *gtk.Window) {
+	getObject("menuConnect").(*gtk.MenuItem).Connect("activate", func() {
 		connDialog := getObject("connDialog").(*gtk.Dialog)
 		connDialog.Show()
+	})
+	getObject("menuExit").(*gtk.MenuItem).Connect("activate", func() {
+		ZkCachingRepo.Close()
+		mainWindow.Close()
+	})
+
+	getObject("menuDisconnect").(*gtk.MenuItem).Connect("activate", func() {
+		ZkCachingRepo.Close()
+		ClearNodeTree()
 	})
 }

@@ -5,7 +5,7 @@ import (
 	"github.com/alivesubstance/zooverseer/core"
 	"github.com/alivesubstance/zooverseer/util"
 	"github.com/gotk3/gotk3/gtk"
-	"github.com/samuel/go-zookeeper/zk"
+	goZk "github.com/samuel/go-zookeeper/zk"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -31,7 +31,7 @@ func (c *CreateNodeDlg) onOkBtnClicked() {
 	parentZkPath, _ := getTreeSelectedZkPath(selection)
 
 	c.hide()
-	err := ZkCachingRepo.Save(parentZkPath, nodeName, c.getAcl())
+	err := ZkCachingRepo.SaveChild(parentZkPath, nodeName, c.getAcl())
 	if err != nil {
 		msg := "Unable to create node: " + nodeName
 		log.WithError(err).Warn(msg)
@@ -57,14 +57,14 @@ func (c *CreateNodeDlg) setAcl(connInfo *core.ConnInfo) {
 	c.getAclEntry().SetText(aclStr)
 }
 
-func (c *CreateNodeDlg) getAcl() []zk.ACL {
+func (c *CreateNodeDlg) getAcl() []goZk.ACL {
 	//digest:someuser:hashedpw:crdwa
 	//todo remove once ACL support will be full
 	connInfo := getSelectedConn()
 	if len(connInfo.User) == 0 && len(connInfo.Password) == 0 {
 		return core.AclWorldAnyone
 	}
-	return zk.DigestACL(zk.PermAll, connInfo.User, connInfo.Password)
+	return goZk.DigestACL(goZk.PermAll, connInfo.User, connInfo.Password)
 }
 
 func (c *CreateNodeDlg) showAll() {

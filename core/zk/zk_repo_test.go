@@ -66,7 +66,7 @@ func TestSave(t *testing.T) {
 	ZkRepo.SetConnInfo(connInfo)
 
 	nodeName := "test"
-	err := ZkRepo.Save("/", nodeName, core.AclWorldAnyone)
+	err := ZkRepo.SaveChild("/", nodeName, core.AclWorldAnyone)
 	assert.Nil(t, err)
 	if err != nil {
 		log.WithError(err).Panicf("Failed to save node " + nodeName)

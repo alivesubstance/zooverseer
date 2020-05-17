@@ -21,7 +21,6 @@ import (
 var (
 	nodeTreeStore    *gtk.TreeStore
 	ZkPathByTreePath = make(map[string]string)
-	ZkRepo           = zk.Repository{}
 )
 
 func initNodeTree() {

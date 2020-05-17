@@ -38,9 +38,10 @@ type Accessor interface {
 	GetValue(path string) (*Node, error)
 	GetChildren(path string) ([]*Node, error)
 	GetRootNode() (*Node, error)
-	Save(parentPath string, childName string, acl []goZk.ACL) error
+	SaveChild(parentPath string, childName string, acl []goZk.ACL) error
 	SaveValue(parentPath string, node *Node) error
 	Delete(path string, version int32) error
+	Close()
 }
 
 type Repository struct {
@@ -166,7 +167,7 @@ func (r *Repository) GetChildren(path string) ([]*Node, error) {
 	return r.getChildrenMeta(path, childrenNames)
 }
 
-func (r *Repository) Save(parentPath string, childName string, acl []goZk.ACL) error {
+func (r *Repository) SaveChild(parentPath string, childName string, acl []goZk.ACL) error {
 	conn, err := r.getConn()
 	if err != nil {
 		return err
@@ -230,6 +231,13 @@ func (r *Repository) Delete(path string, node *Node) error {
 
 	log.Tracef("Deleting %s", path)
 	return conn.Delete(path, node.Meta.Version)
+}
+
+func (r *Repository) Close() {
+	conn, _ := r.getConn()
+	if conn != nil {
+		conn.Close()
+	}
 }
 
 func (r *Repository) buildAbsPath(parentPath string, childName string) string {

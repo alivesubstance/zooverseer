@@ -12,7 +12,8 @@ import (
 // there are rumors that global variable is evil. why?
 var (
 	Builder       *gtk.Builder
-	ZkCachingRepo = zk.CachingRepository{}
+	ZkRepo        = zk.Repository{}
+	ZkCachingRepo = zk.CachingRepository{Repo: ZkRepo}
 )
 
 func OnAppActivate(app *gtk.Application) func() {
@@ -25,12 +26,9 @@ func OnAppActivate(app *gtk.Application) func() {
 
 		mainWindow := getMainWindow()
 		InitMainWindow(mainWindow)
-
-		//InitConnDialog(mainWindow)
+		InitConnDialog(mainWindow)
 
 		app.AddWindow(mainWindow)
-
-		onConnBtnClicked()
 	}
 }
 

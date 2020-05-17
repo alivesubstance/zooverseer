@@ -6,9 +6,11 @@ import (
 	"github.com/alivesubstance/zooverseer/util"
 	"github.com/gotk3/gotk3/glib"
 	"github.com/gotk3/gotk3/gtk"
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"os"
 )
+
+var log = logrus.New()
 
 func main() {
 	log.Info("Starting zooverseer")
@@ -24,10 +26,6 @@ func main() {
 }
 
 func initLogger() {
-	// Output to stdout instead of the default stderr
-	// Can be any io.Writer, see below for File example
 	log.SetOutput(os.Stdout)
-
-	// Only log the warning severity or above.
-	log.SetLevel(log.TraceLevel)
+	log.SetLevel(logrus.TraceLevel)
 }
