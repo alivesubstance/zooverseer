@@ -6,17 +6,17 @@ import (
 
 type RenameNodeDlg struct {
 	nameEntry *gtk.Entry
-	dialog    *gtk.Dialog
+	dlg       *gtk.Dialog
 }
 
 func NewRenameNodeDlg(mainWindow *gtk.Window) *RenameNodeDlg {
 	renameNodeDlg := RenameNodeDlg{}
 	renameNodeDlg.nameEntry = getObject("renameNodeDlgNameEntry").(*gtk.Entry)
-	renameNodeDlg.dialog = getObject("createNodeDlg").(*gtk.Dialog)
+	renameNodeDlg.dlg = getObject("createNodeDlg").(*gtk.Dialog)
+	createNodeDlg.dlg.SetTransientFor(mainWindow)
 
 	getObject("renameNodeDlgOkBtn").(*gtk.Button).Connect("clicked", renameNodeDlg.onOkBtnClicked)
 	getObject("renameNodeDlgCancelBtn").(*gtk.Button).Connect("clicked", renameNodeDlg.onCancelBtnClicked)
-	createNodeDlg.getCreateNodeDlg().SetTransientFor(mainWindow)
 
 	return &renameNodeDlg
 }
@@ -35,9 +35,9 @@ func (c *RenameNodeDlg) onOkBtnClicked() {
 	//if err != nil {
 	//	msg := "Unable to create node: " + newName
 	//	log.WithError(err).Warn(msg)
-	//	dialog := createWarnDialog(getMainWindow(), msg+"\n"+err.Error())
-	//	dialog.Run()
-	//	dialog.Hide()
+	//	dlg := CreateWarnDialog(GetMainWindow(), msg+"\n"+err.Error())
+	//	dlg.Run()
+	//	dlg.Hide()
 	//} else {
 	//	refreshNode(parentZkPath)
 	//}
@@ -50,9 +50,9 @@ func (c *RenameNodeDlg) onCancelBtnClicked() {
 func (c *RenameNodeDlg) showAll() {
 	c.nameEntry.SetText("")
 	c.nameEntry.GrabFocus()
-	c.dialog.ShowAll()
+	c.dlg.ShowAll()
 }
 
 func (c *RenameNodeDlg) hide() {
-	c.dialog.Hide()
+	c.dlg.Hide()
 }

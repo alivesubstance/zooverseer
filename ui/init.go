@@ -2,19 +2,15 @@ package ui
 
 import (
 	"github.com/alivesubstance/zooverseer/core"
-	"github.com/alivesubstance/zooverseer/core/zk"
 	"github.com/alivesubstance/zooverseer/util"
 	"github.com/gotk3/gotk3/glib"
 	"github.com/gotk3/gotk3/gtk"
 	log "github.com/sirupsen/logrus"
+	"time"
 )
 
 // there are rumors that global variable is evil. why?
-var (
-	Builder       *gtk.Builder
-	ZkRepo        = zk.Repository{}
-	ZkCachingRepo = zk.CachingRepository{Repo: ZkRepo}
-)
+var Builder *gtk.Builder
 
 func OnAppActivate(app *gtk.Application) func() {
 	return func() {
@@ -24,7 +20,7 @@ func OnAppActivate(app *gtk.Application) func() {
 
 		Builder = builder
 
-		mainWindow := getMainWindow()
+		mainWindow := GetMainWindow()
 		InitMainWindow(mainWindow)
 		InitConnDialog(mainWindow)
 
@@ -32,8 +28,12 @@ func OnAppActivate(app *gtk.Application) func() {
 	}
 }
 
-func getMainWindow() *gtk.Window {
+func GetMainWindow() *gtk.Window {
 	return getObject("mainWindow").(*gtk.Window)
+}
+
+func CreateErrorDialog(parent gtk.IWindow, text string) *gtk.MessageDialog {
+	return gtk.MessageDialogNew(parent, gtk.DIALOG_MODAL, gtk.MESSAGE_ERROR, gtk.BUTTONS_OK, text)
 }
 
 func createConfirmDialog(parent gtk.IWindow, text string) *gtk.MessageDialog {
@@ -51,19 +51,19 @@ func createWarnDialog(parent gtk.IWindow, text string) *gtk.MessageDialog {
 	return gtk.MessageDialogNew(parent, gtk.DIALOG_MODAL, gtk.MESSAGE_WARNING, gtk.BUTTONS_OK, text)
 }
 
-func createAndRunWarnDialog(parent gtk.IWindow, text string) {
-	dlg := gtk.MessageDialogNew(parent, gtk.DIALOG_MODAL, gtk.MESSAGE_WARNING, gtk.BUTTONS_OK, text)
-	dlg.Run()
-	dlg.Hide()
-}
-
-func createErrorDialog(parent gtk.IWindow, text string) *gtk.MessageDialog {
-	return gtk.MessageDialogNew(parent, gtk.DIALOG_MODAL, gtk.MESSAGE_ERROR, gtk.BUTTONS_OK, text)
-}
-
 func getObject(objectName string) glib.IObject {
 	object, err := Builder.GetObject(objectName)
 	util.CheckError(err)
 
 	return object
+}
+
+func TestExport() {
+	// todo exclude, test only
+	time.Sleep(1 * time.Second)
+	log.Tracef("Eagerly select path")
+	selection, _ := getNodesTreeView().GetSelection()
+	treeIter, _ := nodeTreeStore.GetIterFromString("0:0")
+	selection.SelectIter(treeIter)
+	contextMenu.onExportNode()
 }

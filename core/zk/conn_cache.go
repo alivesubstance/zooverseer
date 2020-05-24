@@ -34,8 +34,10 @@ func init() {
 	c.Stats(stats)
 
 	go func() {
-		time.Sleep(core.ConnCacheStatsPeriodMinutes * time.Minute)
-		log.Infof("Conn cache: %+v\n", stats)
+		for {
+			time.Sleep(core.ConnCacheStatsPeriodMinutes * time.Minute)
+			log.Infof("Conn cache: %+v\n", stats)
+		}
 	}()
 
 	ConnCache = c

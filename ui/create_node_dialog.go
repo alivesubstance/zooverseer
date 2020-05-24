@@ -3,6 +3,7 @@ package ui
 import (
 	"fmt"
 	"github.com/alivesubstance/zooverseer/core"
+	"github.com/alivesubstance/zooverseer/core/zk"
 	"github.com/alivesubstance/zooverseer/util"
 	"github.com/gotk3/gotk3/gtk"
 	goZk "github.com/samuel/go-zookeeper/zk"
@@ -10,13 +11,16 @@ import (
 )
 
 type CreateNodeDlg struct {
+	dlg *gtk.Dialog
 }
 
 func NewCreateNodeDlg(mainWindow *gtk.Window) *CreateNodeDlg {
 	createNodeDlg := CreateNodeDlg{}
+	createNodeDlg.dlg = getObject("createNodeDlg").(*gtk.Dialog)
+	createNodeDlg.dlg.SetTransientFor(mainWindow)
+
 	getObject("createNodeDlgOkBtn").(*gtk.Button).Connect("clicked", createNodeDlg.onOkBtnClicked)
 	getObject("createNodeDlgCancelBtn").(*gtk.Button).Connect("clicked", createNodeDlg.onCancelBtnClicked)
-	createNodeDlg.getCreateNodeDlg().SetTransientFor(mainWindow)
 
 	return &createNodeDlg
 }
@@ -31,11 +35,11 @@ func (c *CreateNodeDlg) onOkBtnClicked() {
 	parentZkPath, _ := getTreeSelectedZkPath(selection)
 
 	c.hide()
-	err := ZkCachingRepo.SaveChild(parentZkPath, nodeName, c.getAcl())
+	err := zk.CachingRepo.SaveChild(parentZkPath, nodeName, c.getAcl())
 	if err != nil {
 		msg := "Unable to create node: " + nodeName
 		log.WithError(err).Warn(msg)
-		dialog := createWarnDialog(getMainWindow(), msg+"\n"+err.Error())
+		dialog := createWarnDialog(GetMainWindow(), msg+"\n"+err.Error())
 		dialog.Run()
 		dialog.Hide()
 	} else {
@@ -71,15 +75,11 @@ func (c *CreateNodeDlg) showAll() {
 	c.getNameEntry().SetText("")
 	c.getNameEntry().GrabFocus()
 	c.setAcl(getSelectedConn())
-	c.getCreateNodeDlg().ShowAll()
+	c.dlg.ShowAll()
 }
 
 func (c *CreateNodeDlg) hide() {
-	c.getCreateNodeDlg().Hide()
-}
-
-func (c *CreateNodeDlg) getCreateNodeDlg() *gtk.Dialog {
-	return getObject("createNodeDlg").(*gtk.Dialog)
+	c.dlg.Hide()
 }
 
 func (c *CreateNodeDlg) getAclEntry() *gtk.Entry {

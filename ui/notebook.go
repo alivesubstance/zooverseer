@@ -56,6 +56,10 @@ func (n *Notebook) showPageData(node *zk2.Node) {
 
 func (n *Notebook) showPageMetadata(node *zk2.Node) {
 	meta := node.Meta
+	if meta == nil {
+		return
+	}
+
 	getObject("czxidEntry").(*gtk.Entry).SetText(util.Int64ToStr(meta.Czxid))
 	getObject("mzxidEntry").(*gtk.Entry).SetText(util.Int64ToStr(meta.Mzxid))
 	getObject("ctimeEntry").(*gtk.Entry).SetText(util.MillisToTime(meta.Ctime).String())
@@ -77,16 +81,16 @@ func (n *Notebook) onSaveDataBtnClicked() {
 	buffer, _ := getObject("nodeDataTextView").(*gtk.TextView).GetBuffer()
 	text, err := buffer.GetText(buffer.GetStartIter(), buffer.GetEndIter(), false)
 	if err != nil {
-		createWarnDialog(getMainWindow(), "Unable to read node value: "+err.Error())
+		createWarnDialog(GetMainWindow(), "Unable to read node value: "+err.Error())
 	}
 
 	treeSelection, _ := getNodesTreeView().GetSelection()
 	node, _ := getTreeSelectedNode(treeSelection)
 	zkPath, _ := getTreeSelectedZkPath(treeSelection)
 	node.Value = text
-	err = ZkCachingRepo.SaveValue(zkPath, node)
+	err = zk2.CachingRepo.SaveValue(zkPath, node)
 	if err != nil {
-		createWarnDialog(getMainWindow(), "Unable to save node value: "+err.Error())
+		createWarnDialog(GetMainWindow(), "Unable to save node value: "+err.Error())
 	}
 }
 

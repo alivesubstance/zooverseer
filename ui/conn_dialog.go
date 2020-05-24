@@ -7,6 +7,7 @@ import "C"
 import (
 	"fmt"
 	"github.com/alivesubstance/zooverseer/core"
+	"github.com/alivesubstance/zooverseer/core/zk"
 	"github.com/alivesubstance/zooverseer/util"
 	"github.com/avast/retry-go"
 	"github.com/gotk3/gotk3/gdk"
@@ -70,7 +71,7 @@ func InitConnDialog(mainWindow *gtk.Window) *gtk.Dialog {
 //todo cache it for session
 func getSelectedConn() *core.ConnInfo {
 	//todo leave it for test
-	//return &core.ConnInfo{Name: "localhost", Host: "127.0.0.1", Port: 2181}
+	return &core.ConnInfo{Name: "localhost", Host: "127.0.0.1", Port: 2181}
 	//return &core.ConnInfo{Name: "scotia-nightly", Host: "172.0.30.173", Port: 32090}
 	//return &core.ConnInfo{Name: "sandbox-pleeco", Host: "10.1.1.112", Port: 2181, User: "zookeeper", Password: "z00k33p3r"}
 	connList := getConnListBox()
@@ -352,11 +353,11 @@ func onConnBtnClicked() {
 	ClearNodeTree()
 
 	connInfo := getSelectedConn()
-	ZkCachingRepo.SetConnInfo(connInfo)
+	zk.CachingRepo.SetConnInfo(connInfo)
 
 	err := ShowTreeRootNodes()
 	if err != nil {
-		dialog := createErrorDialog(getConnDialog(), "Unable to connect to "+connInfo.Name)
+		dialog := CreateErrorDialog(getConnDialog(), "Unable to connect to "+connInfo.Name)
 		dialog.Run()
 		dialog.Hide()
 		return
@@ -374,7 +375,7 @@ func onConnTestBtnClicked() {
 	connInfo := getConnForm()
 	var dialog *gtk.MessageDialog
 
-	_, err := ZkRepo.GetValue(core.NodeRootName)
+	_, err := zk.Repo.GetValue(core.NodeRootName)
 	if err == nil {
 		dialog = createInfoDialog(getConnDialog(), "Successfully connected to "+connInfo.Name)
 	} else {

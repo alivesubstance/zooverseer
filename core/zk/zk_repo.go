@@ -34,9 +34,12 @@ var retryOptions = []retry.Option{
 type Accessor interface {
 	SetConnInfo(connInfo *core.ConnInfo)
 	Get(path string) (*Node, error)
+
+	//todo consider to remove next three methods and use Get instead
 	GetMeta(path string) (*goZk.Stat, error)
 	GetValue(path string) (*Node, error)
 	GetChildren(path string) ([]*Node, error)
+
 	GetRootNode() (*Node, error)
 	SaveChild(parentPath string, childName string, acl []goZk.ACL) error
 	SaveValue(parentPath string, node *Node) error

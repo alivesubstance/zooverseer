@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"github.com/alivesubstance/zooverseer/core/zk"
 	"github.com/gotk3/gotk3/gtk"
 )
 
@@ -27,12 +28,16 @@ func initMainMenu(mainWindow *gtk.Window) {
 		connDialog.Show()
 	})
 	getObject("menuExit").(*gtk.MenuItem).Connect("activate", func() {
-		ZkCachingRepo.Close()
+		zk.CachingRepo.Close()
 		mainWindow.Close()
 	})
 
 	getObject("menuDisconnect").(*gtk.MenuItem).Connect("activate", func() {
-		ZkCachingRepo.Close()
+		zk.CachingRepo.Close()
 		ClearNodeTree()
+	})
+
+	getObject("menuExport").(*gtk.MenuItem).Connect("activate", func() {
+		contextMenu.onExportNode()
 	})
 }

@@ -42,12 +42,12 @@ func initNodeTree() {
 
 func ClearNodeTree() {
 	nodeTreeStore.Clear()
-	ZkCachingRepo.InvalidateAll()
+	zk.CachingRepo.InvalidateAll()
 	ZkPathByTreePath = make(map[string]string)
 }
 
 func ShowTreeRootNodes() error {
-	rootNode, err := ZkCachingRepo.GetRootNode()
+	rootNode, err := zk.CachingRepo.GetRootNode()
 	if err == nil {
 		rootTreeIter := addSubRow(nil, rootNode)
 		rootTreePath, _ := nodeTreeStore.GetPath(rootTreeIter)
@@ -62,23 +62,23 @@ func getTreeSelectedNode(treeSelection *gtk.TreeSelection) (*zk.Node, error) {
 		if err != nil {
 			return nil, err
 		}
-		log.Tracef("Nothing selected")
 		// there is no error. nothing to selected. happens f.i. after node deletion
 		return nil, nil
 	}
 
-	node, err := ZkCachingRepo.GetValue(zkPath)
+	node, err := zk.CachingRepo.Get(zkPath)
 	if err != nil {
 		return nil, errors.Wrapf(err, "Value nil for %s", zkPath)
 	}
 	return node, nil
 }
 
+// todo consider not to return error and show error dlg or even panic
 func getTreeSelectedZkPath(treeSelection *gtk.TreeSelection) (string, error) {
 	model, iter, ok := treeSelection.GetSelected()
 	if !ok {
 		nodeAction.enableButtons(false)
-		contextMenu.enableButtons(false)
+		contextMenu.enableMenu(false)
 		return "", nil
 	}
 
@@ -94,12 +94,12 @@ func getTreeSelectedZkPath(treeSelection *gtk.TreeSelection) (string, error) {
 
 func onTreeRowSelected(treeSelection *gtk.TreeSelection) {
 	nodeAction.enableButtons(true)
-	contextMenu.enableButtons(true)
+	contextMenu.enableMenu(true)
 
 	node, err := getTreeSelectedNode(treeSelection)
 	if err != nil {
 		log.WithError(err).Error("Failed to get tree selected node")
-		dialog := createWarnDialog(getMainWindow(), "Unable to fetch node value: "+errors.Cause(err).Error())
+		dialog := createWarnDialog(GetMainWindow(), "Unable to fetch node value: "+errors.Cause(err).Error())
 		dialog.Run()
 		dialog.Hide()
 		return
@@ -120,15 +120,15 @@ func onExpandRow(treeView *gtk.TreeView, parentIter *gtk.TreeIter, treePath *gtk
 	parentGoValue, _ := parentValue.GoValue()
 
 	zkPath := ZkPathByTreePath[treePath.String()]
-	children, err := ZkCachingRepo.GetChildren(zkPath)
+	node, err := zk.CachingRepo.Get(zkPath)
 	if err != nil {
-		//todo show error dialog
+		//todo show error dlg
 		log.WithError(err).Errorf("Failed to get data and children for %s", zkPath)
 	}
 
-	log.Tracef("Add %v children at %s", len(children), parentGoValue)
-	for i := range children {
-		addSubRow(parentIter, children[i])
+	log.Tracef("Add %v children at %s", len(node.Children), parentGoValue)
+	for i := range node.Children {
+		addSubRow(parentIter, node.Children[i])
 	}
 }
 
@@ -138,7 +138,6 @@ func removeRowChildren(parentIter *gtk.TreeIter) {
 
 	parentZkPath := ZkPathByTreePath[parentTreePath.String()]
 	log.Tracef("Remove %v children at %s", children, parentZkPath)
-	ZkCachingRepo.Invalidate(parentZkPath)
 
 	hasChildren := nodeTreeStore.IterHasChild(parentIter)
 	if hasChildren {
@@ -162,7 +161,6 @@ func removeRowChildren(parentIter *gtk.TreeIter) {
 func addSubRow(parentIter *gtk.TreeIter, child *zk.Node) *gtk.TreeIter {
 	childIter := nodeTreeStore.Append(parentIter)
 	setNodeName(childIter, child.Name)
-	//setNodeValue(child)
 
 	if child.Meta.NumChildren > 0 {
 		// add dummy node value in order to force GtkTreeView show expander icon
@@ -258,26 +256,32 @@ func refreshNode(zkPath string) {
 
 	parentTreeIter, _ := nodeTreeStore.GetIterFromString(treePath)
 	parentTreePath, _ := nodeTreeStore.GetPath(parentTreeIter)
+
+	parentZkPath := ZkPathByTreePath[parentTreePath.String()]
+	// remove cached node value
+	zk.CachingRepo.Invalidate(parentZkPath)
+	// mimic user click expand row
 	onExpandRow(getNodesTreeView(), parentTreeIter, parentTreePath)
+	// expand tree to parent path
 	getNodesTreeView().ExpandToPath(parentTreePath)
 
-	node, _ := ZkCachingRepo.GetValue(zkPath)
+	node, _ := zk.CachingRepo.GetValue(zkPath)
 	notebook.showPage(node, PageData)
 }
 
 func deleteSelectedNode() {
 	treeSelection, _ := getNodesTreeView().GetSelection()
 	zkPath, _ := getTreeSelectedZkPath(treeSelection)
-	//dialog := createConfirmDialog(getConnDialog(), "Are you sure you want to delete "+gopath.Base(zkPath)+"?")
-	//resp := dialog.Run()
-	//dialog.Hide()
+	//dlg := CreateConfirmDialog(getConnDialog(), "Are you sure you want to delete "+gopath.Base(zkPath)+"?")
+	//resp := dlg.Run()
+	//dlg.Hide()
 	//if resp == gtk.RESPONSE_YES {
-	node, _ := ZkCachingRepo.GetValue(zkPath)
-	err := ZkCachingRepo.Delete(zkPath, node)
+	node, _ := zk.CachingRepo.GetValue(zkPath)
+	err := zk.CachingRepo.Delete(zkPath, node)
 	if err != nil {
 		msg := "Unable to delete node"
 		log.WithError(err).Error(msg)
-		warnDlg := createWarnDialog(getMainWindow(), msg+errors.Cause(err).Error())
+		warnDlg := createWarnDialog(GetMainWindow(), msg+errors.Cause(err).Error())
 		warnDlg.Run()
 		warnDlg.Hide()
 		return

@@ -15,7 +15,8 @@ var (
 
 type CachingRepositoryAccessor interface {
 	InvalidateAll()
-	Invalidate(zkPath string)
+	Invalidate(path string)
+	Export(path string) (*Node, error)
 
 	Accessor
 }
@@ -33,8 +34,10 @@ func init() {
 	cache.Stats(stats)
 
 	go func() {
-		time.Sleep(core.ZkCacheStatsPeriodMinutes * time.Minute)
-		log.Infof("Zk cache: %+v\n", stats)
+		for {
+			time.Sleep(core.ZkCacheStatsPeriodMinutes * time.Minute)
+			log.Infof("Zk cache: %+v\n", stats)
+		}
 	}()
 }
 
@@ -171,4 +174,26 @@ func (c *CachingRepository) Delete(path string, node *Node) error {
 func (c *CachingRepository) Close() {
 	c.Repo.Close()
 	c.InvalidateAll()
+}
+
+func (c *CachingRepository) Export(path string) (*Node, error) {
+	node, err := c.Get(path)
+	if err != nil {
+		return nil, err
+	}
+
+	return node, c.doExport(node, path)
+}
+
+func (c *CachingRepository) doExport(parent *Node, parentPath string) error {
+	for i, child := range parent.Children {
+		// todo run in parallel
+		childNode, err := c.Export(c.Repo.buildAbsPath(parentPath, child.Name))
+		parent.Children[i] = childNode
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
