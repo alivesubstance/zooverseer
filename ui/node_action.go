@@ -10,13 +10,13 @@ type NodeAction struct {
 
 func NewNodeAction() *NodeAction {
 	n := &NodeAction{}
-	n.createBtn = getObject("nodeCreateBtn").(*gtk.Button)
+	n.createBtn = GetObject("nodeCreateBtn").(*gtk.Button)
 	n.createBtn.Connect("clicked", n.onNodeCreateBtnClicked)
 
-	n.refreshBtn = getObject("nodeRefreshBtn").(*gtk.Button)
+	n.refreshBtn = GetObject("nodeRefreshBtn").(*gtk.Button)
 	n.refreshBtn.Connect("clicked", n.onNodeRefreshBtnClicked)
 
-	n.deleteBtn = getObject("nodeDeleteBtn").(*gtk.Button)
+	n.deleteBtn = GetObject("nodeDeleteBtn").(*gtk.Button)
 	n.deleteBtn.Connect("clicked", n.onNodeDeleteBtnClicked)
 
 	n.enableButtons(false)

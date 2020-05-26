@@ -187,7 +187,7 @@ func addSubRow(parentIter *gtk.TreeIter, child *zk.Node) *gtk.TreeIter {
 }
 
 func setNodeValue(node *zk.Node) {
-	nodeDataTextView := getObject("nodeDataTextView").(*gtk.TextView)
+	nodeDataTextView := GetObject("nodeDataTextView").(*gtk.TextView)
 	textBuffer, err := nodeDataTextView.GetBuffer()
 	util.CheckErrorWithMsg("Failed to get text buffer", err)
 
@@ -225,7 +225,7 @@ func createTextColumn(title string, id int) *gtk.TreeViewColumn {
 
 func onMouseButtonPress(b *gtk.TreeView, e *gdk.Event) {
 	if isMouse2ButtonClicked(e) {
-		menu := getObject("popupMenu").(*gtk.Menu)
+		menu := GetObject("popupMenu").(*gtk.Menu)
 		menu.ShowAll()
 		menu.PopupAtPointer(e)
 	}
@@ -242,7 +242,7 @@ func isMouse2ButtonClicked(e *gdk.Event) bool {
 }
 
 func getNodesTreeView() *gtk.TreeView {
-	return getObject("nodesTreeView").(*gtk.TreeView)
+	return GetObject("nodesTreeView").(*gtk.TreeView)
 }
 
 func refreshNode(zkPath string) {

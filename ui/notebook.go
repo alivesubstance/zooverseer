@@ -18,14 +18,14 @@ var notebook = Notebook{}
 type Notebook struct{}
 
 func (n *Notebook) init() {
-	getObject("notebook").(*gtk.Notebook).Connect(
+	GetObject("notebook").(*gtk.Notebook).Connect(
 		"switch-page",
 		func(notebook *gtk.Notebook, widget *gtk.Widget, page int) {
 			n.onNotebookSwitchPage(notebook, widget, page)
 		},
 	)
 
-	getObject("saveDataBtn").(*gtk.Button).Connect("clicked", n.onSaveDataBtnClicked)
+	GetObject("saveDataBtn").(*gtk.Button).Connect("clicked", n.onSaveDataBtnClicked)
 }
 
 func (n *Notebook) onNotebookSwitchPage(notebook *gtk.Notebook, widget *gtk.Widget, page int) {
@@ -60,17 +60,17 @@ func (n *Notebook) showPageMetadata(node *zk2.Node) {
 		return
 	}
 
-	getObject("czxidEntry").(*gtk.Entry).SetText(util.Int64ToStr(meta.Czxid))
-	getObject("mzxidEntry").(*gtk.Entry).SetText(util.Int64ToStr(meta.Mzxid))
-	getObject("ctimeEntry").(*gtk.Entry).SetText(util.MillisToTime(meta.Ctime).String())
-	getObject("mtimeEntry").(*gtk.Entry).SetText(util.MillisToTime(meta.Mtime).String())
-	getObject("versionEntry").(*gtk.Entry).SetText(util.Int32ToStr(meta.Version))
-	getObject("cversionEntry").(*gtk.Entry).SetText(util.Int32ToStr(meta.Cversion))
-	getObject("aversionEntry").(*gtk.Entry).SetText(util.Int32ToStr(meta.Aversion))
-	getObject("ephemeralOwnerEntry").(*gtk.Entry).SetText(util.Int64ToStr(meta.EphemeralOwner))
-	getObject("dataLengthEntry").(*gtk.Entry).SetText(util.Int32ToStr(meta.DataLength))
-	getObject("numChildrenEntry").(*gtk.Entry).SetText(util.Int32ToStr(meta.NumChildren))
-	getObject("pzxidEntry").(*gtk.Entry).SetText(util.Int64ToStr(meta.Pzxid))
+	GetObject("czxidEntry").(*gtk.Entry).SetText(util.Int64ToStr(meta.Czxid))
+	GetObject("mzxidEntry").(*gtk.Entry).SetText(util.Int64ToStr(meta.Mzxid))
+	GetObject("ctimeEntry").(*gtk.Entry).SetText(util.MillisToTime(meta.Ctime).String())
+	GetObject("mtimeEntry").(*gtk.Entry).SetText(util.MillisToTime(meta.Mtime).String())
+	GetObject("versionEntry").(*gtk.Entry).SetText(util.Int32ToStr(meta.Version))
+	GetObject("cversionEntry").(*gtk.Entry).SetText(util.Int32ToStr(meta.Cversion))
+	GetObject("aversionEntry").(*gtk.Entry).SetText(util.Int32ToStr(meta.Aversion))
+	GetObject("ephemeralOwnerEntry").(*gtk.Entry).SetText(util.Int64ToStr(meta.EphemeralOwner))
+	GetObject("dataLengthEntry").(*gtk.Entry).SetText(util.Int32ToStr(meta.DataLength))
+	GetObject("numChildrenEntry").(*gtk.Entry).SetText(util.Int32ToStr(meta.NumChildren))
+	GetObject("pzxidEntry").(*gtk.Entry).SetText(util.Int64ToStr(meta.Pzxid))
 }
 
 func (n *Notebook) showPageAcl() {
@@ -78,7 +78,7 @@ func (n *Notebook) showPageAcl() {
 }
 
 func (n *Notebook) onSaveDataBtnClicked() {
-	buffer, _ := getObject("nodeDataTextView").(*gtk.TextView).GetBuffer()
+	buffer, _ := GetObject("nodeDataTextView").(*gtk.TextView).GetBuffer()
 	text, err := buffer.GetText(buffer.GetStartIter(), buffer.GetEndIter(), false)
 	if err != nil {
 		createWarnDialog(GetMainWindow(), "Unable to read node value: "+err.Error())
@@ -95,5 +95,5 @@ func (n *Notebook) onSaveDataBtnClicked() {
 }
 
 func getNotebook() *gtk.Notebook {
-	return getObject("notebook").(*gtk.Notebook)
+	return GetObject("notebook").(*gtk.Notebook)
 }

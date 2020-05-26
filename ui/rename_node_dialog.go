@@ -11,12 +11,12 @@ type RenameNodeDlg struct {
 
 func NewRenameNodeDlg(mainWindow *gtk.Window) *RenameNodeDlg {
 	renameNodeDlg := RenameNodeDlg{}
-	renameNodeDlg.nameEntry = getObject("renameNodeDlgNameEntry").(*gtk.Entry)
-	renameNodeDlg.dlg = getObject("createNodeDlg").(*gtk.Dialog)
+	renameNodeDlg.nameEntry = GetObject("renameNodeDlgNameEntry").(*gtk.Entry)
+	renameNodeDlg.dlg = GetObject("createNodeDlg").(*gtk.Dialog)
 	createNodeDlg.dlg.SetTransientFor(mainWindow)
 
-	getObject("renameNodeDlgOkBtn").(*gtk.Button).Connect("clicked", renameNodeDlg.onOkBtnClicked)
-	getObject("renameNodeDlgCancelBtn").(*gtk.Button).Connect("clicked", renameNodeDlg.onCancelBtnClicked)
+	GetObject("renameNodeDlgOkBtn").(*gtk.Button).Connect("clicked", renameNodeDlg.onOkBtnClicked)
+	GetObject("renameNodeDlgCancelBtn").(*gtk.Button).Connect("clicked", renameNodeDlg.onCancelBtnClicked)
 
 	return &renameNodeDlg
 }

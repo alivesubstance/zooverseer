@@ -15,11 +15,11 @@ import (
 var connCreateLock = sync.Mutex{}
 
 type Node struct {
-	Name     string
-	Value    string
-	Meta     *goZk.Stat
-	Children []*Node
-	Acl      []goZk.ACL
+	Name     string     `json:"name"`
+	Value    string     `json:"value"`
+	Meta     *goZk.Stat `json:"-"`
+	Children []*Node    `json:"children"`
+	Acl      []goZk.ACL `json:"-"`
 }
 
 var retryOptions = []retry.Option{

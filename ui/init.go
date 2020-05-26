@@ -67,3 +67,25 @@ func TestExport() {
 	selection.SelectIter(treeIter)
 	contextMenu.onExportNode()
 }
+
+func enableSpinner(enable bool) {
+	box := GetObject("mainWindow").(*gtk.Window)
+	box.SetSensitive(!enable)
+
+	//if enable {
+	//spinner, _ := gtk.SpinnerNew()
+	//spinner.SetSensitive(true)
+	//spinner.ShowAll()
+	//spinner.Start()
+	//
+	//overlay := GetObject("nodeOverlay").(*gtk.Overlay)
+	//overlay.AddOverlay(spinner)
+	//m.spinner.Show()
+	//m.spinner.Start()
+	//} else {
+	//overlay := GetObject("nodeOverlay").(*gtk.Overlay)
+	//overlay.rem
+	//m.spinner.Stop()
+	//m.spinner.Hide()
+	//}
+}

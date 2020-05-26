@@ -16,11 +16,11 @@ type CreateNodeDlg struct {
 
 func NewCreateNodeDlg(mainWindow *gtk.Window) *CreateNodeDlg {
 	createNodeDlg := CreateNodeDlg{}
-	createNodeDlg.dlg = getObject("createNodeDlg").(*gtk.Dialog)
+	createNodeDlg.dlg = GetObject("createNodeDlg").(*gtk.Dialog)
 	createNodeDlg.dlg.SetTransientFor(mainWindow)
 
-	getObject("createNodeDlgOkBtn").(*gtk.Button).Connect("clicked", createNodeDlg.onOkBtnClicked)
-	getObject("createNodeDlgCancelBtn").(*gtk.Button).Connect("clicked", createNodeDlg.onCancelBtnClicked)
+	GetObject("createNodeDlgOkBtn").(*gtk.Button).Connect("clicked", createNodeDlg.onOkBtnClicked)
+	GetObject("createNodeDlgCancelBtn").(*gtk.Button).Connect("clicked", createNodeDlg.onCancelBtnClicked)
 
 	return &createNodeDlg
 }
@@ -83,9 +83,9 @@ func (c *CreateNodeDlg) hide() {
 }
 
 func (c *CreateNodeDlg) getAclEntry() *gtk.Entry {
-	return getObject("createNodeDlgAclEntry").(*gtk.Entry)
+	return GetObject("createNodeDlgAclEntry").(*gtk.Entry)
 }
 
 func (c *CreateNodeDlg) getNameEntry() *gtk.Entry {
-	return getObject("createNodeDlgNameEntry").(*gtk.Entry)
+	return GetObject("createNodeDlgNameEntry").(*gtk.Entry)
 }
