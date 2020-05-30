@@ -13,7 +13,7 @@ import (
 //var completeChan = make(chan Handler, 1)
 
 type Handler interface {
-	Process()
+	Process() /* <-chan interface{}*/
 	Complete()
 }
 

@@ -10,7 +10,6 @@ import (
 	"github.com/alivesubstance/zooverseer/core/zk"
 	"github.com/alivesubstance/zooverseer/util"
 	"github.com/avast/retry-go"
-	"github.com/gotk3/gotk3/gdk"
 	"github.com/gotk3/gotk3/gtk"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
@@ -32,24 +31,24 @@ var ConnRepo core.ConnRepository = &core.JsonConnRepository{}
 //)
 
 func InitConnDialog(mainWindow *gtk.Window) *gtk.Dialog {
-	getObject("connPortEntry").(*gtk.Entry).SetWidthChars(10)
+	GetObject("connPortEntry").(*gtk.Entry).SetWidthChars(10)
 
 	connDialog := getConnDialog()
 	connDialog.SetTransientFor(mainWindow)
 	connDialog.SetPosition(gtk.WIN_POS_CENTER_ON_PARENT)
 
-	getObject("connDialogCancelBtn").(*gtk.Button).Connect("clicked", onConnDialogCancelBtnClicked(connDialog))
-	getObject("connAddBtn").(*gtk.Button).Connect("clicked", onConnAddBtnClicked)
-	connSaveBtn := getObject("connSaveBtn").(*gtk.Button)
+	GetObject("connDialogCancelBtn").(*gtk.Button).Connect("clicked", onConnDialogCancelBtnClicked(connDialog))
+	GetObject("connAddBtn").(*gtk.Button).Connect("clicked", onConnAddBtnClicked)
+	connSaveBtn := GetObject("connSaveBtn").(*gtk.Button)
 	connSaveBtn.Connect("clicked", onConnSaveBtnClicked)
 
-	connCopyBtn := getObject("connCopyBtn").(*gtk.Button)
+	connCopyBtn := GetObject("connCopyBtn").(*gtk.Button)
 	connCopyBtn.Connect("clicked", onConnCopyBtnClicked)
 
-	connDeleteBtn := getObject("connDeleteBtn").(*gtk.Button)
+	connDeleteBtn := GetObject("connDeleteBtn").(*gtk.Button)
 	connDeleteBtn.Connect("clicked", onConnDeleteBtnClicked)
 
-	connTestBtn := getObject("connTestBtn").(*gtk.Button)
+	connTestBtn := GetObject("connTestBtn").(*gtk.Button)
 	connTestBtn.Connect("clicked", onConnTestBtnClicked)
 
 	connInfos := ConnRepo.FindAll()
@@ -59,10 +58,9 @@ func InitConnDialog(mainWindow *gtk.Window) *gtk.Dialog {
 		connDeleteBtn.SetSensitive(false)
 	}
 
-	getObject("connBtn").(*gtk.Button).Connect("clicked", onConnBtnClicked)
+	GetObject("connBtn").(*gtk.Button).Connect("clicked", onConnBtnClicked)
 
 	initConnListBox()
-	initCssProvider()
 
 	connDialog.ShowAll()
 	return connDialog
@@ -71,31 +69,13 @@ func InitConnDialog(mainWindow *gtk.Window) *gtk.Dialog {
 //todo cache it for session
 func getSelectedConn() *core.ConnInfo {
 	//todo leave it for test
-	return &core.ConnInfo{Name: "localhost", Host: "127.0.0.1", Port: 2181}
-	//return &core.ConnInfo{Name: "scotia-nightly", Host: "172.0.30.173", Port: 32090}
+	//return &core.ConnInfo{Name: "localhost", Host: "127.0.0.1", Port: 2181}
+	return &core.ConnInfo{Name: "scotia-nightly", Host: "172.0.30.173", Port: 32090, User: "zookeeper", Password: "z00k33p3r"}
 	//return &core.ConnInfo{Name: "sandbox-pleeco", Host: "10.1.1.112", Port: 2181, User: "zookeeper", Password: "z00k33p3r"}
-	connList := getConnListBox()
-	connName := getSelectedConnName(connList)
-	return ConnRepo.Find(connName)
-}
-
-func initCssProvider() {
-	providerNew, err := gtk.CssProviderNew()
-	if err != nil {
-		log.WithError(err).Errorf("Failed to create CSS provider")
-	}
-
-	err = providerNew.LoadFromPath(core.CssStyleFilePath)
-	if err != nil {
-		log.WithError(err).Errorf("Failed to load CSS styles")
-	}
-
-	defaultScreen, err := gdk.ScreenGetDefault()
-	if err != nil {
-		log.WithError(err).Errorf("Failed to get default screen")
-	}
-
-	gtk.AddProviderForScreen(defaultScreen, providerNew, gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+	//return &core.ConnInfo{Name: "scotia-history", Host: "172.0.30.173", Port: 32216, User: "zookeeper", Password: "z00k33p3r"}
+	//connList := getConnListBox()
+	//connName := getSelectedConnName(connList)
+	//return ConnRepo.Find(connName)
 }
 
 func getSelectedConnName(connList *gtk.ListBox) string {
@@ -114,13 +94,13 @@ func getSelectedConnName(connList *gtk.ListBox) string {
 }
 
 func drawConnInfo(connInfo *core.ConnInfo, withMandatory bool) {
-	connNameEntry := getObject("connNameEntry").(*gtk.Entry)
+	connNameEntry := GetObject("connNameEntry").(*gtk.Entry)
 	connNameEntry.SetText(connInfo.Name)
 
-	connHostEntry := getObject("connHostEntry").(*gtk.Entry)
+	connHostEntry := GetObject("connHostEntry").(*gtk.Entry)
 	connHostEntry.SetText(connInfo.Host)
 
-	connPortEntry := getObject("connPortEntry").(*gtk.Entry)
+	connPortEntry := GetObject("connPortEntry").(*gtk.Entry)
 	if connInfo.Port != 0 {
 		connPortEntry.SetText(fmt.Sprintf("%v", connInfo.Port))
 	} else {
@@ -137,11 +117,11 @@ func drawConnInfo(connInfo *core.ConnInfo, withMandatory bool) {
 	}
 
 	if len(connInfo.User) != 0 && len(connInfo.Password) != 0 {
-		getObject("connUserEntry").(*gtk.Entry).SetText(connInfo.User)
-		getObject("connPwdEntry").(*gtk.Entry).SetText(connInfo.Password)
+		GetObject("connUserEntry").(*gtk.Entry).SetText(connInfo.User)
+		GetObject("connPwdEntry").(*gtk.Entry).SetText(connInfo.Password)
 	} else {
-		getObject("connUserEntry").(*gtk.Entry).SetText("")
-		getObject("connPwdEntry").(*gtk.Entry).SetText("")
+		GetObject("connUserEntry").(*gtk.Entry).SetText("")
+		GetObject("connPwdEntry").(*gtk.Entry).SetText("")
 	}
 }
 
@@ -194,8 +174,8 @@ func onConnListBoxRowSelected() {
 }
 
 func setConnListBoxBtnsSensitivity(value bool) {
-	getObject("connCopyBtn").(*gtk.Button).SetSensitive(value)
-	getObject("connDeleteBtn").(*gtk.Button).SetSensitive(value)
+	GetObject("connCopyBtn").(*gtk.Button).SetSensitive(value)
+	GetObject("connDeleteBtn").(*gtk.Button).SetSensitive(value)
 }
 
 // todo Double click handle has a bug. To reproduce:
@@ -241,13 +221,13 @@ func onConnSaveBtnClicked() {
 }
 
 func validateAndGetConn() *core.ConnInfo {
-	connNameEntry := getObject("connNameEntry").(*gtk.Entry)
+	connNameEntry := GetObject("connNameEntry").(*gtk.Entry)
 	connName, _ := connNameEntry.GetText()
 
-	connHostEntry := getObject("connHostEntry").(*gtk.Entry)
+	connHostEntry := GetObject("connHostEntry").(*gtk.Entry)
 	connHost, _ := connHostEntry.GetText()
 
-	connPortEntry := getObject("connPortEntry").(*gtk.Entry)
+	connPortEntry := GetObject("connPortEntry").(*gtk.Entry)
 	connPort, _ := connPortEntry.GetText()
 
 	if len(connName) == 0 || len(connHost) == 0 || len(connPort) == 0 {
@@ -261,10 +241,10 @@ func validateAndGetConn() *core.ConnInfo {
 		return nil
 	}
 
-	connUserEntry := getObject("connUserEntry").(*gtk.Entry)
+	connUserEntry := GetObject("connUserEntry").(*gtk.Entry)
 	connUser, _ := connUserEntry.GetText()
 
-	connPwdEntry := getObject("connPwdEntry").(*gtk.Entry)
+	connPwdEntry := GetObject("connPwdEntry").(*gtk.Entry)
 	connPwd, _ := connPwdEntry.GetText()
 	if len(connUser) != 0 && len(connPwd) == 0 {
 		dialog := createInfoDialog(
@@ -389,11 +369,11 @@ func onConnTestBtnClicked() {
 }
 
 func getConnForm() *core.ConnInfo {
-	connName, _ := getObject("connNameEntry").(*gtk.Entry).GetText()
-	connHost, _ := getObject("connHostEntry").(*gtk.Entry).GetText()
-	connPort, _ := getObject("connPortEntry").(*gtk.Entry).GetText()
-	connUser, _ := getObject("connUserEntry").(*gtk.Entry).GetText()
-	connPwd, _ := getObject("connPwdEntry").(*gtk.Entry).GetText()
+	connName, _ := GetObject("connNameEntry").(*gtk.Entry).GetText()
+	connHost, _ := GetObject("connHostEntry").(*gtk.Entry).GetText()
+	connPort, _ := GetObject("connPortEntry").(*gtk.Entry).GetText()
+	connUser, _ := GetObject("connUserEntry").(*gtk.Entry).GetText()
+	connPwd, _ := GetObject("connPwdEntry").(*gtk.Entry).GetText()
 
 	connPortInt, _ := strconv.Atoi(connPort)
 	connInfo := &core.ConnInfo{
@@ -407,9 +387,9 @@ func getConnForm() *core.ConnInfo {
 }
 
 func getConnDialog() *gtk.Dialog {
-	return getObject("connDialog").(*gtk.Dialog)
+	return GetObject("connDialog").(*gtk.Dialog)
 }
 
 func getConnListBox() *gtk.ListBox {
-	return getObject("connList").(*gtk.ListBox)
+	return GetObject("connList").(*gtk.ListBox)
 }

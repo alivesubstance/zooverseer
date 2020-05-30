@@ -6,11 +6,13 @@ import (
 	"github.com/gotk3/gotk3/glib"
 	"github.com/gotk3/gotk3/gtk"
 	log "github.com/sirupsen/logrus"
-	"time"
 )
 
 // there are rumors that global variable is evil. why?
-var Builder *gtk.Builder
+var (
+	Builder *gtk.Builder
+	spinner *gtk.Spinner
+)
 
 func OnAppActivate(app *gtk.Application) func() {
 	return func() {
@@ -58,34 +60,33 @@ func getObject(objectName string) glib.IObject {
 	return object
 }
 
-func TestExport() {
-	// todo exclude, test only
-	time.Sleep(1 * time.Second)
-	log.Tracef("Eagerly select path")
-	selection, _ := getNodesTreeView().GetSelection()
-	treeIter, _ := nodeTreeStore.GetIterFromString("0:0")
-	selection.SelectIter(treeIter)
-	contextMenu.onExportNode()
+// todo replace with busy dialog
+func enableSpinner(enable bool) {
+	if enable {
+		log.Infof("Enable spinner")
+		styleContext, _ := getNodesTreeView().GetStyleContext()
+		styleContext.AddClass("font-disabled")
+
+		createInfoDialog(GetMainWindow(), "Export in progress").Run()
+	} else {
+		styleContext, _ := getNodesTreeView().GetStyleContext()
+		styleContext.AddClass("font-enabled")
+		log.Infof("Disable spinner")
+	}
+
+	GetMainWindow().SetSensitive(!enable)
+	//
+	//if enable {
+	//	spinner, _ = gtk.SpinnerNew()
+	//	getNodeOverlay().AddOverlay(spinner)
+	//	spinner.Start()
+	//} else {
+	//	if spinner != nil {
+	//		getNodeOverlay().Remove(spinner)
+	//	}
+	//}
 }
 
-func enableSpinner(enable bool) {
-	box := GetObject("mainWindow").(*gtk.Window)
-	box.SetSensitive(!enable)
-
-	//if enable {
-	//spinner, _ := gtk.SpinnerNew()
-	//spinner.SetSensitive(true)
-	//spinner.ShowAll()
-	//spinner.Start()
-	//
-	//overlay := GetObject("nodeOverlay").(*gtk.Overlay)
-	//overlay.AddOverlay(spinner)
-	//m.spinner.Show()
-	//m.spinner.Start()
-	//} else {
-	//overlay := GetObject("nodeOverlay").(*gtk.Overlay)
-	//overlay.rem
-	//m.spinner.Stop()
-	//m.spinner.Hide()
-	//}
+func getNodeOverlay() *gtk.Overlay {
+	return GetObject("nodeOverlay").(*gtk.Overlay)
 }

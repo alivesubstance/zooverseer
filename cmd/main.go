@@ -15,10 +15,6 @@ func main() {
 
 	initLogger()
 
-	// todo it's necessary to run gtk.Init() ?
-	// Initialize GTK without parsing any command line arguments.
-	//gtk.Init(nil)
-
 	app, err := gtk.ApplicationNew(core.AppId, glib.APPLICATION_FLAGS_NONE)
 	util.CheckError(err)
 

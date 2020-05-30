@@ -25,7 +25,7 @@ var (
 
 func initNodeTree() {
 	nodesTreeView := getNodesTreeView()
-	nodesTreeView.AppendColumn(createTextColumn("Node", core.NodeColumn))
+	nodesTreeView.AppendColumn(createTextColumn("Data", core.NodeColumn))
 	nodesTreeView.Connect("test-expand-row", onExpandRow)
 	nodesTreeView.Connect("button-press-event", onMouseButtonPress)
 

@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	// Zk path -> Node
+	// Zk path -> Data
 	cache goCache.Cache
 )
 

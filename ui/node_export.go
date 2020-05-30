@@ -2,9 +2,11 @@ package ui
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/alivesubstance/zooverseer/core"
 	"github.com/alivesubstance/zooverseer/core/zk"
 	"github.com/alivesubstance/zooverseer/task"
+	"github.com/kennygrant/sanitize"
 	log "github.com/sirupsen/logrus"
 	"os"
 	"path"
@@ -18,7 +20,7 @@ type ExportTask struct {
 	*task.BaseTask
 }
 
-type Metadata struct {
+type Meta struct {
 	RootPath  string
 	CreatedAt time.Time
 	// todo think to add connection
@@ -30,43 +32,27 @@ type Metadata struct {
 }
 
 type ExportNodeReport struct {
-	Metadata Metadata
-	Node     *zk.Node
+	Meta Meta
+	Data *zk.Node
 }
 
 func ExportSelectedNode() {
 	treeSelection, _ := getNodesTreeView().GetSelection()
 	zkPath, _ := getTreeSelectedZkPath(treeSelection)
+	createExportTask(zkPath)
+}
 
-	onStartTask := func() {
-		enableSpinner(true)
-	}
+func createExportTask(zkPath string) {
 	onError := func(err error) {
-		CreateErrorDialog(GetMainWindow(), "Export from "+zkPath+" failed: "+err.Error())
+		log.WithError(err).Infof("Failed to export from %v", zkPath)
+		nodeExportDlg.showError(zkPath, err)
 	}
 	onSuccess := func(jsonFilePath interface{}) {
 		log.Infof("Exported %v to %v", zkPath, jsonFilePath)
-		enableSpinner(false)
-		showNodeExportResultDialog(jsonFilePath.(string))
+		nodeExportDlg.showResult(zkPath, jsonFilePath.(string))
 	}
 
-	createExportTask(zkPath, onStartTask, onError, onSuccess)
-}
-
-func showNodeExportResultDialog(jsonFilePath string) {
-	exportResultDlg.setResultFile(jsonFilePath)
-	exportResultDlg.dlg.Run()
-	exportResultDlg.dlg.Hide()
-}
-
-func createExportTask(
-	zkPath string,
-	onStart func(),
-	onError func(err error),
-	onSuccess func(tree interface{}),
-) {
 	baseTask := &task.BaseTask{
-		OnStart:   onStart,
 		OnError:   onError,
 		OnSuccess: onSuccess,
 	}
@@ -75,20 +61,19 @@ func createExportTask(
 		BaseTask: baseTask,
 	}
 
-	exportTask.Process()
+	go exportTask.Process()
+	nodeExportDlg.startExport(zkPath)
 }
 
 func (t *ExportTask) Process() {
 	log.Infof("Start exporting %s", t.ZkPath)
-
-	t.OnStart()
 
 	node, err := zk.CachingRepo.Export(t.ZkPath)
 	t.Tree = node
 
 	// todo replace same pieces with chan error
 	if err != nil {
-		t.OnError(t.Error)
+		t.OnError(err)
 		return
 	}
 
@@ -101,16 +86,16 @@ func (t *ExportTask) Process() {
 		}
 	}
 
-	metadata := Metadata{t.ZkPath, time.Now()}
+	metadata := Meta{t.ZkPath, time.Now()}
 	report := ExportNodeReport{metadata, node}
 
-	data, err := json.Marshal(report)
+	data, err := json.MarshalIndent(report, "", "  ")
 	if err != nil {
 		t.OnError(err)
 		return
 	}
 
-	jsonFilePath := t.createFilePath(metadata)
+	jsonFilePath := t.createFilePath(node, metadata)
 	log.Tracef("Save export result to %v", jsonFilePath)
 
 	jsonFile, err := os.Create(jsonFilePath)
@@ -119,7 +104,7 @@ func (t *ExportTask) Process() {
 		return
 	}
 
-	log.Tracef("File %v successfully created", jsonFilePath)
+	log.Tracef("File %v created", jsonFilePath)
 	_, err = jsonFile.Write(data[:])
 	if err != nil {
 		t.OnError(err)
@@ -131,9 +116,9 @@ func (t *ExportTask) Process() {
 	t.OnSuccess(jsonFilePath)
 }
 
-func (t *ExportTask) createFilePath(meta Metadata) string {
+func (t *ExportTask) createFilePath(node *zk.Node, meta Meta) string {
 	return path.Join(
 		core.Config.ExportDir,
-		"export_"+meta.CreatedAt.Format("20060102_150405")+".json",
+		fmt.Sprintf("%s_%v.json", meta.CreatedAt.Format("20060102_150405"), sanitize.Name(node.Name)),
 	)
 }

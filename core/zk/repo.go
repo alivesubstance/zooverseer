@@ -16,9 +16,9 @@ var connCreateLock = sync.Mutex{}
 
 type Node struct {
 	Name     string     `json:"name"`
-	Value    string     `json:"value"`
+	Value    string     `json:"value,omitempty"`
 	Meta     *goZk.Stat `json:"-"`
-	Children []*Node    `json:"children"`
+	Children []*Node    `json:"children,omitempty"`
 	Acl      []goZk.ACL `json:"-"`
 }
 
@@ -102,7 +102,7 @@ func (r *Repository) GetMeta(path string) (*goZk.Stat, error) {
 		func() error {
 			_, meta, err = conn.Exists(path)
 			if err != nil {
-				log.WithError(err).Error("Failed to get metadata for " + path)
+				log.WithError(err).Errorf("Failed to get metadata for %s", path)
 				return err
 			}
 
@@ -124,7 +124,7 @@ func (r *Repository) GetValue(path string) (*Node, error) {
 		func() error {
 			value, meta, err = conn.Get(path)
 			if err != nil {
-				log.WithError(err).Error("Failed to get value for " + path)
+				log.WithError(err).Errorf("Failed to get value for %s", path)
 				return err
 			}
 
@@ -155,7 +155,7 @@ func (r *Repository) GetChildren(path string) ([]*Node, error) {
 		func() error {
 			childrenNames, _, err = conn.Children(path)
 			if err != nil {
-				log.WithError(err).Fatalf("Failed to get children for %s", path)
+				log.WithError(err).Error("Failed to get children for %s", path)
 				return err
 			}
 			return nil
