@@ -31,10 +31,11 @@ func (d *ExportResultDlg) startExport(path string) {
 	d.resetDlg()
 
 	d.setStatus("Start exporting from <b>" + path + "</b>")
-	d.spinner.Start()
 
+	d.spinner.Start()
 	d.mainWindow.SetSensitive(false)
 	d.okBtn.SetSensitive(false)
+
 	d.dlg.Run()
 }
 
@@ -44,8 +45,8 @@ func (d *ExportResultDlg) showError(path string, err error) {
 	d.setStatus("Export failed from <b>" + path + "</b>")
 	d.resultLabel.SetMarkup("Error: " + err.Error())
 
-	d.mainWindow.SetSensitive(true)
 	d.spinner.Stop()
+	d.mainWindow.SetSensitive(true)
 	d.okBtn.SetSensitive(true)
 }
 

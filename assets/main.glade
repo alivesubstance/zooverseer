@@ -619,106 +619,97 @@
             <property name="hexpand">True</property>
             <property name="vexpand">True</property>
             <child>
-              <object class="GtkOverlay" id="nodeOverlay">
+              <object class="GtkBox" id="nodeBox">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
+                <property name="orientation">vertical</property>
                 <child>
-                  <object class="GtkBox" id="nodeBox">
+                  <object class="GtkActionBar">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="orientation">vertical</property>
                     <child>
-                      <object class="GtkActionBar">
+                      <object class="GtkButton" id="nodeCreateBtn">
                         <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <child>
-                          <object class="GtkButton" id="nodeCreateBtn">
-                            <property name="visible">True</property>
-                            <property name="can_focus">True</property>
-                            <property name="receives_default">True</property>
-                            <property name="image">iconNodeAdd</property>
-                          </object>
-                          <packing>
-                            <property name="position">0</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkButton" id="nodeRefreshBtn">
-                            <property name="visible">True</property>
-                            <property name="can_focus">True</property>
-                            <property name="receives_default">True</property>
-                            <property name="image">iconNodeRefresh</property>
-                          </object>
-                          <packing>
-                            <property name="position">1</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkButton" id="nodeDeleteBtn">
-                            <property name="visible">True</property>
-                            <property name="can_focus">True</property>
-                            <property name="receives_default">True</property>
-                            <property name="image">iconNodeDelete</property>
-                          </object>
-                          <packing>
-                            <property name="position">2</property>
-                          </packing>
-                        </child>
+                        <property name="can_focus">True</property>
+                        <property name="receives_default">True</property>
+                        <property name="image">iconNodeAdd</property>
                       </object>
                       <packing>
-                        <property name="expand">False</property>
-                        <property name="fill">True</property>
                         <property name="position">0</property>
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkScrolledWindow">
-                        <property name="width_request">300</property>
+                      <object class="GtkButton" id="nodeRefreshBtn">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
-                        <property name="hexpand">True</property>
-                        <property name="vexpand">True</property>
-                        <property name="shadow_type">in</property>
-                        <child>
-                          <object class="GtkTreeView" id="nodesTreeView">
-                            <property name="visible">True</property>
-                            <property name="can_focus">True</property>
-                            <property name="vexpand">True</property>
-                            <property name="headers_visible">False</property>
-                            <property name="enable_tree_lines">True</property>
-                            <property name="activate_on_single_click">True</property>
-                            <child internal-child="selection">
-                              <object class="GtkTreeSelection"/>
-                            </child>
-                          </object>
-                        </child>
+                        <property name="receives_default">True</property>
+                        <property name="image">iconNodeRefresh</property>
                       </object>
                       <packing>
-                        <property name="expand">False</property>
-                        <property name="fill">True</property>
                         <property name="position">1</property>
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkSearchEntry">
+                      <object class="GtkButton" id="nodeDeleteBtn">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
-                        <property name="editable">False</property>
-                        <property name="shadow_type">none</property>
-                        <property name="caps_lock_warning">False</property>
-                        <property name="primary_icon_name">edit-find-symbolic</property>
-                        <property name="primary_icon_activatable">False</property>
-                        <property name="primary_icon_sensitive">False</property>
+                        <property name="receives_default">True</property>
+                        <property name="image">iconNodeDelete</property>
                       </object>
                       <packing>
-                        <property name="expand">False</property>
-                        <property name="fill">True</property>
                         <property name="position">2</property>
                       </packing>
                     </child>
                   </object>
                   <packing>
-                    <property name="index">-1</property>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkScrolledWindow">
+                    <property name="width_request">300</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="hexpand">True</property>
+                    <property name="vexpand">True</property>
+                    <property name="shadow_type">in</property>
+                    <child>
+                      <object class="GtkTreeView" id="nodesTreeView">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="vexpand">True</property>
+                        <property name="headers_visible">False</property>
+                        <property name="enable_tree_lines">True</property>
+                        <property name="activate_on_single_click">True</property>
+                        <child internal-child="selection">
+                          <object class="GtkTreeSelection"/>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkSearchEntry">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="editable">False</property>
+                    <property name="shadow_type">none</property>
+                    <property name="caps_lock_warning">False</property>
+                    <property name="primary_icon_name">edit-find-symbolic</property>
+                    <property name="primary_icon_activatable">False</property>
+                    <property name="primary_icon_sensitive">False</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">2</property>
                   </packing>
                 </child>
               </object>

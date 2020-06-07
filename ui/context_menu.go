@@ -17,7 +17,6 @@ type ContextMenu struct {
 	deleteItem     *gtk.MenuItem
 	exportItem     *gtk.MenuItem
 	spinner        *gtk.Spinner
-	//dlgFileSave    *gtk.FileChooserDialog
 }
 
 func NewContextMenu() *ContextMenu {
@@ -51,7 +50,6 @@ func NewContextMenu() *ContextMenu {
 	//contextMenu.spinner = GetObject("spinner").(*gtk.Spinner)
 
 	contextMenu.enableMenu(false)
-	enableSpinner(false)
 
 	return contextMenu
 }

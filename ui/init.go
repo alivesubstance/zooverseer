@@ -11,7 +11,6 @@ import (
 // there are rumors that global variable is evil. why?
 var (
 	Builder *gtk.Builder
-	spinner *gtk.Spinner
 )
 
 func OnAppActivate(app *gtk.Application) func() {
@@ -31,7 +30,7 @@ func OnAppActivate(app *gtk.Application) func() {
 }
 
 func GetMainWindow() *gtk.Window {
-	return getObject("mainWindow").(*gtk.Window)
+	return GetObject("mainWindow").(*gtk.Window)
 }
 
 func CreateErrorDialog(parent gtk.IWindow, text string) *gtk.MessageDialog {
@@ -58,35 +57,4 @@ func getObject(objectName string) glib.IObject {
 	util.CheckError(err)
 
 	return object
-}
-
-// todo replace with busy dialog
-func enableSpinner(enable bool) {
-	if enable {
-		log.Infof("Enable spinner")
-		styleContext, _ := getNodesTreeView().GetStyleContext()
-		styleContext.AddClass("font-disabled")
-
-		createInfoDialog(GetMainWindow(), "Export in progress").Run()
-	} else {
-		styleContext, _ := getNodesTreeView().GetStyleContext()
-		styleContext.AddClass("font-enabled")
-		log.Infof("Disable spinner")
-	}
-
-	GetMainWindow().SetSensitive(!enable)
-	//
-	//if enable {
-	//	spinner, _ = gtk.SpinnerNew()
-	//	getNodeOverlay().AddOverlay(spinner)
-	//	spinner.Start()
-	//} else {
-	//	if spinner != nil {
-	//		getNodeOverlay().Remove(spinner)
-	//	}
-	//}
-}
-
-func getNodeOverlay() *gtk.Overlay {
-	return GetObject("nodeOverlay").(*gtk.Overlay)
 }

@@ -12,20 +12,26 @@ const (
 	PageAcl      = 2
 )
 
-// use these pair to address exact func owner
-var notebook = Notebook{}
+type Notebook struct {
+	notebook    *gtk.Notebook
+	saveDataBtn *gtk.Button
+}
 
-type Notebook struct{}
+func NewNotebook() *Notebook {
+	notebook := &Notebook{}
+	notebook.notebook = GetObject("notebook").(*gtk.Notebook)
+	notebook.notebook.Connect("switch-page", notebook.onSwitchPage())
 
-func (n *Notebook) init() {
-	GetObject("notebook").(*gtk.Notebook).Connect(
-		"switch-page",
-		func(notebook *gtk.Notebook, widget *gtk.Widget, page int) {
-			n.onNotebookSwitchPage(notebook, widget, page)
-		},
-	)
+	notebook.saveDataBtn = GetObject("saveDataBtn").(*gtk.Button)
+	notebook.saveDataBtn.Connect("clicked", notebook.onSaveDataBtnClicked)
 
-	GetObject("saveDataBtn").(*gtk.Button).Connect("clicked", n.onSaveDataBtnClicked)
+	return notebook
+}
+
+func (n *Notebook) onSwitchPage() func(notebook *gtk.Notebook, widget *gtk.Widget, page int) {
+	return func(notebook *gtk.Notebook, widget *gtk.Widget, page int) {
+		n.onNotebookSwitchPage(notebook, widget, page)
+	}
 }
 
 func (n *Notebook) onNotebookSwitchPage(notebook *gtk.Notebook, widget *gtk.Widget, page int) {

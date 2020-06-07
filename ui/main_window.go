@@ -13,6 +13,7 @@ var (
 	nodeExportDlg *ExportResultDlg
 	nodeAction    *NodeAction
 	contextMenu   *ContextMenu
+	notebook      *Notebook
 )
 
 func InitMainWindow(mainWindow *gtk.Window) {
@@ -20,9 +21,9 @@ func InitMainWindow(mainWindow *gtk.Window) {
 	nodeExportDlg = NewNodeExportDlg(mainWindow)
 	nodeAction = NewNodeAction()
 	contextMenu = NewContextMenu()
+	notebook = NewNotebook()
 
 	initNodeTree()
-	notebook.init()
 	initMainMenu(mainWindow)
 	initCssProvider()
 

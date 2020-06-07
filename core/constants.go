@@ -17,7 +17,7 @@ const (
 	ConnCacheExpireAfterAccessMinutes = 20
 	ConnCacheStatsPeriodMinutes       = 5
 	ConnRetryAttempts                 = 3
-	ConnRetryDelay                    = 1000
+	ConnRetryDelay                    = 500
 	ConnTimeoutSec                    = 20
 )
 
@@ -25,8 +25,8 @@ const (
 const (
 	ZkCacheExpireAfterAccessMinutes = 10
 	ZkCacheStatsPeriodMinutes       = 5
-	ZkOpRetryAttempts               = 1
-	ZkOpRetryDelay                  = 100
+	ZkOpRetryAttempts               = 3
+	ZkOpRetryDelay                  = 500
 )
 
 // Nodes tree and repository

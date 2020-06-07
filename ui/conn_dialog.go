@@ -66,16 +66,15 @@ func InitConnDialog(mainWindow *gtk.Window) *gtk.Dialog {
 	return connDialog
 }
 
-//todo cache it for session
 func getSelectedConn() *core.ConnInfo {
 	//todo leave it for test
 	//return &core.ConnInfo{Name: "localhost", Host: "127.0.0.1", Port: 2181}
-	return &core.ConnInfo{Name: "scotia-nightly", Host: "172.0.30.173", Port: 32090, User: "zookeeper", Password: "z00k33p3r"}
+	//return &core.ConnInfo{Name: "scotia-nightly", Host: "172.0.30.173", Port: 32090, User: "zookeeper", Password: "z00k33p3r"}
 	//return &core.ConnInfo{Name: "sandbox-pleeco", Host: "10.1.1.112", Port: 2181, User: "zookeeper", Password: "z00k33p3r"}
 	//return &core.ConnInfo{Name: "scotia-history", Host: "172.0.30.173", Port: 32216, User: "zookeeper", Password: "z00k33p3r"}
-	//connList := getConnListBox()
-	//connName := getSelectedConnName(connList)
-	//return ConnRepo.Find(connName)
+	connList := getConnListBox()
+	connName := getSelectedConnName(connList)
+	return ConnRepo.Find(connName)
 }
 
 func getSelectedConnName(connList *gtk.ListBox) string {
@@ -353,9 +352,11 @@ func onConnDialogCancelBtnClicked(connDialog *gtk.Dialog) func() {
 
 func onConnTestBtnClicked() {
 	connInfo := getConnForm()
-	var dialog *gtk.MessageDialog
+	repo := zk.Repository{}
+	repo.SetConnInfo(connInfo)
+	_, err := repo.GetMeta(core.NodeRootName)
 
-	_, err := zk.Repo.GetValue(core.NodeRootName)
+	var dialog *gtk.MessageDialog
 	if err == nil {
 		dialog = createInfoDialog(getConnDialog(), "Successfully connected to "+connInfo.Name)
 	} else {
