@@ -52,7 +52,7 @@ func createWarnDialog(parent gtk.IWindow, text string) *gtk.MessageDialog {
 	return gtk.MessageDialogNew(parent, gtk.DIALOG_MODAL, gtk.MESSAGE_WARNING, gtk.BUTTONS_OK, text)
 }
 
-func getObject(objectName string) glib.IObject {
+func GetObject(objectName string) glib.IObject {
 	object, err := Builder.GetObject(objectName)
 	util.CheckError(err)
 
