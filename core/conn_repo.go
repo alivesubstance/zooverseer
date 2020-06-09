@@ -10,7 +10,13 @@ import (
 	"os"
 )
 
-//todo remove it and put conn_info_repo.go into conn_repo folder?
+type Type string
+
+const (
+	ConnManual    Type = "manual"
+	ConnGenerated Type = "generated"
+)
+
 type ConnRepository interface {
 	Upsert(connInfo *ConnInfo)
 	Find(connName string) *ConnInfo
@@ -28,6 +34,7 @@ type ConnInfo struct {
 	Port     int
 	User     string
 	Password string
+	Type     Type
 }
 
 func (c *ConnInfo) String() string {

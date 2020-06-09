@@ -277,18 +277,9 @@ func validateAndGetConn() *core.ConnInfo {
 		Port:     connPortInt,
 		User:     connUser,
 		Password: connPwd,
+		Type:     core.ConnManual,
 	}
 	return connInfo
-}
-
-func isConnExists(connName string) bool {
-	for _, connInfo := range ConnRepo.FindAll() {
-		if connName == connInfo.Name {
-			return true
-		}
-	}
-
-	return false
 }
 
 func onConnCopyBtnClicked() {
