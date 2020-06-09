@@ -156,9 +156,9 @@ func (c *CachingRepository) InvalidateAll() {
 	cache.InvalidateAll()
 }
 
-func (c *CachingRepository) SaveChild(path string, childName string, acl []goZk.ACL) error {
+func (c *CachingRepository) SaveChild(path string, child *Node) error {
 	c.Invalidate(path)
-	return c.Repo.SaveChild(path, childName, acl)
+	return c.Repo.SaveChild(path, child)
 }
 
 func (c *CachingRepository) SaveValue(path string, node *Node) error {

@@ -36,7 +36,7 @@ type ExportNodeReport struct {
 	Data *zk.Node
 }
 
-func ExportSelectedNode() {
+func exportSelectedNode() {
 	treeSelection, _ := getNodesTreeView().GetSelection()
 	zkPath, _ := getTreeSelectedZkPath(treeSelection)
 	createExportTask(zkPath)

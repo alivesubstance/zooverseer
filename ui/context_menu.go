@@ -41,8 +41,8 @@ func NewContextMenu() *ContextMenu {
 	//contextMenu.renameItem = GetObject("contextMenuRename").(*gtk.MenuItem)
 	//contextMenu.renameItem.Connect("activate", onCopyValue)
 	//
-	//contextMenu.deleteItem = GetObject("contextMenuDeleteNode").(*gtk.MenuItem)
-	//contextMenu.deleteItem.Connect("activate", onCopyValue)
+	contextMenu.deleteItem = GetObject("contextMenuDeleteNode").(*gtk.MenuItem)
+	contextMenu.deleteItem.Connect("activate", contextMenu.onDeleteNode)
 
 	contextMenu.exportItem = GetObject("contextMenuExportNode").(*gtk.MenuItem)
 	contextMenu.exportItem.Connect("activate", contextMenu.onExportNode)
@@ -59,7 +59,11 @@ func (m *ContextMenu) onAddNewNode() {
 }
 
 func (m *ContextMenu) onExportNode() {
-	ExportSelectedNode()
+	exportSelectedNode()
+}
+
+func (m *ContextMenu) onDeleteNode() {
+	deleteSelectedNode()
 }
 
 func (m *ContextMenu) onCopyValue() {

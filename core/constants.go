@@ -2,13 +2,12 @@ package core
 
 import goZk "github.com/samuel/go-zookeeper/zk"
 
-const AppId = "com.github.alivesubstance.zooverseer"
-
-// todo change to relative path
 const (
-	GladeFilePath      = "/home/mirian/code/zooverseer/assets/main.glade"
-	ConnConfigFilePath = "/home/mirian/code/zooverseer/assets/connections.json"
-	CssStyleFilePath   = "/home/mirian/code/zooverseer/assets/style.css"
+	AppId              = "com.github.alivesubstance.zooverseer"
+	ConfigDir          = "/home/mirian/code/zooverseer/assets"
+	GladeFilePath      = ConfigDir + "/main.glade"
+	ConnConfigFilePath = ConfigDir + "/connections.json"
+	CssStyleFilePath   = ConfigDir + "/style.css"
 )
 
 // todo Move constants to config
@@ -37,15 +36,3 @@ const (
 )
 
 var AclWorldAnyone = goZk.WorldACL(goZk.PermAll)
-
-//todo tested and worked with relative path. Use run.sh to build and run app
-//const (
-//	AppId = "com.github.alivesubstance.zooverseer"
-//	ConfigDir = "./config"
-//)
-//
-//const (
-//	GladeFilePath      = ConfigDir + "/main.glade"
-//	ConnConfigFilePath = ConfigDir + "/connections.json"
-//	ConfigFilePath = ConfigDir + "/zooverseer.yml"
-//)

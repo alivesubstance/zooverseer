@@ -10,6 +10,7 @@ import (
 	"github.com/alivesubstance/zooverseer/core/zk"
 	"github.com/alivesubstance/zooverseer/util"
 	"github.com/avast/retry-go"
+	"github.com/gotk3/gotk3/gdk"
 	"github.com/gotk3/gotk3/gtk"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
@@ -22,20 +23,16 @@ const (
 	ConnNameDraft     = ""
 )
 
-var ConnRepo core.ConnRepository = &core.JsonConnRepository{}
-
-//var (
-//	lastBtnClickTime       = int64(0)
-//	lastSelectedConnName   string
-//	DoubleClickedBtnPeriod = int64(500 * 1e6)
-//)
+var (
+	ConnRepo core.ConnRepository = &core.JsonConnRepository{}
+)
 
 func InitConnDialog(mainWindow *gtk.Window) *gtk.Dialog {
 	GetObject("connPortEntry").(*gtk.Entry).SetWidthChars(10)
 
 	connDialog := getConnDialog()
 	connDialog.SetTransientFor(mainWindow)
-	connDialog.SetPosition(gtk.WIN_POS_CENTER_ON_PARENT)
+	connDialog.SetPosition(gtk.WIN_POS_CENTER)
 
 	GetObject("connDialogCancelBtn").(*gtk.Button).Connect("clicked", onConnDialogCancelBtnClicked(connDialog))
 	GetObject("connAddBtn").(*gtk.Button).Connect("clicked", onConnAddBtnClicked)
@@ -66,6 +63,7 @@ func InitConnDialog(mainWindow *gtk.Window) *gtk.Dialog {
 	return connDialog
 }
 
+//todo cache it for session
 func getSelectedConn() *core.ConnInfo {
 	//todo leave it for test
 	//return &core.ConnInfo{Name: "localhost", Host: "127.0.0.1", Port: 2181}
@@ -126,8 +124,9 @@ func drawConnInfo(connInfo *core.ConnInfo, withMandatory bool) {
 
 func initConnListBox() {
 	connListBox := getConnListBox()
-	connListBox.Connect("row-selected", onConnListBoxRowSelected)
-	//connListBox.Connect("button-release-event", onConnListBoxBtnPress)
+	connListBox.Connect("row-selected", onConnSelected)
+	//connListBox.Connect("button-release-event", onConnListBoxBtnRelease)
+	connListBox.Connect("button-press-event", onConnListBoxBtnPress)
 
 	// clear conn list before load saved conns from repo
 	// it's done to use delete, add or copy conn buttons
@@ -162,7 +161,7 @@ func addConnListBoxItem(conn *core.ConnInfo) {
 	connListBox.ShowAll()
 }
 
-func onConnListBoxRowSelected() {
+func onConnSelected() {
 	selectedConn := getSelectedConn()
 	if selectedConn == nil {
 		return
@@ -177,32 +176,19 @@ func setConnListBoxBtnsSensitivity(value bool) {
 	GetObject("connDeleteBtn").(*gtk.Button).SetSensitive(value)
 }
 
-// todo Double click handle has a bug. To reproduce:
-// - create new connection
-// - remove it
-// - try to double click to another(not currently selected)
-// - error occurs
-//func onConnListBoxBtnPress(listBox *gtk.ListBox, e *gdk.Event) {
-//	event := &gdk.EventKey{Event: e}
-//	mouseButton := (*C.GdkEventButton)(unsafe.Pointer(event.Event.GdkEvent)).button
-//	row := listBox.GetSelectedRow()
-//
-//	// row is nil when conn list is empty
-//	if row != nil && mouseButton == 1 {
-//		child, _ := row.GetChild()
-//		connName, _ := child.GetTooltipText()
-//		// didn't find a way how to register double button click
-//		// looks like GO GTK adapter doesn't support such event
-//		// implement my own bicycle
-//		if time.Now().UnixNano()-lastBtnClickTime < DoubleClickedBtnPeriod && lastSelectedConnName == connName {
-//			log.Infof("Selected conn: %s", connName)
-//			onConnBtnClicked(getConnDialog())()
-//		}
-//
-//		lastBtnClickTime = time.Now().UnixNano()
-//		lastSelectedConnName = connName
-//	}
-//}
+func onConnListBoxBtnPress(listBox *gtk.ListBox, e *gdk.Event) {
+	btnEvent := gdk.EventButtonNewFromEvent(e)
+	row := listBox.GetSelectedRow()
+
+	// row is nil when conn list is empty
+	if row != nil && btnEvent.Button() == 1 && btnEvent.Type() == gdk.EVENT_DOUBLE_BUTTON_PRESS {
+		child, _ := row.GetChild()
+		connName, _ := child.GetTooltipText()
+
+		log.Infof("Selected conn: %s", connName)
+		onConnBtnClicked()
+	}
+}
 
 func onConnAddBtnClicked() {
 	getConnListBox().UnselectAll()
@@ -332,6 +318,9 @@ func onConnBtnClicked() {
 	ClearNodeTree()
 
 	connInfo := getSelectedConn()
+	if connInfo == nil {
+		return
+	}
 	zk.CachingRepo.SetConnInfo(connInfo)
 
 	err := ShowTreeRootNodes()
@@ -352,6 +341,10 @@ func onConnDialogCancelBtnClicked(connDialog *gtk.Dialog) func() {
 
 func onConnTestBtnClicked() {
 	connInfo := getConnForm()
+	if connInfo.Host == "" || connInfo.Port == 0 {
+		return
+	}
+
 	repo := zk.Repository{}
 	repo.SetConnInfo(connInfo)
 	_, err := repo.GetMeta(core.NodeRootName)

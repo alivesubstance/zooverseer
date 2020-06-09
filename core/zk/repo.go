@@ -170,14 +170,19 @@ func (r *Repository) GetChildren(path string) ([]*Node, error) {
 	return r.getChildrenMeta(path, childrenNames)
 }
 
-func (r *Repository) SaveChild(parentPath string, childName string, acl []goZk.ACL) error {
+func (r *Repository) SaveChild(parentPath string, child *Node) error {
 	conn, err := r.getConn()
 	if err != nil {
 		return err
 	}
 
-	absPath := r.buildAbsPath(parentPath, childName)
-	_, err = conn.Create(absPath, util.StringToBytes(""), int32(0), acl)
+	absPath := r.buildAbsPath(parentPath, child.Name)
+	_, err = conn.Create(absPath, util.StringToBytes(""), int32(0), child.Acl)
+	if err != nil {
+		return err
+	}
+
+	err = r.SaveValue(absPath, child)
 	if err != nil {
 		return err
 	}
@@ -191,16 +196,13 @@ func (r *Repository) SaveValue(absPath string, node *Node) error {
 		return err
 	}
 
-	_, err = conn.Set(absPath, util.StringToBytes(node.Value), node.Meta.Version)
+	version := int32(0)
+	if node.Meta != nil {
+		version = node.Meta.Version
+	}
+	_, err = conn.Set(absPath, util.StringToBytes(node.Value), version)
 	return err
 }
-
-//todo create func like doWithConn(func action()) and
-//to hide
-// 	conn, err := r.getConn()
-//	if err != nil {
-//		return err
-//	}
 
 func (r *Repository) Delete(path string, node *Node) error {
 	conn, err := r.getConn()
