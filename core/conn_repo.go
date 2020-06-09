@@ -63,7 +63,7 @@ func (c *JsonConnRepository) Upsert(connInfo *ConnInfo) {
 
 func (c *JsonConnRepository) insert(connInfo *ConnInfo) {
 	conns := append(c.FindAll(), connInfo)
-	c.saveAll(conns)
+	c.SaveAll(conns)
 }
 
 func (c *JsonConnRepository) Find(connName string) *ConnInfo {
@@ -103,10 +103,10 @@ func (c *JsonConnRepository) Delete(connInfo *ConnInfo) {
 		newConns = append(newConns, conn)
 	}
 
-	c.saveAll(newConns)
+	c.SaveAll(newConns)
 }
 
-func (c *JsonConnRepository) saveAll(connInfos []*ConnInfo) {
+func (c *JsonConnRepository) SaveAll(connInfos []*ConnInfo) {
 	connConfigJson, err := os.Open(ConnConfigFilePath)
 	util.CheckError(err)
 	defer connConfigJson.Close()
