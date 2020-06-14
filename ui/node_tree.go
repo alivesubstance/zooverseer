@@ -272,7 +272,7 @@ func refreshNode(zkPath string) {
 func deleteSelectedNode() {
 	treeSelection, _ := getNodesTreeView().GetSelection()
 	zkPath, _ := getTreeSelectedZkPath(treeSelection)
-	dlg := createConfirmDialog(getConnDialog(), "Are you sure you want to delete "+gopath.Base(zkPath)+"?")
+	dlg := createConfirmDialog(GetMainWindow(), "Are you sure you want to delete "+gopath.Base(zkPath)+"?")
 	resp := dlg.Run()
 	dlg.Hide()
 

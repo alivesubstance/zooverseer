@@ -9,10 +9,10 @@ import (
 )
 
 type CreateNodeDlg struct {
-	dlg         *gtk.Dialog
-	aclCheckBtn *gtk.CheckButton
-	nameEntry   *gtk.Entry
-	valueEntry  *gtk.Entry
+	dlg                *gtk.Dialog
+	publicNodeCheckBtn *gtk.CheckButton
+	nameEntry          *gtk.Entry
+	valueEntry         *gtk.Entry
 }
 
 func NewCreateNodeDlg(mainWindow *gtk.Window) *CreateNodeDlg {
@@ -20,9 +20,9 @@ func NewCreateNodeDlg(mainWindow *gtk.Window) *CreateNodeDlg {
 	createNodeDlg.dlg = GetObject("createNodeDlg").(*gtk.Dialog)
 	createNodeDlg.dlg.SetTransientFor(mainWindow)
 
-	createNodeDlg.aclCheckBtn = GetObject("createNodeDlgAclCheckBtn").(*gtk.CheckButton)
 	createNodeDlg.nameEntry = GetObject("createNodeDlgNameEntry").(*gtk.Entry)
 	createNodeDlg.valueEntry = GetObject("createNodeDlgValueEntry").(*gtk.Entry)
+	createNodeDlg.publicNodeCheckBtn = GetObject("createNodeDlgPublicNodeCheckBtn").(*gtk.CheckButton)
 
 	GetObject("createNodeDlgOkBtn").(*gtk.Button).Connect("clicked", createNodeDlg.onOkBtnClicked)
 	GetObject("createNodeDlgCancelBtn").(*gtk.Button).Connect("clicked", createNodeDlg.onCancelBtnClicked)
@@ -65,7 +65,7 @@ func (c *CreateNodeDlg) onCancelBtnClicked() {
 func (c *CreateNodeDlg) getAcl() []goZk.ACL {
 	//digest:someuser:hashedpw:crdwa
 	connInfo := getSelectedConn()
-	if !c.aclCheckBtn.GetActive() {
+	if c.publicNodeCheckBtn.GetActive() {
 		return core.AclWorldAnyone
 	}
 	return goZk.DigestACL(goZk.PermAll, connInfo.User, connInfo.Password)
@@ -76,8 +76,8 @@ func (c *CreateNodeDlg) showAll() {
 	c.valueEntry.SetText("")
 
 	connInfo := getSelectedConn()
-	c.aclCheckBtn.SetSensitive(len(connInfo.User) != 0 && len(connInfo.Password) != 0)
-	c.aclCheckBtn.SetActive(false)
+	c.publicNodeCheckBtn.SetSensitive(len(connInfo.User) != 0 && len(connInfo.Password) != 0)
+	c.publicNodeCheckBtn.SetActive(true)
 
 	c.dlg.ShowAll()
 }

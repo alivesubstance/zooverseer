@@ -22,7 +22,7 @@ func BytesToString(data []byte) string {
 	return string(data[:])
 }
 
-func StringToBytes(data string) []byte {
+func StrToBytes(data string) []byte {
 	return []byte(data)
 }
 

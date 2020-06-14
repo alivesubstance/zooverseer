@@ -8,6 +8,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"os"
+	"time"
 )
 
 type Type string
@@ -19,9 +20,11 @@ const (
 
 type ConnRepository interface {
 	Upsert(connInfo *ConnInfo)
-	Find(connName string) *ConnInfo
+	FindById(id int64) *ConnInfo
+	FindByName(name string) *ConnInfo
 	FindAll() []*ConnInfo
 	Delete(connInfo *ConnInfo)
+	SaveAll(connInfos []*ConnInfo)
 }
 
 type JsonConnRepository struct {
@@ -29,6 +32,7 @@ type JsonConnRepository struct {
 }
 
 type ConnInfo struct {
+	Id       int64
 	Name     string /*`json:"name"`*/
 	Host     string
 	Port     int
@@ -48,11 +52,15 @@ func (c *ConnInfo) Copy() *ConnInfo {
 		log.WithError(err).Errorf("Copy")
 	}
 
+	connCopy.Id = 0
 	return connCopy
 }
 
 func (c *JsonConnRepository) Upsert(connInfo *ConnInfo) {
-	foundConnInfo := c.Find(connInfo.Name)
+	if connInfo.Id == 0 {
+		connInfo.Id = time.Now().Unix()
+	}
+	foundConnInfo := c.FindById(connInfo.Id)
 	if foundConnInfo != nil {
 		c.Delete(foundConnInfo)
 		c.insert(connInfo)
@@ -66,14 +74,32 @@ func (c *JsonConnRepository) insert(connInfo *ConnInfo) {
 	c.SaveAll(conns)
 }
 
-func (c *JsonConnRepository) Find(connName string) *ConnInfo {
-	if len(connName) == 0 {
+func (c *JsonConnRepository) FindById(id int64) *ConnInfo {
+	if id == 0 {
 		return nil
 	}
 
 	// can be replaced with json path but it also need fully read json file
 	for _, connInfo := range c.FindAll() {
-		if connInfo.Name == connName {
+		if connInfo.Id == id {
+			if len(connInfo.Password) != 0 {
+				connInfo.Password = util.Decrypt(connInfo.Password)
+			}
+			return connInfo
+		}
+	}
+
+	return nil
+}
+
+func (c *JsonConnRepository) FindByName(name string) *ConnInfo {
+	if len(name) == 0 {
+		return nil
+	}
+
+	// can be replaced with json path but it also need fully read json file
+	for _, connInfo := range c.FindAll() {
+		if connInfo.Name == name {
 			if len(connInfo.Password) != 0 {
 				connInfo.Password = util.Decrypt(connInfo.Password)
 			}
@@ -97,7 +123,7 @@ func (c *JsonConnRepository) Delete(connInfo *ConnInfo) {
 
 	var newConns = make([]*ConnInfo, 0)
 	for _, conn := range conns {
-		if conn.Name == connInfo.Name {
+		if conn.Id == connInfo.Id {
 			continue
 		}
 		newConns = append(newConns, conn)
@@ -107,9 +133,18 @@ func (c *JsonConnRepository) Delete(connInfo *ConnInfo) {
 }
 
 func (c *JsonConnRepository) SaveAll(connInfos []*ConnInfo) {
-	connConfigJson, err := os.Open(ConnConfigFilePath)
+	var file *os.File
+	var err error
+
+	_, err = os.Stat(ConnConfigFilePath)
+	if os.IsNotExist(err) {
+		file, err = os.Create(ConnConfigFilePath)
+		log.Infof("File %s has been created", ConnConfigFilePath)
+	} else {
+		file, err = os.Open(ConnConfigFilePath)
+	}
 	util.CheckError(err)
-	defer connConfigJson.Close()
+	defer file.Close()
 
 	bytes, err := json.Marshal(connInfos)
 	if err != nil {

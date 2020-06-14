@@ -119,20 +119,20 @@
               </packing>
             </child>
             <child>
-              <object class="GtkCheckButton" id="createNodeDlgAclCheckBtn">
-                <property name="label" translatable="yes"> ACL</property>
+              <object class="GtkCheckButton" id="createNodeDlgPublicNodeCheckBtn">
+                <property name="label" translatable="yes"> Public</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">False</property>
-                <property name="tooltip_text" translatable="yes">Set ACL to node based on user and password defined in connection</property>
+                <property name="tooltip_text" translatable="yes">Public node available for all users. Private node protected by ACL based on user and password in case auth info is defined in connection config.</property>
                 <property name="halign">end</property>
-                <property name="margin_left">5</property>
+                <property name="margin_right">10</property>
                 <property name="margin_top">10</property>
                 <property name="margin_bottom">10</property>
                 <property name="draw_indicator">True</property>
               </object>
               <packing>
-                <property name="left_attach">0</property>
+                <property name="left_attach">1</property>
                 <property name="top_attach">2</property>
               </packing>
             </child>
@@ -423,6 +423,20 @@
               <packing>
                 <property name="x">-1</property>
                 <property name="y">-3</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkEntry" id="connIdEntry">
+                <property name="width_request">0</property>
+                <property name="height_request">80</property>
+                <property name="sensitive">False</property>
+                <property name="can_focus">False</property>
+                <property name="opacity">0</property>
+                <property name="visibility">False</property>
+              </object>
+              <packing>
+                <property name="x">486</property>
+                <property name="y">312</property>
               </packing>
             </child>
           </object>

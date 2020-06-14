@@ -25,42 +25,57 @@ const (
 
 var (
 	ConnRepo core.ConnRepository = &core.JsonConnRepository{}
+	connDlg                      = ConnDlg{}
 )
 
-func InitConnDialog(mainWindow *gtk.Window) *gtk.Dialog {
-	GetObject("connPortEntry").(*gtk.Entry).SetWidthChars(10)
+type ConnDlg struct {
+	dlg                 *gtk.Dialog
+	connDialogCancelBtn *gtk.Button
+	connNameEntry       *gtk.Entry
+	connHostEntry       *gtk.Entry
+	connPortEntry       *gtk.Entry
+	connUserEntry       *gtk.Entry
+	connPwdEntry        *gtk.Entry
+	connIdEntry         *gtk.Entry
+	connListBox         *gtk.ListBox
+	connCopyBtn         *gtk.Button
+	connDeleteBtn       *gtk.Button
+}
 
-	connDialog := getConnDialog()
-	connDialog.SetTransientFor(mainWindow)
-	connDialog.SetPosition(gtk.WIN_POS_CENTER)
+func InitConnDialog(mainWindow *gtk.Window) {
+	connDlg.dlg = GetObject("connDialog").(*gtk.Dialog)
+	connDlg.dlg.SetTransientFor(mainWindow)
+	connDlg.dlg.SetPosition(gtk.WIN_POS_CENTER)
 
-	GetObject("connDialogCancelBtn").(*gtk.Button).Connect("clicked", onConnDialogCancelBtnClicked(connDialog))
+	connDlg.connPortEntry = GetObject("connPortEntry").(*gtk.Entry)
+	connDlg.connPortEntry.SetWidthChars(10)
+
+	connDlg.connIdEntry = GetObject("connIdEntry").(*gtk.Entry)
+	connDlg.connNameEntry = GetObject("connNameEntry").(*gtk.Entry)
+	connDlg.connHostEntry = GetObject("connHostEntry").(*gtk.Entry)
+	connDlg.connPortEntry = GetObject("connPortEntry").(*gtk.Entry)
+	connDlg.connUserEntry = GetObject("connUserEntry").(*gtk.Entry)
+	connDlg.connPwdEntry = GetObject("connPwdEntry").(*gtk.Entry)
+
+	connDlg.connCopyBtn = GetObject("connCopyBtn").(*gtk.Button)
+	connDlg.connCopyBtn.Connect("clicked", onConnCopyBtnClicked)
+	connDlg.connDeleteBtn = GetObject("connDeleteBtn").(*gtk.Button)
+	connDlg.connDeleteBtn.Connect("clicked", onConnDeleteBtnClicked)
+	GetObject("connDialogCancelBtn").(*gtk.Button).Connect("clicked", onConnDialogCancelBtnClicked(connDlg.dlg))
 	GetObject("connAddBtn").(*gtk.Button).Connect("clicked", onConnAddBtnClicked)
-	connSaveBtn := GetObject("connSaveBtn").(*gtk.Button)
-	connSaveBtn.Connect("clicked", onConnSaveBtnClicked)
-
-	connCopyBtn := GetObject("connCopyBtn").(*gtk.Button)
-	connCopyBtn.Connect("clicked", onConnCopyBtnClicked)
-
-	connDeleteBtn := GetObject("connDeleteBtn").(*gtk.Button)
-	connDeleteBtn.Connect("clicked", onConnDeleteBtnClicked)
-
-	connTestBtn := GetObject("connTestBtn").(*gtk.Button)
-	connTestBtn.Connect("clicked", onConnTestBtnClicked)
+	GetObject("connSaveBtn").(*gtk.Button).Connect("clicked", onConnSaveBtnClicked)
+	GetObject("connTestBtn").(*gtk.Button).Connect("clicked", onConnTestBtnClicked)
+	GetObject("connBtn").(*gtk.Button).Connect("clicked", onConnBtnClicked)
 
 	connInfos := ConnRepo.FindAll()
 	if len(connInfos) == 0 {
-		connSaveBtn.SetSensitive(false)
-		connCopyBtn.SetSensitive(false)
-		connDeleteBtn.SetSensitive(false)
+		enableConnActions(false)
 	}
 
-	GetObject("connBtn").(*gtk.Button).Connect("clicked", onConnBtnClicked)
-
+	connDlg.connListBox = GetObject("connList").(*gtk.ListBox)
 	initConnListBox()
 
-	connDialog.ShowAll()
-	return connDialog
+	connDlg.dlg.ShowAll()
 }
 
 //todo cache it for session
@@ -70,9 +85,8 @@ func getSelectedConn() *core.ConnInfo {
 	//return &core.ConnInfo{Name: "scotia-nightly", Host: "172.0.30.173", Port: 32090, User: "zookeeper", Password: "z00k33p3r"}
 	//return &core.ConnInfo{Name: "sandbox-pleeco", Host: "10.1.1.112", Port: 2181, User: "zookeeper", Password: "z00k33p3r"}
 	//return &core.ConnInfo{Name: "scotia-history", Host: "172.0.30.173", Port: 32216, User: "zookeeper", Password: "z00k33p3r"}
-	connList := getConnListBox()
-	connName := getSelectedConnName(connList)
-	return ConnRepo.Find(connName)
+	connName := getSelectedConnName(connDlg.connListBox)
+	return ConnRepo.FindByName(connName)
 }
 
 func getSelectedConnName(connList *gtk.ListBox) string {
@@ -91,49 +105,44 @@ func getSelectedConnName(connList *gtk.ListBox) string {
 }
 
 func drawConnInfo(connInfo *core.ConnInfo, withMandatory bool) {
-	connNameEntry := GetObject("connNameEntry").(*gtk.Entry)
-	connNameEntry.SetText(connInfo.Name)
+	connDlg.connIdEntry.SetText(fmt.Sprintf("%v", connInfo.Id))
+	connDlg.connNameEntry.SetText(connInfo.Name)
+	connDlg.connHostEntry.SetText(connInfo.Host)
 
-	connHostEntry := GetObject("connHostEntry").(*gtk.Entry)
-	connHostEntry.SetText(connInfo.Host)
-
-	connPortEntry := GetObject("connPortEntry").(*gtk.Entry)
+	connDlg.connPortEntry.SetText("")
 	if connInfo.Port != 0 {
-		connPortEntry.SetText(fmt.Sprintf("%v", connInfo.Port))
-	} else {
-		connPortEntry.SetText("")
+		connDlg.connPortEntry.SetText(fmt.Sprintf("%v", connInfo.Port))
 	}
 
 	if withMandatory {
-		context, _ := connNameEntry.GetStyleContext()
+		context, _ := connDlg.connNameEntry.GetStyleContext()
 		context.AddClass(CssClassMandatory)
-		context, _ = connHostEntry.GetStyleContext()
+		context, _ = connDlg.connHostEntry.GetStyleContext()
 		context.AddClass(CssClassMandatory)
-		context, _ = connPortEntry.GetStyleContext()
+		context, _ = connDlg.connPortEntry.GetStyleContext()
 		context.AddClass(CssClassMandatory)
 	}
 
 	if len(connInfo.User) != 0 && len(connInfo.Password) != 0 {
-		GetObject("connUserEntry").(*gtk.Entry).SetText(connInfo.User)
-		GetObject("connPwdEntry").(*gtk.Entry).SetText(connInfo.Password)
+		connDlg.connUserEntry.SetText(connInfo.User)
+		connDlg.connPwdEntry.SetText(connInfo.Password)
 	} else {
-		GetObject("connUserEntry").(*gtk.Entry).SetText("")
-		GetObject("connPwdEntry").(*gtk.Entry).SetText("")
+		connDlg.connUserEntry.SetText("")
+		connDlg.connPwdEntry.SetText("")
 	}
 }
 
 func initConnListBox() {
-	connListBox := getConnListBox()
-	connListBox.Connect("row-selected", onConnSelected)
+	connDlg.connListBox.Connect("row-selected", onConnSelected)
 	//connListBox.Connect("button-release-event", onConnListBoxBtnRelease)
-	connListBox.Connect("button-press-event", onConnListBoxBtnPress)
+	connDlg.connListBox.Connect("button-press-event", onConnListBoxBtnPress)
 
 	// clear conn list before load saved conns from repo
 	// it's done to use delete, add or copy conn buttons
 	// better to redraw list box then do manual delete, add or copy ops
-	children := connListBox.GetChildren()
+	children := connDlg.connListBox.GetChildren()
 	children.Foreach(func(item interface{}) {
-		connListBox.Remove(item.(gtk.IWidget))
+		connDlg.connListBox.Remove(item.(gtk.IWidget))
 	})
 	connInfos := ConnRepo.FindAll()
 	sort.Slice(connInfos, func(i, j int) bool {
@@ -142,7 +151,7 @@ func initConnListBox() {
 	for _, connInfo := range connInfos {
 		addConnListBoxItem(connInfo)
 	}
-	connListBox.ShowAll()
+	connDlg.connListBox.ShowAll()
 }
 
 func addConnListBoxItem(conn *core.ConnInfo) {
@@ -156,9 +165,8 @@ func addConnListBoxItem(conn *core.ConnInfo) {
 	label.SetTooltipText(conn.Name)
 	label.SetHAlign(gtk.ALIGN_START)
 
-	connListBox := getConnListBox()
-	connListBox.Add(label)
-	connListBox.ShowAll()
+	connDlg.connListBox.Add(label)
+	connDlg.connListBox.ShowAll()
 }
 
 func onConnSelected() {
@@ -167,13 +175,15 @@ func onConnSelected() {
 		return
 	}
 
-	setConnListBoxBtnsSensitivity(true)
+	enableConnActions(true)
 	drawConnInfo(selectedConn, false)
 }
 
-func setConnListBoxBtnsSensitivity(value bool) {
-	GetObject("connCopyBtn").(*gtk.Button).SetSensitive(value)
-	GetObject("connDeleteBtn").(*gtk.Button).SetSensitive(value)
+func enableConnActions(value bool) {
+	log.Infof("enableConnActions. set sensitive: %v", value)
+
+	connDlg.connCopyBtn.SetSensitive(value)
+	connDlg.connDeleteBtn.SetSensitive(value)
 }
 
 func onConnListBoxBtnPress(listBox *gtk.ListBox, e *gdk.Event) {
@@ -191,8 +201,8 @@ func onConnListBoxBtnPress(listBox *gtk.ListBox, e *gdk.Event) {
 }
 
 func onConnAddBtnClicked() {
-	getConnListBox().UnselectAll()
-	setConnListBoxBtnsSensitivity(false)
+	connDlg.connListBox.UnselectAll()
+	enableConnActions(false)
 	drawConnInfo(&core.ConnInfo{Name: ConnNameDraft}, true)
 }
 
@@ -201,23 +211,19 @@ func onConnSaveBtnClicked() {
 	if connInfo == nil {
 		return
 	}
+
 	ConnRepo.Upsert(connInfo)
 	initConnListBox()
 }
 
 func validateAndGetConn() *core.ConnInfo {
-	connNameEntry := GetObject("connNameEntry").(*gtk.Entry)
-	connName, _ := connNameEntry.GetText()
-
-	connHostEntry := GetObject("connHostEntry").(*gtk.Entry)
-	connHost, _ := connHostEntry.GetText()
-
-	connPortEntry := GetObject("connPortEntry").(*gtk.Entry)
-	connPort, _ := connPortEntry.GetText()
+	connName, _ := connDlg.connNameEntry.GetText()
+	connHost, _ := connDlg.connHostEntry.GetText()
+	connPort, _ := connDlg.connPortEntry.GetText()
 
 	if len(connName) == 0 || len(connHost) == 0 || len(connPort) == 0 {
 		dialog := createInfoDialog(
-			getConnDialog(),
+			connDlg.dlg,
 			"Mandatory fields should not be empty",
 		)
 		dialog.Run()
@@ -226,52 +232,49 @@ func validateAndGetConn() *core.ConnInfo {
 		return nil
 	}
 
-	connUserEntry := GetObject("connUserEntry").(*gtk.Entry)
-	connUser, _ := connUserEntry.GetText()
-
-	connPwdEntry := GetObject("connPwdEntry").(*gtk.Entry)
-	connPwd, _ := connPwdEntry.GetText()
+	connUser, _ := connDlg.connUserEntry.GetText()
+	connPwd, _ := connDlg.connPwdEntry.GetText()
 	if len(connUser) != 0 && len(connPwd) == 0 {
-		dialog := createInfoDialog(
-			getConnDialog(),
-			"Password should be provided together with user",
-		)
+		dialog := createInfoDialog(connDlg.dlg, "Password should be provided together with user")
 		dialog.Run()
 		dialog.Hide()
 
-		context, _ := connUserEntry.GetStyleContext()
+		context, _ := connDlg.connUserEntry.GetStyleContext()
 		context.AddClass(CssClassMandatory)
 
-		context, _ = connPwdEntry.GetStyleContext()
+		context, _ = connDlg.connPwdEntry.GetStyleContext()
 		context.AddClass(CssClassMandatory)
 
 		return nil
 	}
 
-	context, _ := connNameEntry.GetStyleContext()
+	context, _ := connDlg.connNameEntry.GetStyleContext()
 	context.RemoveClass(CssClassMandatory)
-	context, _ = connHostEntry.GetStyleContext()
+	context, _ = connDlg.connHostEntry.GetStyleContext()
 	context.RemoveClass(CssClassMandatory)
-	context, _ = connUserEntry.GetStyleContext()
+	context, _ = connDlg.connUserEntry.GetStyleContext()
 	context.RemoveClass(CssClassMandatory)
-	context, _ = connPwdEntry.GetStyleContext()
+	context, _ = connDlg.connPwdEntry.GetStyleContext()
 	context.RemoveClass(CssClassMandatory)
 
 	connPortInt, err := strconv.Atoi(connPort)
 	if err != nil || connPortInt < 0 {
-		dialog := createInfoDialog(
-			getConnDialog(),
-			"Connection port should be positive number",
-		)
+		dialog := createInfoDialog(connDlg.dlg, "Connection port should be positive number")
 		dialog.Run()
 		dialog.Hide()
 		return nil
 	}
 
-	context, _ = connPortEntry.GetStyleContext()
+	context, _ = connDlg.connPortEntry.GetStyleContext()
 	context.RemoveClass(CssClassMandatory)
 
+	id := int64(0)
+	idTxt, _ := connDlg.connIdEntry.GetText()
+	if len(idTxt) != 0 {
+		id, _ = strconv.ParseInt(idTxt, 10, 64)
+	}
 	connInfo := &core.ConnInfo{
+		Id:       id,
 		Name:     connName,
 		Host:     connHost,
 		Port:     connPortInt,
@@ -287,22 +290,25 @@ func onConnCopyBtnClicked() {
 	connInfoCopy := connInfo.Copy()
 	connInfoCopy.Name += " - copy"
 
-	getConnListBox().UnselectAll()
-	setConnListBoxBtnsSensitivity(false)
+	connDlg.connListBox.UnselectAll()
+	enableConnActions(false)
 	drawConnInfo(connInfoCopy, false)
 }
 
 func onConnDeleteBtnClicked() {
 	selectedConn := getSelectedConn()
-	dialog := createConfirmDialog(getConnDialog(), "Are you sure you want to delete "+selectedConn.Name+"?")
+	dialog := createConfirmDialog(connDlg.dlg, "Are you sure you want to delete "+selectedConn.Name+"?")
 	resp := dialog.Run()
 	if resp == gtk.RESPONSE_YES {
 		ConnRepo.Delete(selectedConn)
-		connListBox := getConnListBox()
-		connListBox.Remove(connListBox.GetSelectedRow())
+		connDlg.connListBox.Remove(connDlg.connListBox.GetSelectedRow())
 	}
 
 	dialog.Hide()
+	conns := ConnRepo.FindAll()
+	if len(conns) == 0 {
+		enableConnActions(false)
+	}
 }
 
 func onConnBtnClicked() {
@@ -316,12 +322,12 @@ func onConnBtnClicked() {
 
 	err := ShowTreeRootNodes()
 	if err != nil {
-		dialog := CreateErrorDialog(getConnDialog(), "Unable to connect to "+connInfo.Name)
+		dialog := CreateErrorDialog(connDlg.dlg, "Unable to connect to "+connInfo.Name)
 		dialog.Run()
 		dialog.Hide()
 		return
 	}
-	getConnDialog().Hide()
+	connDlg.dlg.Hide()
 }
 
 func onConnDialogCancelBtnClicked(connDialog *gtk.Dialog) func() {
@@ -342,23 +348,23 @@ func onConnTestBtnClicked() {
 
 	var dialog *gtk.MessageDialog
 	if err == nil {
-		dialog = createInfoDialog(getConnDialog(), "Successfully connected to "+connInfo.Name)
+		dialog = createInfoDialog(connDlg.dlg, "Successfully connected to "+connInfo.Name)
 	} else {
 		cause := errors.Cause(err).(retry.Error)
 		wrappedErrors := cause.WrappedErrors()
 		errMsg := wrappedErrors[len(wrappedErrors)-1].Error()
-		dialog = createWarnDialog(getConnDialog(), errMsg)
+		dialog = createWarnDialog(connDlg.dlg, errMsg)
 	}
 	dialog.Run()
 	dialog.Hide()
 }
 
 func getConnForm() *core.ConnInfo {
-	connName, _ := GetObject("connNameEntry").(*gtk.Entry).GetText()
-	connHost, _ := GetObject("connHostEntry").(*gtk.Entry).GetText()
-	connPort, _ := GetObject("connPortEntry").(*gtk.Entry).GetText()
-	connUser, _ := GetObject("connUserEntry").(*gtk.Entry).GetText()
-	connPwd, _ := GetObject("connPwdEntry").(*gtk.Entry).GetText()
+	connName, _ := connDlg.connNameEntry.GetText()
+	connHost, _ := connDlg.connHostEntry.GetText()
+	connPort, _ := connDlg.connPortEntry.GetText()
+	connUser, _ := connDlg.connUserEntry.GetText()
+	connPwd, _ := connDlg.connPwdEntry.GetText()
 
 	connPortInt, _ := strconv.Atoi(connPort)
 	connInfo := &core.ConnInfo{
@@ -369,12 +375,4 @@ func getConnForm() *core.ConnInfo {
 		Password: connPwd,
 	}
 	return connInfo
-}
-
-func getConnDialog() *gtk.Dialog {
-	return GetObject("connDialog").(*gtk.Dialog)
-}
-
-func getConnListBox() *gtk.ListBox {
-	return GetObject("connList").(*gtk.ListBox)
 }

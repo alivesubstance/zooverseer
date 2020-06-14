@@ -177,7 +177,7 @@ func (r *Repository) SaveChild(parentPath string, child *Node) error {
 	}
 
 	absPath := r.buildAbsPath(parentPath, child.Name)
-	_, err = conn.Create(absPath, util.StringToBytes(""), int32(0), child.Acl)
+	_, err = conn.Create(absPath, util.StrToBytes(""), int32(0), child.Acl)
 	if err != nil {
 		return err
 	}
@@ -200,7 +200,7 @@ func (r *Repository) SaveValue(absPath string, node *Node) error {
 	if node.Meta != nil {
 		version = node.Meta.Version
 	}
-	_, err = conn.Set(absPath, util.StringToBytes(node.Value), version)
+	_, err = conn.Set(absPath, util.StrToBytes(node.Value), version)
 	return err
 }
 
