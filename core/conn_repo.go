@@ -136,12 +136,12 @@ func (c *JsonConnRepository) SaveAll(connInfos []*ConnInfo) {
 	var file *os.File
 	var err error
 
-	_, err = os.Stat(ConnConfigFilePath)
+	_, err = os.Stat(Config.ConnConfigFilePath)
 	if os.IsNotExist(err) {
-		file, err = os.Create(ConnConfigFilePath)
-		log.Infof("File %s has been created", ConnConfigFilePath)
+		file, err = os.Create(Config.ConnConfigFilePath)
+		log.Infof("File %s has been created", Config.ConnConfigFilePath)
 	} else {
-		file, err = os.Open(ConnConfigFilePath)
+		file, err = os.Open(Config.ConnConfigFilePath)
 	}
 	util.CheckError(err)
 	defer file.Close()
@@ -150,7 +150,7 @@ func (c *JsonConnRepository) SaveAll(connInfos []*ConnInfo) {
 	if err != nil {
 		log.WithError(err).Errorf("Failed to marshal connections")
 	}
-	err = ioutil.WriteFile(ConnConfigFilePath, bytes, 0644)
+	err = ioutil.WriteFile(Config.ConnConfigFilePath, bytes, 0644)
 	if err != nil {
 		log.WithError(err).Errorf("Failed to write connections config")
 	}
@@ -159,7 +159,7 @@ func (c *JsonConnRepository) SaveAll(connInfos []*ConnInfo) {
 func readConns() []*ConnInfo {
 	connInfos := make([]*ConnInfo, 0)
 
-	connConfigJson, err := os.Open(ConnConfigFilePath)
+	connConfigJson, err := os.Open(Config.ConnConfigFilePath)
 	if os.IsNotExist(err) {
 		log.Tracef("Connections file doesn't exist")
 		return nil

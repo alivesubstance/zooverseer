@@ -57,7 +57,7 @@ func initCssProvider() {
 		log.WithError(err).Errorf("Failed to create CSS provider")
 	}
 
-	err = providerNew.LoadFromPath(core.CssStyleFilePath)
+	err = providerNew.LoadFromPath(core.Config.CssStyleFilePath)
 	if err != nil {
 		log.WithError(err).Errorf("Failed to load CSS styles")
 	}

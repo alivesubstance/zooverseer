@@ -2,14 +2,6 @@ package core
 
 import goZk "github.com/samuel/go-zookeeper/zk"
 
-const (
-	AppId              = "com.github.alivesubstance.zooverseer"
-	ConfigDir          = "/home/mirian/code/zooverseer/assets"
-	GladeFilePath      = ConfigDir + "/main.glade"
-	ConnConfigFilePath = ConfigDir + "/connections.json"
-	CssStyleFilePath   = ConfigDir + "/style.css"
-)
-
 // todo Move constants to config
 // Zk Connection
 const (

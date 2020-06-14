@@ -15,7 +15,7 @@ func main() {
 
 	initLogger()
 
-	app, err := gtk.ApplicationNew(core.AppId, glib.APPLICATION_FLAGS_NONE)
+	app, err := gtk.ApplicationNew(core.Config.AppId, glib.APPLICATION_FLAGS_NONE)
 	util.CheckError(err)
 
 	app.Connect("activate", ui.OnAppActivate(app))
