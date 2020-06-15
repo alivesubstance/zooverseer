@@ -180,8 +180,6 @@ func onConnSelected() {
 }
 
 func enableConnActions(value bool) {
-	log.Infof("enableConnActions. set sensitive: %v", value)
-
 	connDlg.connCopyBtn.SetSensitive(value)
 	connDlg.connDeleteBtn.SetSensitive(value)
 }
