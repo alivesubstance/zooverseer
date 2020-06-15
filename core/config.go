@@ -3,7 +3,6 @@ package core
 import (
 	"github.com/mitchellh/go-homedir"
 	log "github.com/sirupsen/logrus"
-	"os"
 )
 
 const AppAssetsDir = "./assets"
@@ -20,28 +19,38 @@ type ZooverseerConfig struct {
 }
 
 var Config = ZooverseerConfig{
-	AppId:              "com.github.alivesubstance.zooverseer",
-	SortFolderFirst:    true,
-	ConnConfigFilePath: createUserConfigDir() + "/connections.json",
+	AppId:           "com.github.alivesubstance.zooverseer",
+	SortFolderFirst: true,
+	// todo not an easy task to create hidden file thru go
+	//ConnConfigFilePath: getUserConfigDir() + "/connections.json",
+	ConnConfigFilePath: AppAssetsDir + "/connections.json",
 	GladeFilePath:      AppAssetsDir + "/main.glade",
 	CssStyleFilePath:   AppAssetsDir + "/style.css",
 	ExportDir:          "./export",
 }
 
-func createUserConfigDir() string {
+func getUserConfigDir() string {
 	userHome, err := homedir.Dir()
 	if err != nil {
 		log.WithError(err).Errorf("Failed to get user home dir. Fallback to %v", AppAssetsDir)
 	}
 
-	userConfigDir := userHome + "/zooverseer"
-	_, err = os.Stat(userConfigDir)
-	if os.IsNotExist(err) {
-		_, err = os.Create(userConfigDir)
-		if err != nil {
-			log.WithError(err).Fatalf("Failed to create user config dir %v", userConfigDir)
-		}
-	}
+	log.Infof("User home dir is %v", userHome)
 
-	return userHome
+	userConfigDir := AppAssetsDir
+
+	// todo not an easy task to create hidden file thru go
+	//https://stackoverflow.com/questions/54139606/how-to-create-a-hidden-file-in-windows-mac-linux
+	//userConfigDir := userHome + "/.zooverseer"
+	//_, err = os.Stat(userConfigDir)
+	//if os.IsNotExist(err) {
+	//	err := os.Mkdir(userConfigDir, 0666)
+	//	if err != nil {
+	//		log.WithError(err).Fatalf("Failed to create user config dir %v", userConfigDir)
+	//		userConfigDir = AppAssetsDir + "/config"
+	//	}
+	//}
+
+	log.Infof("Set config dir to %v", userConfigDir)
+	return userConfigDir
 }
