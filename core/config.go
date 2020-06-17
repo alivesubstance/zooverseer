@@ -11,8 +11,7 @@ type ZooverseerConfig struct {
 	SortFolderFirst    bool
 	ExportDir          string
 	AppId              string
-	UserConfigDir      string
-	AppConfigDir       string
+	LogDir             string
 	GladeFilePath      string
 	ConnConfigFilePath string
 	CssStyleFilePath   string
@@ -23,6 +22,7 @@ var Config = ZooverseerConfig{
 	SortFolderFirst: true,
 	// todo not an easy task to create hidden file thru go
 	//ConnConfigFilePath: getUserConfigDir() + "/connections.json",
+	LogDir:             "./log",
 	ConnConfigFilePath: AppAssetsDir + "/connections.json",
 	GladeFilePath:      AppAssetsDir + "/main.glade",
 	CssStyleFilePath:   AppAssetsDir + "/style.css",
