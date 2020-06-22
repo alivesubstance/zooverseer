@@ -319,6 +319,7 @@ func onConnDeleteBtnClicked() {
 }
 
 func onConnBtnClicked() {
+	zk.Reset()
 	ClearNodeTree()
 
 	connInfo := getSelectedConn()

@@ -5,7 +5,7 @@ var (
 	CachingRepo = CachingRepository{Repo: Repo}
 )
 
-func Close() {
+func Reset() {
 	ConnCache.InvalidateAll()
 	CachingRepo.Close()
 }
