@@ -82,9 +82,6 @@ func (c *JsonConnRepository) FindById(id int64) *ConnInfo {
 	// can be replaced with json path but it also need fully read json file
 	for _, connInfo := range c.FindAll() {
 		if connInfo.Id == id {
-			if len(connInfo.Password) != 0 {
-				connInfo.Password = util.Decrypt(connInfo.Password)
-			}
 			return connInfo
 		}
 	}
@@ -100,9 +97,6 @@ func (c *JsonConnRepository) FindByName(name string) *ConnInfo {
 	// can be replaced with json path but it also need fully read json file
 	for _, connInfo := range c.FindAll() {
 		if connInfo.Name == name {
-			if len(connInfo.Password) != 0 {
-				connInfo.Password = util.Decrypt(connInfo.Password)
-			}
 			return connInfo
 		}
 	}

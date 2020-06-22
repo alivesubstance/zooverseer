@@ -3,6 +3,7 @@ package zk
 import (
 	"fmt"
 	"github.com/alivesubstance/zooverseer/core"
+	"github.com/alivesubstance/zooverseer/util"
 	"github.com/avast/retry-go"
 	goCache "github.com/goburrow/cache"
 	"github.com/pkg/errors"
@@ -58,8 +59,13 @@ func connect(connInfo core.ConnInfo) (*goZk.Conn, error) {
 	}
 
 	if len(connInfo.User) != 0 && len(connInfo.Password) != 0 {
-		authExp := fmt.Sprint(connInfo.User, ":", connInfo.Password)
-		err := conn.AddAuth("digest", []byte(authExp))
+		decryptedPwd, err := util.Decrypt(connInfo.Password)
+		if err != nil {
+			return nil, errors.Wrapf(err, "Failed to decrypt password for %s", connInfo.Name)
+		}
+
+		authExp := fmt.Sprint(connInfo.User, ":", decryptedPwd)
+		err = conn.AddAuth("digest", []byte(authExp))
 		if err != nil {
 			return nil, errors.Wrapf(err, "Failed to add auth for user %s", connInfo.User)
 		}

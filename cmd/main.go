@@ -19,14 +19,22 @@ func main() {
 	app, err := gtk.ApplicationNew(core.Config.AppId, glib.APPLICATION_FLAGS_NONE)
 	util.CheckError(err)
 
+	addAppIcon(app)
+
 	app.Connect("activate", ui.OnAppActivate(app))
 
 	os.Exit(app.Run(os.Args))
 }
 
+func addAppIcon(app *gtk.Application) {
+	//https://stackoverflow.com/questions/45162862/how-do-i-set-an-icon-for-the-whole-application-using-pygobject
+	//iconTheme, err := gtk.IconThemeGetDefault()
+	//util.CheckError(err)
+	//iconTheme.LoadIcon()
+}
+
 // todo clean old logs
 func initLogger() {
-	log.SetReportCaller(true)
 	log.SetLevel(log.TraceLevel)
 	log.SetFormatter(&log.TextFormatter{
 		DisableColors:   true,
@@ -38,7 +46,7 @@ func initLogger() {
 	if os.IsNotExist(err) {
 		err := os.Mkdir(core.Config.LogDir, 0775)
 		if err != nil {
-			log.WithError(err).Fatalf("Failed to create log dir %v", core.Config.LogDir)
+			log.WithError(err).Panicf("Failed to create log dir %v", core.Config.LogDir)
 		}
 	}
 
@@ -47,7 +55,7 @@ func initLogger() {
 	if err == nil {
 		log.SetOutput(logFile)
 	} else {
-		log.WithError(err).Info("Failed to create log file, using default stdout")
+		log.WithError(err).Panicf("Failed to create log file, using default stdout")
 		log.SetOutput(os.Stdout)
 	}
 }

@@ -172,7 +172,6 @@ func (c *CachingRepository) Delete(path string, node *Node) error {
 }
 
 func (c *CachingRepository) Close() {
-	c.Repo.Close()
 	c.InvalidateAll()
 }
 

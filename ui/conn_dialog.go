@@ -125,7 +125,7 @@ func drawConnInfo(connInfo *core.ConnInfo, withMandatory bool) {
 
 	if len(connInfo.User) != 0 && len(connInfo.Password) != 0 {
 		connDlg.connUserEntry.SetText(connInfo.User)
-		connDlg.connPwdEntry.SetText(connInfo.Password)
+		connDlg.connPwdEntry.SetText(util.DecryptOrPanic(connInfo.Password))
 	} else {
 		connDlg.connUserEntry.SetText("")
 		connDlg.connPwdEntry.SetText("")
@@ -271,13 +271,22 @@ func validateAndGetConn() *core.ConnInfo {
 	if len(idTxt) != 0 {
 		id, _ = strconv.ParseInt(idTxt, 10, 64)
 	}
+
+	encryptedPwd, err := util.Encrypt(connPwd)
+	if err != nil {
+		dialog := createInfoDialog(connDlg.dlg, err.Error())
+		dialog.Run()
+		dialog.Hide()
+		return nil
+	}
+
 	connInfo := &core.ConnInfo{
 		Id:       id,
 		Name:     connName,
 		Host:     connHost,
 		Port:     connPortInt,
 		User:     connUser,
-		Password: connPwd,
+		Password: encryptedPwd,
 		Type:     core.ConnManual,
 	}
 	return connInfo

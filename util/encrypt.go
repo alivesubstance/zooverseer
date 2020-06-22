@@ -6,38 +6,62 @@ import (
 	"crypto/md5"
 	"crypto/rand"
 	"encoding/hex"
+	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 )
 
 const salt = "8d84b9363adf51458a3e67672176bcfd"
 
-func Encrypt(passphrase string) string {
-	block, err := aes.NewCipher([]byte(createHash(salt)))
-	CheckError(err)
+func Encrypt(passphrase string) (string, error) {
+	if passphrase == "" {
+		return "", nil
+	}
 
-	gcm, err := cipher.NewGCM(block)
-	CheckError(err)
+	decrypted, err := Decrypt(passphrase)
+	if err == nil && decrypted != passphrase {
+		// passphrase already encrypted. do not encrypt it twice
+		return passphrase, nil
+	}
+
+	gcm, err := createGCM()
+	if err != nil {
+		return "", err
+	}
 
 	nonce := make([]byte, gcm.NonceSize())
 	_, err = rand.Read(nonce)
-	CheckError(err)
+	if err != nil {
+		return "", errors.Wrap(err, "Failed to read nonce")
+	}
 
-	ciphertext := gcm.Seal(nonce, nonce, []byte(passphrase), nil)
+	cipherText := gcm.Seal(nonce, nonce, []byte(passphrase), nil)
 
-	return hex.EncodeToString(ciphertext)
+	return hex.EncodeToString(cipherText), nil
 }
 
-func Decrypt(cipherText string) string {
-	block, err := aes.NewCipher([]byte(createHash(salt)))
+func DecryptOrPanic(cipherText string) string {
+	decrypt, err := Decrypt(cipherText)
 	if err != nil {
-		panic(err.Error())
+		log.WithError(err).Panic()
 	}
-	gcm, err := cipher.NewGCM(block)
-	if err != nil {
-		panic(err.Error())
+
+	return decrypt
+}
+
+func Decrypt(cipherText string) (string, error) {
+	if cipherText == "" {
+		return "", nil
 	}
 
 	cipherBytes, err := hex.DecodeString(cipherText)
-	CheckError(err)
+	if err != nil {
+		return "", errors.Wrap(err, "Failed to get decoded bytes")
+	}
+
+	gcm, err := createGCM()
+	if err != nil {
+		return "", err
+	}
 
 	plaintext, err := gcm.Open(
 		nil,
@@ -46,9 +70,22 @@ func Decrypt(cipherText string) string {
 		nil,
 	)
 	if err != nil {
-		panic(err.Error())
+		return "", errors.Wrap(err, "Failed to decrypt string")
 	}
-	return string(plaintext)
+
+	return string(plaintext), nil
+}
+
+func createGCM() (cipher.AEAD, error) {
+	block, err := aes.NewCipher([]byte(createHash(salt)))
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to create Cipher")
+	}
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to create GCM")
+	}
+	return gcm, nil
 }
 
 func createHash(key string) string {

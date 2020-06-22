@@ -42,7 +42,7 @@ func initMainMenu(mainWindow *gtk.Window) {
 	})
 
 	GetObject("menuDisconnect").(*gtk.MenuItem).Connect("activate", func() {
-		zk.CachingRepo.Close()
+		zk.Close()
 		ClearNodeTree()
 	})
 
