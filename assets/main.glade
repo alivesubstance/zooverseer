@@ -572,9 +572,19 @@
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <child>
-                      <object class="GtkMenuItem" id="menuNodeCut">
+                      <object class="GtkMenuItem" id="menuAdd">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
+                        <property name="label" translatable="yes">Add</property>
+                        <property name="use_underline">True</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkMenuItem" id="menuCut">
+                        <property name="visible">True</property>
+                        <property name="sensitive">False</property>
+                        <property name="can_focus">False</property>
+                        <property name="tooltip_text" translatable="yes">Not implemented yet</property>
                         <property name="label" translatable="yes">Cut</property>
                         <property name="use_underline">True</property>
                       </object>
@@ -585,23 +595,76 @@
                         <property name="can_focus">False</property>
                         <property name="label" translatable="yes">Copy</property>
                         <property name="use_underline">True</property>
+                        <child type="submenu">
+                          <object class="GtkMenu">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <child>
+                              <object class="GtkMenuItem" id="menuCopyValue">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="label" translatable="yes">Value</property>
+                                <property name="use_underline">True</property>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkMenuItem" id="menuCopyName">
+                                <property name="visible">True</property>
+                                <property name="sensitive">False</property>
+                                <property name="can_focus">False</property>
+                                <property name="tooltip_text" translatable="yes">Not implemented yet</property>
+                                <property name="label" translatable="yes">Name</property>
+                                <property name="use_underline">True</property>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkMenuItem" id="menuCopyPath">
+                                <property name="visible">True</property>
+                                <property name="sensitive">False</property>
+                                <property name="can_focus">False</property>
+                                <property name="tooltip_text" translatable="yes">Not implemented yet</property>
+                                <property name="label" translatable="yes">Path</property>
+                                <property name="use_underline">True</property>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
                       </object>
                     </child>
                     <child>
-                      <object class="GtkMenuItem">
+                      <object class="GtkMenuItem" id="menuNodePasteNode">
                         <property name="visible">True</property>
+                        <property name="sensitive">False</property>
                         <property name="can_focus">False</property>
+                        <property name="tooltip_text" translatable="yes">Not implemented yet</property>
                         <property name="label" translatable="yes">Paste</property>
                         <property name="use_underline">True</property>
                       </object>
                     </child>
                     <child>
-                      <object class="GtkImageMenuItem">
-                        <property name="label">gtk-delete</property>
+                      <object class="GtkMenuItem" id="menuRename">
+                        <property name="visible">True</property>
+                        <property name="sensitive">False</property>
+                        <property name="can_focus">False</property>
+                        <property name="tooltip_text" translatable="yes">Not implemented yet</property>
+                        <property name="label" translatable="yes">Rename</property>
+                        <property name="use_underline">True</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkMenuItem" id="menuDeleteNode">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
+                        <property name="label" translatable="yes">Delete</property>
                         <property name="use_underline">True</property>
-                        <property name="use_stock">True</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkMenuItem" id="menuExportNode">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="label" translatable="yes">Export</property>
+                        <property name="use_underline">True</property>
                       </object>
                     </child>
                   </object>
@@ -1169,7 +1232,9 @@
                 <child type="tab">
                   <object class="GtkLabel" id="aclPage">
                     <property name="visible">True</property>
+                    <property name="sensitive">False</property>
                     <property name="can_focus">False</property>
+                    <property name="tooltip_text" translatable="yes">Not implemented yet</property>
                     <property name="label" translatable="yes">ACL</property>
                   </object>
                   <packing>
@@ -1354,7 +1419,7 @@
       </object>
     </child>
     <child>
-      <object class="GtkMenuItem" id="contextMenuPasteValue">
+      <object class="GtkMenuItem" id="contextMenuPasteNode">
         <property name="visible">True</property>
         <property name="sensitive">False</property>
         <property name="can_focus">False</property>

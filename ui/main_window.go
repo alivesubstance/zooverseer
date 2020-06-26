@@ -16,19 +16,19 @@ var (
 	notebook      *Notebook
 )
 
-func InitMainWindow(mainWindow *gtk.Window) {
-	createNodeDlg = NewCreateNodeDlg(mainWindow)
-	nodeExportDlg = NewNodeExportDlg(mainWindow)
+func InitMainWindow(gtkWindow *gtk.Window) {
+	createNodeDlg = NewCreateNodeDlg(gtkWindow)
+	nodeExportDlg = NewNodeExportDlg(gtkWindow)
 	nodeAction = NewNodeAction()
 	contextMenu = NewContextMenu()
 	notebook = NewNotebook()
 
 	initNodeTree()
-	initMainMenu(mainWindow)
+	initMainMenu(gtkWindow)
 	initCssProvider()
 
-	mainWindow.SetTitle("Zooverseer")
-	mainWindow.ShowAll()
+	gtkWindow.SetTitle("Zooverseer")
+	gtkWindow.ShowAll()
 }
 
 func initMainMenu(mainWindow *gtk.Window) {
@@ -46,9 +46,10 @@ func initMainMenu(mainWindow *gtk.Window) {
 		ClearNodeTree()
 	})
 
-	GetObject("menuExport").(*gtk.MenuItem).Connect("activate", func() {
-		contextMenu.onExportNode()
-	})
+	GetObject("menuAdd").(*gtk.MenuItem).Connect("activate", contextMenu.onAddNewNode)
+	GetObject("menuCopyValue").(*gtk.MenuItem).Connect("activate", contextMenu.onCopyValue)
+	GetObject("menuExportNode").(*gtk.MenuItem).Connect("activate", contextMenu.onExportNode)
+	GetObject("menuDeleteNode").(*gtk.MenuItem).Connect("activate", contextMenu.onDeleteNode)
 }
 
 func initCssProvider() {

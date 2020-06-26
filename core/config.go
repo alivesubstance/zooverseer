@@ -8,13 +8,14 @@ import (
 const AppAssetsDir = "./assets"
 
 type ZooverseerConfig struct {
-	SortFolderFirst    bool
-	ExportDir          string
-	AppId              string
-	LogDir             string
-	GladeFilePath      string
-	ConnConfigFilePath string
-	CssStyleFilePath   string
+	SortFolderFirst     bool
+	ExportDir           string
+	AppId               string
+	LogDir              string
+	GladeFilePath       string
+	ConnConfigFilePath  string
+	CssStyleFilePath    string
+	LogFilesHistorySize int
 }
 
 var Config = ZooverseerConfig{
@@ -22,11 +23,12 @@ var Config = ZooverseerConfig{
 	SortFolderFirst: true,
 	// todo not an easy task to create hidden file thru go
 	//ConnConfigFilePath: getUserConfigDir() + "/connections.json",
-	LogDir:             "./log",
-	ConnConfigFilePath: AppAssetsDir + "/connections.json",
-	GladeFilePath:      AppAssetsDir + "/main.glade",
-	CssStyleFilePath:   AppAssetsDir + "/style.css",
-	ExportDir:          "./export",
+	LogDir:              "./log",
+	ConnConfigFilePath:  AppAssetsDir + "/connections.json",
+	GladeFilePath:       AppAssetsDir + "/main.glade",
+	CssStyleFilePath:    AppAssetsDir + "/style.css",
+	ExportDir:           "./export",
+	LogFilesHistorySize: 10,
 }
 
 func getUserConfigDir() string {

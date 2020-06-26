@@ -13,6 +13,7 @@ type ExportResultDlg struct {
 	mainWindow  *gtk.Window
 }
 
+//todo add filter(like regex os strong) for nodes
 func NewNodeExportDlg(mainWindow *gtk.Window) *ExportResultDlg {
 	dlg := &ExportResultDlg{}
 	dlg.statusLabel = GetObject("nodeExportStatusLabel").(*gtk.Label)

@@ -15,7 +15,7 @@ var (
 
 func OnAppActivate(app *gtk.Application) func() {
 	return func() {
-		log.Info("Reading glade file")
+		log.Infof("Reading glade file %v", core.Config.GladeFilePath)
 		builder, err := gtk.BuilderNewFromFile(core.Config.GladeFilePath)
 		util.CheckError(err)
 
