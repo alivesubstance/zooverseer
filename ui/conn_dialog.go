@@ -42,9 +42,9 @@ type ConnDlg struct {
 	connDeleteBtn       *gtk.Button
 }
 
-func InitConnDialog(mainWindow *gtk.Window) {
+func InitConnDialog(mainWindow *MainWindow) {
 	connDlg.dlg = GetObject("connDialog").(*gtk.Dialog)
-	connDlg.dlg.SetTransientFor(mainWindow)
+	connDlg.dlg.SetTransientFor(mainWindow.gtkWindow)
 	connDlg.dlg.SetPosition(gtk.WIN_POS_CENTER)
 
 	connDlg.connPortEntry = GetObject("connPortEntry").(*gtk.Entry)

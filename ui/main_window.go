@@ -16,29 +16,44 @@ var (
 	notebook      *Notebook
 )
 
-func InitMainWindow(gtkWindow *gtk.Window) {
-	createNodeDlg = NewCreateNodeDlg(gtkWindow)
-	nodeExportDlg = NewNodeExportDlg(gtkWindow)
+type MainWindow struct {
+	gtkWindow      *gtk.Window
+	menuAdd        *gtk.MenuItem
+	menuCopyValue  *gtk.MenuItem
+	menuExportNode *gtk.MenuItem
+	menuDeleteNode *gtk.MenuItem
+}
+
+func NewMainWindow() *MainWindow {
+	mainWindow := &MainWindow{}
+	mainWindow.gtkWindow = GetObject("mainWindow").(*gtk.Window)
+
+	createNodeDlg = NewCreateNodeDlg(mainWindow.gtkWindow)
+	nodeExportDlg = NewNodeExportDlg(mainWindow.gtkWindow)
 	nodeAction = NewNodeAction()
 	contextMenu = NewContextMenu()
 	notebook = NewNotebook()
 
 	initNodeTree()
-	initMainMenu(gtkWindow)
+	initMainMenu(mainWindow)
 	initCssProvider()
 
-	gtkWindow.SetTitle("Zooverseer")
-	gtkWindow.ShowAll()
+	mainWindow.gtkWindow.SetTitle("Zooverseer")
+	mainWindow.gtkWindow.Show()
+
+	mainWindow.enableEditActions(false)
+
+	return mainWindow
 }
 
-func initMainMenu(mainWindow *gtk.Window) {
+func initMainMenu(mainWindow *MainWindow) {
 	GetObject("menuConnect").(*gtk.MenuItem).Connect("activate", func() {
 		connDialog := GetObject("connDialog").(*gtk.Dialog)
 		connDialog.Show()
 	})
 	GetObject("menuExit").(*gtk.MenuItem).Connect("activate", func() {
 		zk.CachingRepo.Close()
-		mainWindow.Close()
+		mainWindow.gtkWindow.Close()
 	})
 
 	GetObject("menuDisconnect").(*gtk.MenuItem).Connect("activate", func() {
@@ -46,10 +61,17 @@ func initMainMenu(mainWindow *gtk.Window) {
 		ClearNodeTree()
 	})
 
-	GetObject("menuAdd").(*gtk.MenuItem).Connect("activate", contextMenu.onAddNewNode)
-	GetObject("menuCopyValue").(*gtk.MenuItem).Connect("activate", contextMenu.onCopyValue)
-	GetObject("menuExportNode").(*gtk.MenuItem).Connect("activate", contextMenu.onExportNode)
-	GetObject("menuDeleteNode").(*gtk.MenuItem).Connect("activate", contextMenu.onDeleteNode)
+	mainWindow.menuAdd = GetObject("menuAdd").(*gtk.MenuItem)
+	mainWindow.menuAdd.Connect("activate", contextMenu.onAddNewNode)
+
+	mainWindow.menuCopyValue = GetObject("menuCopyValue").(*gtk.MenuItem)
+	mainWindow.menuCopyValue.Connect("activate", contextMenu.onCopyValue)
+
+	mainWindow.menuExportNode = GetObject("menuExportNode").(*gtk.MenuItem)
+	mainWindow.menuExportNode.Connect("activate", contextMenu.onExportNode)
+
+	mainWindow.menuDeleteNode = GetObject("menuDeleteNode").(*gtk.MenuItem)
+	mainWindow.menuDeleteNode.Connect("activate", contextMenu.onDeleteNode)
 }
 
 func initCssProvider() {
@@ -69,4 +91,11 @@ func initCssProvider() {
 	}
 
 	gtk.AddProviderForScreen(defaultScreen, providerNew, gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+}
+
+func (w *MainWindow) enableEditActions(enabled bool) {
+	w.menuAdd.SetSensitive(enabled)
+	w.menuCopyValue.SetSensitive(enabled)
+	w.menuExportNode.SetSensitive(enabled)
+	w.menuDeleteNode.SetSensitive(enabled)
 }

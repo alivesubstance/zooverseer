@@ -284,7 +284,7 @@ func sortNodes(nodes []*Node) []*Node {
 	byChildren := func(n1, n2 *Node) bool { return n1.Meta.NumChildren > 0 && n2.Meta.NumChildren <= 0 }
 	var lessFuncs = []lessFunc{byName}
 
-	if core.Config.SortFolderFirst {
+	if core.Config.ShowFolderFirst {
 		lessFuncs = []lessFunc{byChildren, byName}
 	}
 

@@ -8,9 +8,9 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// there are rumors that global variable is evil. why?
 var (
-	Builder *gtk.Builder
+	Builder    *gtk.Builder
+	mainWindow *MainWindow
 )
 
 func OnAppActivate(app *gtk.Application) func() {
@@ -21,17 +21,11 @@ func OnAppActivate(app *gtk.Application) func() {
 
 		Builder = builder
 
-		mainWindow := GetMainWindow()
-		InitMainWindow(mainWindow)
+		mainWindow = NewMainWindow()
 		InitConnDialog(mainWindow)
 
-		mainWindow.Show()
-		app.AddWindow(mainWindow)
+		app.AddWindow(mainWindow.gtkWindow)
 	}
-}
-
-func GetMainWindow() *gtk.Window {
-	return GetObject("mainWindow").(*gtk.Window)
 }
 
 func CreateErrorDialog(parent gtk.IWindow, text string) *gtk.MessageDialog {

@@ -77,7 +77,7 @@ func TestSave(t *testing.T) {
 }
 
 func TestSortNodesByChildrenAndName(t *testing.T) {
-	core.Config.SortFolderFirst = true
+	core.Config.ShowFolderFirst = true
 
 	var nodes = []*Node{
 		{"with-child2", "", &zkGo.Stat{NumChildren: 2}, nil, nil},
@@ -96,7 +96,7 @@ func TestSortNodesByChildrenAndName(t *testing.T) {
 }
 
 func TestSortNodesByNameOnly(t *testing.T) {
-	core.Config.SortFolderFirst = false
+	core.Config.ShowFolderFirst = false
 
 	var nodes = []*Node{
 		{"with-child2", "", &zkGo.Stat{NumChildren: 2}, nil, nil},

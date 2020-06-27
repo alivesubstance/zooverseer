@@ -77,8 +77,8 @@ func getTreeSelectedNode(treeSelection *gtk.TreeSelection) (*zk.Node, error) {
 func getTreeSelectedZkPath(treeSelection *gtk.TreeSelection) (string, error) {
 	model, iter, ok := treeSelection.GetSelected()
 	if !ok {
-		nodeAction.enableButtons(false)
-		contextMenu.enableMenu(false)
+		enableRowActions(false)
+
 		return "", nil
 	}
 
@@ -93,13 +93,12 @@ func getTreeSelectedZkPath(treeSelection *gtk.TreeSelection) (string, error) {
 }
 
 func onTreeRowSelected(treeSelection *gtk.TreeSelection) {
-	nodeAction.enableButtons(true)
-	contextMenu.enableMenu(true)
+	enableRowActions(true)
 
 	node, err := getTreeSelectedNode(treeSelection)
 	if err != nil {
 		log.WithError(err).Error("Failed to get tree selected node")
-		dialog := createWarnDialog(GetMainWindow(), "Unable to fetch node value: "+errors.Cause(err).Error())
+		dialog := createWarnDialog(mainWindow.gtkWindow, "Unable to fetch node value: "+errors.Cause(err).Error())
 		dialog.Run()
 		dialog.Hide()
 		return
@@ -108,6 +107,12 @@ func onTreeRowSelected(treeSelection *gtk.TreeSelection) {
 	if node != nil {
 		notebook.showPage(node, getNotebook().GetCurrentPage())
 	}
+}
+
+func enableRowActions(enabled bool) {
+	nodeAction.enableButtons(enabled)
+	contextMenu.enableMenu(enabled)
+	mainWindow.enableEditActions(enabled)
 }
 
 //todo test on 100+ children. works slowly
@@ -272,7 +277,7 @@ func refreshNode(zkPath string) {
 func deleteSelectedNode() {
 	treeSelection, _ := getNodesTreeView().GetSelection()
 	zkPath, _ := getTreeSelectedZkPath(treeSelection)
-	dlg := createConfirmDialog(GetMainWindow(), "Are you sure you want to delete "+gopath.Base(zkPath)+"?")
+	dlg := createConfirmDialog(mainWindow.gtkWindow, "Are you sure you want to delete "+gopath.Base(zkPath)+"?")
 	resp := dlg.Run()
 	dlg.Hide()
 
@@ -282,7 +287,7 @@ func deleteSelectedNode() {
 		if err != nil {
 			msg := "Unable to delete node"
 			log.WithError(err).Error(msg)
-			warnDlg := createWarnDialog(GetMainWindow(), msg+errors.Cause(err).Error())
+			warnDlg := createWarnDialog(mainWindow.gtkWindow, msg+errors.Cause(err).Error())
 			warnDlg.Run()
 			warnDlg.Hide()
 			return

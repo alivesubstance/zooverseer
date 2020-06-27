@@ -50,7 +50,7 @@ func (c *CreateNodeDlg) onOkBtnClicked() {
 	if err != nil {
 		msg := "Unable to create child: " + nodeName
 		log.WithError(err).Warn(msg)
-		dialog := createWarnDialog(GetMainWindow(), msg+"\n"+err.Error())
+		dialog := createWarnDialog(mainWindow.gtkWindow, msg+"\n"+err.Error())
 		dialog.Run()
 		dialog.Hide()
 	} else {

@@ -87,7 +87,7 @@ func (n *Notebook) onSaveDataBtnClicked() {
 	buffer, _ := GetObject("nodeDataTextView").(*gtk.TextView).GetBuffer()
 	text, err := buffer.GetText(buffer.GetStartIter(), buffer.GetEndIter(), false)
 	if err != nil {
-		createWarnDialog(GetMainWindow(), "Unable to read node value: "+err.Error())
+		createWarnDialog(mainWindow.gtkWindow, "Unable to read node value: "+err.Error())
 	}
 
 	treeSelection, _ := getNodesTreeView().GetSelection()
@@ -96,7 +96,7 @@ func (n *Notebook) onSaveDataBtnClicked() {
 	node.Value = text
 	err = zk2.CachingRepo.SaveValue(zkPath, node)
 	if err != nil {
-		createWarnDialog(GetMainWindow(), "Unable to save node value: "+err.Error())
+		createWarnDialog(mainWindow.gtkWindow, "Unable to save node value: "+err.Error())
 	}
 }
 
