@@ -8,7 +8,7 @@ export NO_AT_BRIDGE=1
 #PATH="${PATH}:./bin"
 SRC_ASSETS_DIR="assets"
 #BIN_DIR="../bin"
-INSTALL_DIR="../build/linux-1.0.0b"
+INSTALL_DIR="../bin/linux-1.0.0b"
 INSTALL_ASSETS_DIR=${INSTALL_DIR}/${SRC_ASSETS_DIR}
 
 rm -rf "${INSTALL_DIR}"

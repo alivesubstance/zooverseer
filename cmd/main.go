@@ -11,8 +11,8 @@ import (
 )
 
 func main() {
-	log.Println("Starting zooverseer")
 	core.InitLogger()
+	log.Println("Starting zooverseer")
 
 	app, err := gtk.ApplicationNew(core.Config.AppId, glib.APPLICATION_FLAGS_NONE)
 	util.CheckError(err)

@@ -99,3 +99,7 @@ func (w *MainWindow) enableEditActions(enabled bool) {
 	w.menuExportNode.SetSensitive(enabled)
 	w.menuDeleteNode.SetSensitive(enabled)
 }
+
+func onMenuAboutActivate() {
+	GetObject("aboutDlg").(*gtk.Dialog).Show()
+}

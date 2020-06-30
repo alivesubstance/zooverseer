@@ -21,11 +21,21 @@ func OnAppActivate(app *gtk.Application) func() {
 
 		Builder = builder
 
+		connectSignals(builder)
+
 		mainWindow = NewMainWindow()
 		InitConnDialog(mainWindow)
 
 		app.AddWindow(mainWindow.gtkWindow)
 	}
+}
+
+func connectSignals(builder *gtk.Builder) {
+	signals := map[string]interface{}{
+		"onMenuAboutBtnCloseClicked": onMenuAboutBtnCloseClicked,
+		"onMenuAboutActivate":        onMenuAboutActivate,
+	}
+	builder.ConnectSignals(signals)
 }
 
 func CreateErrorDialog(parent gtk.IWindow, text string) *gtk.MessageDialog {
