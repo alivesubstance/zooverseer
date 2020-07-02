@@ -57,7 +57,7 @@ func (n *Notebook) showPage(node *zk2.Node, page int) {
 }
 
 func (n *Notebook) showPageData(node *zk2.Node) {
-	setNodeValue(node)
+	drawNodeValue(node)
 }
 
 func (n *Notebook) showPageMetadata(node *zk2.Node) {

@@ -16,6 +16,7 @@ type ZooverseerConfig struct {
 	ShowFolderFirst    bool
 	ExportDir          string
 	AppId              string
+	AppTitle           string
 	GladeFilePath      string
 	ConnConfigFilePath string
 	CssStyleFilePath   string
@@ -27,6 +28,7 @@ type ZooverseerConfig struct {
 // used as AppId. In this case "app.Run(os.Args)" returns zero code immediately and application exits. WTF!?
 var Config = ZooverseerConfig{
 	AppId:              "com.github.alivesubstance.app.zooverseer",
+	AppTitle:           "Zooverseer",
 	ShowFolderFirst:    true,
 	ConnConfigFilePath: AppAssetsDir + "/connections.json",
 	GladeFilePath:      AppAssetsDir + "/main.glade",

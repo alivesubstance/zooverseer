@@ -25,6 +25,7 @@ type Node struct {
 var retryOptions = []retry.Option{
 	retry.Attempts(core.ZkOpRetryAttempts),
 	retry.Delay(core.ZkOpRetryDelay * time.Millisecond),
+	retry.LastErrorOnly(true),
 	retry.OnRetry(func(n uint, err error) {
 		log.WithError(err).Infof("Zk op failed. Retry %v of %v", n, core.ZkOpRetryAttempts)
 	}),

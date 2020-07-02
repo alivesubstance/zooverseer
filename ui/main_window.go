@@ -38,7 +38,7 @@ func NewMainWindow() *MainWindow {
 	initMainMenu(mainWindow)
 	initCssProvider()
 
-	mainWindow.gtkWindow.SetTitle("Zooverseer")
+	mainWindow.gtkWindow.SetTitle(core.Config.AppTitle)
 	mainWindow.gtkWindow.Show()
 
 	mainWindow.enableEditActions(false)
@@ -59,6 +59,7 @@ func initMainMenu(mainWindow *MainWindow) {
 	GetObject("menuDisconnect").(*gtk.MenuItem).Connect("activate", func() {
 		zk.Reset()
 		ClearNodeTree()
+		mainWindow.gtkWindow.SetTitle(core.Config.AppTitle)
 	})
 
 	mainWindow.menuAdd = GetObject("menuAdd").(*gtk.MenuItem)

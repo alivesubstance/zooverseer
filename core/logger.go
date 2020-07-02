@@ -71,7 +71,7 @@ type PlainFormatter struct {
 
 func (f *PlainFormatter) Format(entry *log.Entry) ([]byte, error) {
 	msg := fmt.Sprintf(
-		"[%-23v] [%-5v] %v",
+		"%-23v [%-5v] %v",
 		time.Now().Format(timeFormatLogMsg),
 		entry.Level,
 		entry.Message,

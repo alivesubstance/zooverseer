@@ -93,6 +93,8 @@ func getTreeSelectedZkPath(treeSelection *gtk.TreeSelection) (string, error) {
 }
 
 func onTreeRowSelected(treeSelection *gtk.TreeSelection) {
+	// reset node value
+	drawNodeValue(&zk.Node{Value: ""})
 	enableRowActions(true)
 
 	node, err := getTreeSelectedNode(treeSelection)
@@ -191,7 +193,7 @@ func addSubRow(parentIter *gtk.TreeIter, child *zk.Node) *gtk.TreeIter {
 	return childIter
 }
 
-func setNodeValue(node *zk.Node) {
+func drawNodeValue(node *zk.Node) {
 	nodeDataTextView := GetObject("nodeDataTextView").(*gtk.TextView)
 	textBuffer, err := nodeDataTextView.GetBuffer()
 	util.CheckErrorWithMsg("Failed to get text buffer", err)

@@ -327,6 +327,7 @@ func onConnBtnClicked() {
 		return
 	}
 	zk.CachingRepo.SetConnInfo(connInfo)
+	mainWindow.gtkWindow.SetTitle(core.Config.AppTitle + "(" + connInfo.Name + ")")
 
 	err := ShowTreeRootNodes()
 	if err != nil {
