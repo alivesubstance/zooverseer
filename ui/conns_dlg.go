@@ -1,8 +1,5 @@
 package ui
 
-// #cgo pkg-config: gdk-3.0 glib-2.0 gobject-2.0
-// #include <gdk/gdk.h>
-// #include "/home/mirian/code/go/src/github.com/gotk3/gotk3/gdk/gdk.go.h"
 import "C"
 import (
 	"fmt"
