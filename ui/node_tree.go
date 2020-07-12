@@ -1,8 +1,5 @@
 package ui
 
-// #cgo pkg-config: gdk-3.0 glib-2.0 gobject-2.0
-// #include <gdk/gdk.h>
-// #include "gdk.go.h"
 import "C"
 import (
 	"fmt"
@@ -15,7 +12,6 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	gopath "path"
-	"unsafe"
 )
 
 var (
@@ -243,9 +239,7 @@ func onMouseButtonPress(b *gtk.TreeView, e *gdk.Event) {
 // This method determine when second mouse button clicked by
 // analyzing button field of native C GdkEventButton struct.
 func isMouse2ButtonClicked(e *gdk.Event) bool {
-	event := &gdk.EventKey{Event: e}
-	mouseButton := (*C.GdkEventButton)(unsafe.Pointer(event.Event.GdkEvent)).button
-	return uint(mouseButton) == 3
+	return false
 }
 
 func getNodesTreeView() *gtk.TreeView {
