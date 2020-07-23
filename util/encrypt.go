@@ -55,7 +55,10 @@ func Decrypt(cipherText string) (string, error) {
 
 	cipherBytes, err := hex.DecodeString(cipherText)
 	if err != nil {
-		return "", errors.Wrap(err, "Failed to get decoded bytes")
+		// cipherText have to contains only hexadecimal characters
+		// and has even length. otherwise, it failed to decode
+		// return original string in this case
+		return cipherText, nil
 	}
 
 	gcm, err := createGCM()

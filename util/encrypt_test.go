@@ -7,12 +7,22 @@ import (
 
 func TestEncryptDecrypt(t *testing.T) {
 	pass := "123"
-	encrypted, _ := Encrypt(pass)
+	encrypted, err := Encrypt(pass)
+	assert.Nil(t, err)
 	assert.Equal(t, encrypted, encrypted)
 
-	againEncrypt, _ := Encrypt(encrypted)
+	againEncrypt, err := Encrypt(encrypted)
+	assert.Nil(t, err)
 	assert.Equal(t, encrypted, againEncrypt)
 
-	decrypt, _ := Decrypt(encrypted)
+	decrypt, err := Decrypt(encrypted)
+	assert.Nil(t, err)
+	assert.Equal(t, pass, decrypt)
+}
+
+func TestDecryptNotEncryptedString(t *testing.T) {
+	pass := "123abcABC"
+	decrypt, err := Decrypt(pass)
+	assert.Nil(t, err)
 	assert.Equal(t, pass, decrypt)
 }

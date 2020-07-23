@@ -856,12 +856,21 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkTextView" id="nodeDataTextView">
+                      <object class="GtkScrolledWindow">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="hexpand">True</property>
                         <property name="vexpand">True</property>
-                        <property name="left_margin">5</property>
+                        <property name="shadow_type">in</property>
+                        <child>
+                          <object class="GtkTextView" id="nodeDataTextView">
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                            <property name="hexpand">True</property>
+                            <property name="vexpand">True</property>
+                            <property name="left_margin">5</property>
+                          </object>
+                        </child>
                       </object>
                       <packing>
                         <property name="expand">False</property>
@@ -1328,11 +1337,12 @@
               <object class="GtkLabel">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="margin_top">10</property>
-                <property name="label" translatable="yes">Zooverseer 1.0.0</property>
+                <property name="margin_top">20</property>
+                <property name="label" translatable="yes">Zooverseer 1.0.0b</property>
                 <attributes>
-                  <attribute name="font-desc" value="Umpush Light 14"/>
+                  <attribute name="font-desc" value="Sans 13"/>
                   <attribute name="weight" value="bold"/>
+                  <attribute name="stretch" value="ultra-condensed"/>
                 </attributes>
               </object>
               <packing>
@@ -1345,7 +1355,7 @@
               <object class="GtkLabel">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="margin_top">7</property>
+                <property name="margin_top">15</property>
                 <property name="label" translatable="yes">The Zookeeper data viewer</property>
               </object>
               <packing>
@@ -1375,6 +1385,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
+                <property name="margin_top">10</property>
                 <property name="relief">none</property>
                 <property name="uri">https://github.com/alivesubstance/zooverseer</property>
               </object>

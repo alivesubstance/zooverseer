@@ -227,19 +227,12 @@ func createTextColumn(title string, id int) *gtk.TreeViewColumn {
 }
 
 func onMouseButtonPress(b *gtk.TreeView, e *gdk.Event) {
-	if isMouse2ButtonClicked(e) {
+	eventButton := gdk.EventButtonNewFromEvent(e)
+	if eventButton.Button() == gdk.BUTTON_SECONDARY {
 		menu := GetObject("popupMenu").(*gtk.Menu)
 		menu.ShowAll()
 		menu.PopupAtPointer(e)
 	}
-}
-
-// Go GTK3 adapter not fully support GTK3 API.
-// But it expose native GDK objects to be used to extend API.
-// This method determine when second mouse button clicked by
-// analyzing button field of native C GdkEventButton struct.
-func isMouse2ButtonClicked(e *gdk.Event) bool {
-	return false
 }
 
 func getNodesTreeView() *gtk.TreeView {

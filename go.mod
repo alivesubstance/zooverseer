@@ -6,15 +6,13 @@ require (
 	github.com/atotto/clipboard v0.1.2
 	github.com/avast/retry-go v2.6.0+incompatible
 	github.com/goburrow/cache v0.1.0
-	github.com/gotk3/gotk3 v0.4.0
+	github.com/gotk3/gotk3 v0.4.1-0.20200321173312-c4ae30c61acd
 	github.com/jinzhu/copier v0.0.0-20190924061706-b57f9002281a
 	github.com/kennygrant/sanitize v1.2.4
 	github.com/pkg/errors v0.9.1
 	github.com/samuel/go-zookeeper v0.0.0-20190923202752-2cc03de413da
-	github.com/shurcooL/httpfs v0.0.0-20190707220628-8d4bc4ba7749 // indirect
-	github.com/shurcooL/vfsgen v0.0.0-20200627165143-92b8a710ab6c
-	github.com/sirupsen/logrus v1.5.0
-	github.com/stretchr/testify v1.4.0
+	github.com/sirupsen/logrus v1.6.0
+	github.com/stretchr/testify v1.6.1
 	golang.org/x/net v0.0.0-20200520182314-0ba52f642ac2 // indirect
-	golang.org/x/tools v0.0.0-20200626171337-aa94e735be7f // indirect
+	gopkg.in/yaml.v2 v2.2.2 // indirect
 )
