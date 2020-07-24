@@ -21,6 +21,4 @@ env \
   GOOS="${GOOS}" \
   GOARCH="${GOARCH}" \
   NO_AT_BRIDGE=1 \
-  # include gdk.go.h into build.
-  CGO_CFLAGS="-I/home/mirian/code/go/src/github.com/gotk3/gotk3/gdk" \
   go build -o "${INSTALL_DIR}/zooverseer" github.com/alivesubstance/zooverseer/cmd

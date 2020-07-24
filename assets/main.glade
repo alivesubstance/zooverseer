@@ -1300,7 +1300,7 @@
                 <property name="receives_default">True</property>
                 <property name="use_stock">True</property>
                 <property name="always_show_image">True</property>
-                <signal name="activate" handler="onMenuAboutBtnCloseClicked" swapped="no"/>
+                <signal name="clicked" handler="onMenuAboutBtnCloseClicked" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">True</property>
