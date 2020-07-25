@@ -20,6 +20,7 @@ type MainWindow struct {
 	gtkWindow      *gtk.Window
 	menuAdd        *gtk.MenuItem
 	menuCopyValue  *gtk.MenuItem
+	menuCopyName   *gtk.MenuItem
 	menuExportNode *gtk.MenuItem
 	menuDeleteNode *gtk.MenuItem
 }
@@ -68,6 +69,9 @@ func initMainMenu(mainWindow *MainWindow) {
 	mainWindow.menuCopyValue = GetObject("menuCopyValue").(*gtk.MenuItem)
 	mainWindow.menuCopyValue.Connect("activate", contextMenu.onCopyValue)
 
+	mainWindow.menuCopyName = GetObject("menuCopyName").(*gtk.MenuItem)
+	mainWindow.menuCopyName.Connect("activate", contextMenu.onCopyName)
+
 	mainWindow.menuExportNode = GetObject("menuExportNode").(*gtk.MenuItem)
 	mainWindow.menuExportNode.Connect("activate", contextMenu.onExportNode)
 
@@ -96,6 +100,7 @@ func initCssProvider() {
 
 func (w *MainWindow) enableEditActions(enabled bool) {
 	w.menuAdd.SetSensitive(enabled)
+	w.menuCopyValue.SetSensitive(enabled)
 	w.menuCopyValue.SetSensitive(enabled)
 	w.menuExportNode.SetSensitive(enabled)
 	w.menuDeleteNode.SetSensitive(enabled)

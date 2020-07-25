@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"github.com/alivesubstance/zooverseer/core/zk"
 	"github.com/atotto/clipboard"
 	"github.com/gotk3/gotk3/gtk"
 	log "github.com/sirupsen/logrus"
@@ -21,7 +22,7 @@ type ContextMenu struct {
 
 func NewContextMenu() *ContextMenu {
 	contextMenu := &ContextMenu{}
-	contextMenu.gtkMenu = GetObject("popupMenu").(*gtk.Menu)
+	contextMenu.gtkMenu = GetObject("contextMenu").(*gtk.Menu)
 
 	contextMenu.addItem = GetObject("contextMenuAdd").(*gtk.MenuItem)
 	contextMenu.addItem.Connect("activate", contextMenu.onAddNewNode)
@@ -29,9 +30,9 @@ func NewContextMenu() *ContextMenu {
 	contextMenu.copyValueItem = GetObject("contextMenuCopyValue").(*gtk.MenuItem)
 	contextMenu.copyValueItem.Connect("activate", contextMenu.onCopyValue)
 
-	//contextMenu.copyNameItem = GetObject("contextMenuCopyName").(*gtk.MenuItem)
-	//contextMenu.copyNameItem.Connect("activate", onCopyValue)
-	//
+	contextMenu.copyNameItem = GetObject("contextMenuCopyName").(*gtk.MenuItem)
+	contextMenu.copyNameItem.Connect("activate", contextMenu.onCopyName)
+
 	//contextMenu.copyPathItem = GetObject("contextMenuCopyPath").(*gtk.MenuItem)
 	//contextMenu.copyPathItem.Connect("activate", onCopyValue)
 	//
@@ -46,8 +47,6 @@ func NewContextMenu() *ContextMenu {
 
 	contextMenu.exportItem = GetObject("contextMenuExportNode").(*gtk.MenuItem)
 	contextMenu.exportItem.Connect("activate", contextMenu.onExportNode)
-
-	//contextMenu.spinner = GetObject("spinner").(*gtk.Spinner)
 
 	contextMenu.enableMenu(false)
 
@@ -67,17 +66,24 @@ func (m *ContextMenu) onDeleteNode() {
 }
 
 func (m *ContextMenu) onCopyValue() {
+	m.copyToClipboard(func(node *zk.Node) string { return node.Value }, "node value")
+}
+
+func (m *ContextMenu) onCopyName() {
+	m.copyToClipboard(func(node *zk.Node) string { return node.Name }, "node name")
+}
+
+func (m *ContextMenu) copyToClipboard(producer func(node *zk.Node) string, errMsg string) {
 	treeSelection, _ := getNodesTreeView().GetSelection()
 	node, _ := getTreeSelectedNode(treeSelection)
 	if node != nil {
-		log.Tracef("Add text value to clipboard")
-		err := clipboard.WriteAll(node.Value)
+		err := clipboard.WriteAll(producer(node))
 		if err != nil {
-			log.WithError(err).Errorf("Failed to copy value to clipboard")
+			log.WithError(err).Errorf("Failed to copy %v to clipboard", errMsg)
 		}
 	}
 }
 
 func (m *ContextMenu) enableMenu(enabled bool) {
-	m.gtkMenu.SetSensitive(enabled)
+	GetObject("contextMenu").(*gtk.Menu).SetSensitive(enabled)
 }

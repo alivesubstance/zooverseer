@@ -229,9 +229,8 @@ func createTextColumn(title string, id int) *gtk.TreeViewColumn {
 func onMouseButtonPress(b *gtk.TreeView, e *gdk.Event) {
 	eventButton := gdk.EventButtonNewFromEvent(e)
 	if eventButton.Button() == gdk.BUTTON_SECONDARY {
-		menu := GetObject("popupMenu").(*gtk.Menu)
-		menu.ShowAll()
-		menu.PopupAtPointer(e)
+		contextMenu.gtkMenu.ShowAll()
+		contextMenu.gtkMenu.PopupAtPointer(e)
 	}
 }
 
