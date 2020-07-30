@@ -9,8 +9,8 @@ import (
 // fatal error: unexpected signal during runtime execution
 // [signal SIGSEGV: segmentation violation code=0x1 addr=0x6 pc=0x6]
 
-//var createChan = make(chan Handler, 1)
-//var completeChan = make(chan Handler, 1)
+var CreateChan = make(chan Handler, 1)
+var completeChan = make(chan Handler, 1)
 
 type Handler interface {
 	Process() /* <-chan interface{}*/
@@ -36,15 +36,15 @@ type SearchTask struct {
 	Handler
 }
 
-//func init() {
-//	go func() {
-//		for {
-//			select {
-//			case task := <-createChan:
-//				task.Process()
-//			case task := <-completeChan:
-//				task.Complete()
-//			}
-//		}
-//	}()
-//}
+func init() {
+	go func() {
+		for {
+			select {
+			case task := <-CreateChan:
+				task.Process()
+			case task := <-completeChan:
+				task.Complete()
+			}
+		}
+	}()
+}

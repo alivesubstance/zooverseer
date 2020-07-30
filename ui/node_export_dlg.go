@@ -2,6 +2,7 @@ package ui
 
 import (
 	"github.com/gotk3/gotk3/gtk"
+	log "github.com/sirupsen/logrus"
 )
 
 type ExportResultDlg struct {
@@ -54,6 +55,7 @@ func (d *ExportResultDlg) showError(path string, err error) {
 func (d *ExportResultDlg) showResult(path string, filePath string) {
 	d.resetDlg()
 
+	log.Tracef("Path %v exported to file %v", path, filePath)
 	html := "Data exported to <a href=\"file://" + filePath + "\">file</a>"
 	nodeExportDlg.resultLabel.SetMarkup(html)
 

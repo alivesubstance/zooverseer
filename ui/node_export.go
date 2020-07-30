@@ -10,6 +10,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"os"
 	"path"
+	"path/filepath"
 	"time"
 )
 
@@ -61,7 +62,7 @@ func createExportTask(zkPath string) {
 		BaseTask: baseTask,
 	}
 
-	go exportTask.Process()
+	task.CreateChan <- exportTask
 	nodeExportDlg.startExport(zkPath)
 }
 
@@ -95,25 +96,29 @@ func (t *ExportTask) Process() {
 		return
 	}
 
-	jsonFilePath := t.createFilePath(node, metadata)
-	log.Tracef("Save export result to %v", jsonFilePath)
+	absJsonFilePath, err := filepath.Abs(t.createFilePath(node, metadata))
+	if err != nil {
+		t.OnError(err)
+		return
+	}
+	log.Tracef("Save export result to %v", absJsonFilePath)
 
-	jsonFile, err := os.Create(jsonFilePath)
+	jsonFile, err := os.Create(absJsonFilePath)
 	if err != nil {
 		t.OnError(err)
 		return
 	}
 
-	log.Tracef("File %v created", jsonFilePath)
+	log.Tracef("File %v created", absJsonFilePath)
 	_, err = jsonFile.Write(data[:])
 	if err != nil {
 		t.OnError(err)
 		return
 	}
 
-	log.Tracef("Data has been written to %v", jsonFilePath)
+	log.Tracef("Data has been written to %v", absJsonFilePath)
 	log.Infof("Finish exporting %s", t.ZkPath)
-	t.OnSuccess(jsonFilePath)
+	t.OnSuccess(absJsonFilePath)
 }
 
 func (t *ExportTask) createFilePath(node *zk.Node, meta Meta) string {
