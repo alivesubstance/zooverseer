@@ -15,10 +15,11 @@ import (
 )
 
 type ExportTask struct {
-	ZkPath string
-	Tree   *zk.Node
-	task.Handler
-	*task.BaseTask
+	ZkPath       string
+	Tree         *zk.Node
+	JsonFilePath string
+	Error        error
+	task.Task
 }
 
 type Meta struct {
@@ -44,45 +45,40 @@ func exportSelectedNode() {
 }
 
 func createExportTask(zkPath string) {
-	onError := func(err error) {
-		log.WithError(err).Infof("Failed to export from %v", zkPath)
-		nodeExportDlg.showError(zkPath, err)
-	}
-	onSuccess := func(jsonFilePath interface{}) {
-		log.Infof("Exported %v to %v", zkPath, jsonFilePath)
-		nodeExportDlg.showResult(zkPath, jsonFilePath.(string))
-	}
-
-	baseTask := &task.BaseTask{
-		OnError:   onError,
-		OnSuccess: onSuccess,
-	}
 	exportTask := &ExportTask{
-		ZkPath:   zkPath,
-		BaseTask: baseTask,
+		ZkPath: zkPath,
 	}
-
 	task.CreateChan <- exportTask
+
 	nodeExportDlg.startExport(zkPath)
+}
+
+func (t *ExportTask) Fail(task task.Task) {
+	exportTask := task.(*ExportTask)
+	log.WithError(exportTask.Error).Errorf("Failed to export from %v", exportTask.ZkPath)
+	nodeExportDlg.showError(exportTask.ZkPath, exportTask.Error)
+}
+
+func (t *ExportTask) Complete(task task.Task) {
+	exportTask := task.(*ExportTask)
+	jsonFilePath := exportTask.JsonFilePath
+	log.Infof("Exported %v to %v", exportTask.ZkPath, jsonFilePath)
+	nodeExportDlg.showResult(exportTask.ZkPath, jsonFilePath)
 }
 
 func (t *ExportTask) Process() {
 	log.Infof("Start exporting %s", t.ZkPath)
 
 	node, err := zk.CachingRepo.Export(t.ZkPath)
-	t.Tree = node
-
-	// todo replace same pieces with chan error
-	if err != nil {
-		t.OnError(err)
+	if t.hasError(err) {
 		return
 	}
+	t.Tree = node
 
 	if _, err := os.Stat(core.Config.ExportDir); os.IsNotExist(err) {
 		log.Tracef("Creating directory %v", core.Config.ExportDir)
 		err = os.Mkdir(core.Config.ExportDir, 0775)
-		if err != nil {
-			t.OnError(err)
+		if t.hasError(err) {
 			return
 		}
 	}
@@ -91,34 +87,40 @@ func (t *ExportTask) Process() {
 	report := ExportNodeReport{metadata, node}
 
 	data, err := json.MarshalIndent(report, "", "  ")
-	if err != nil {
-		t.OnError(err)
+	if t.hasError(err) {
 		return
 	}
 
 	absJsonFilePath, err := filepath.Abs(t.createFilePath(node, metadata))
-	if err != nil {
-		t.OnError(err)
+	if t.hasError(err) {
 		return
 	}
 	log.Tracef("Save export result to %v", absJsonFilePath)
 
 	jsonFile, err := os.Create(absJsonFilePath)
-	if err != nil {
-		t.OnError(err)
+	if t.hasError(err) {
 		return
 	}
 
 	log.Tracef("File %v created", absJsonFilePath)
 	_, err = jsonFile.Write(data[:])
-	if err != nil {
-		t.OnError(err)
+	if t.hasError(err) {
 		return
 	}
 
 	log.Tracef("Data has been written to %v", absJsonFilePath)
 	log.Infof("Finish exporting %s", t.ZkPath)
-	t.OnSuccess(absJsonFilePath)
+	t.JsonFilePath = absJsonFilePath
+	task.CompleteChan <- t
+}
+
+func (t *ExportTask) hasError(err error) bool {
+	if err != nil {
+		t.Error = err
+		task.FailChan <- t
+		return true
+	}
+	return false
 }
 
 func (t *ExportTask) createFilePath(node *zk.Node, meta Meta) string {

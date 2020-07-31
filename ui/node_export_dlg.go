@@ -2,7 +2,6 @@ package ui
 
 import (
 	"github.com/gotk3/gotk3/gtk"
-	log "github.com/sirupsen/logrus"
 )
 
 type ExportResultDlg struct {
@@ -14,29 +13,25 @@ type ExportResultDlg struct {
 	mainWindow  *gtk.Window
 }
 
-//todo add filter(like regex os strong) for nodes
 func NewNodeExportDlg(mainWindow *gtk.Window) *ExportResultDlg {
-	dlg := &ExportResultDlg{}
-	dlg.statusLabel = GetObject("nodeExportStatusLabel").(*gtk.Label)
-	dlg.spinner = GetObject("nodeExportSpinner").(*gtk.Spinner)
-	dlg.resultLabel = GetObject("nodeExportResultLabel").(*gtk.Label)
-	dlg.okBtn = GetObject("exportDlgOkBtn").(*gtk.Button)
-	dlg.mainWindow = mainWindow
-	dlg.dlg = GetObject("nodeExportDlg").(*gtk.Dialog)
-	dlg.dlg.SetTransientFor(mainWindow)
+	exportResultDlg := &ExportResultDlg{}
+	exportResultDlg.statusLabel = GetObject("nodeExportStatusLabel").(*gtk.Label)
+	exportResultDlg.spinner = GetObject("nodeExportSpinner").(*gtk.Spinner)
+	exportResultDlg.resultLabel = GetObject("nodeExportResultLabel").(*gtk.Label)
+	exportResultDlg.okBtn = GetObject("exportDlgOkBtn").(*gtk.Button)
+	exportResultDlg.mainWindow = mainWindow
+	exportResultDlg.dlg = GetObject("nodeExportDlg").(*gtk.Dialog)
+	exportResultDlg.dlg.SetTransientFor(mainWindow)
 
-	dlg.okBtn.Connect("clicked", dlg.onOkBtnClicked(dlg))
-	return dlg
+	exportResultDlg.okBtn.Connect("clicked", exportResultDlg.onOkBtnClicked(exportResultDlg))
+	return exportResultDlg
 }
 
 func (d *ExportResultDlg) startExport(path string) {
 	d.resetDlg()
 
 	d.setStatus("Start exporting from <b>" + path + "</b>")
-
-	d.spinner.Start()
-	d.mainWindow.SetSensitive(false)
-	d.okBtn.SetSensitive(false)
+	d.setSensitive(false)
 
 	d.dlg.Run()
 }
@@ -47,22 +42,27 @@ func (d *ExportResultDlg) showError(path string, err error) {
 	d.setStatus("Export failed from <b>" + path + "</b>")
 	d.resultLabel.SetMarkup("Error: " + err.Error())
 
-	d.spinner.Stop()
-	d.mainWindow.SetSensitive(true)
-	d.okBtn.SetSensitive(true)
+	d.setSensitive(true)
 }
 
 func (d *ExportResultDlg) showResult(path string, filePath string) {
 	d.resetDlg()
 
-	log.Tracef("Path %v exported to file %v", path, filePath)
 	html := "Data exported to <a href=\"file://" + filePath + "\">file</a>"
 	nodeExportDlg.resultLabel.SetMarkup(html)
 
 	d.setStatus("Export finished from <b>" + path + "</b>")
-	d.spinner.Stop()
-	d.mainWindow.SetSensitive(true)
-	d.okBtn.SetSensitive(true)
+	d.setSensitive(true)
+}
+
+func (d *ExportResultDlg) setSensitive(value bool) {
+	if !value {
+		d.spinner.Start()
+	} else {
+		d.spinner.Stop()
+	}
+	d.mainWindow.SetSensitive(value)
+	d.okBtn.SetSensitive(value)
 }
 
 func (d *ExportResultDlg) setStatus(html string) string {

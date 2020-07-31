@@ -54,7 +54,7 @@ func cleanOldLogs() {
 		return files[i].Name() > files[j].Name()
 	})
 	if len(files) > Config.Log.FilesHistorySize {
-		files = files[Config.Log.FilesHistorySize:]
+		files = files[Config.Log.FilesHistorySize-1:]
 		for _, file := range files {
 			filePath := path.Join(Config.Log.Dir, file.Name())
 			err := os.Remove(filePath)
