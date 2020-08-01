@@ -6,7 +6,7 @@ package task
 // [signal SIGSEGV: segmentation violation code=0x1 addr=0x6 pc=0x6]
 
 var CreateChan = make(chan Task, 1)
-var FailChan = make(chan Task, 1)
+var ErrorChan = make(chan Task, 1)
 var CompleteChan = make(chan Task, 1)
 
 type Task interface {
@@ -34,7 +34,7 @@ func init() {
 				task.Process()
 			case task := <-CompleteChan:
 				task.Complete(task)
-			case task := <-FailChan:
+			case task := <-ErrorChan:
 				task.Fail(task)
 			}
 		}

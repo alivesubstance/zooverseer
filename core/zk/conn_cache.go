@@ -26,17 +26,16 @@ func init() {
 		value.(*goZk.Conn).Close()
 	}
 
-	stats := &goCache.Stats{}
 	c := goCache.NewLoadingCache(connCreateFunc,
 		goCache.WithExpireAfterAccess(core.ConnCacheExpireAfterAccessMinutes*time.Minute),
 		goCache.WithRemovalListener(connRemoveListener),
 	)
-	// todo looks like stats doesn't collect numbers
-	c.Stats(stats)
 
 	go func() {
 		for {
 			time.Sleep(core.ConnCacheStatsPeriodMinutes * time.Minute)
+			stats := goCache.Stats{}
+			c.Stats(&stats)
 			log.Infof("Conn cache: %+v\n", stats)
 		}
 	}()

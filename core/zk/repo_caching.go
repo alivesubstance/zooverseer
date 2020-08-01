@@ -28,14 +28,13 @@ type CachingRepository struct {
 }
 
 func init() {
-	stats := &goCache.Stats{}
 	cache = goCache.New(goCache.WithExpireAfterAccess(core.ZkCacheExpireAfterAccessMinutes * time.Minute))
-	// todo looks like stats doesn't collect numbers
-	cache.Stats(stats)
 
 	go func() {
 		for {
 			time.Sleep(core.ZkCacheStatsPeriodMinutes * time.Minute)
+			stats := goCache.Stats{}
+			cache.Stats(&stats)
 			log.Infof("Zk cache: %+v\n", stats)
 		}
 	}()

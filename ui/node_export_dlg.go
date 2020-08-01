@@ -65,9 +65,8 @@ func (d *ExportResultDlg) setSensitive(value bool) {
 	d.okBtn.SetSensitive(value)
 }
 
-func (d *ExportResultDlg) setStatus(html string) string {
+func (d *ExportResultDlg) setStatus(html string) {
 	d.statusLabel.SetMarkup(html)
-	return html
 }
 
 func (d *ExportResultDlg) resetDlg() {

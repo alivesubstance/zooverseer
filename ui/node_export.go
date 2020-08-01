@@ -108,8 +108,7 @@ func (t *ExportTask) Process() {
 		return
 	}
 
-	log.Tracef("Data has been written to %v", absJsonFilePath)
-	log.Infof("Finish exporting %s", t.ZkPath)
+	log.Infof("Finish exporting %s to %s", t.ZkPath, absJsonFilePath)
 	t.JsonFilePath = absJsonFilePath
 	task.CompleteChan <- t
 }
@@ -117,7 +116,7 @@ func (t *ExportTask) Process() {
 func (t *ExportTask) hasError(err error) bool {
 	if err != nil {
 		t.Error = err
-		task.FailChan <- t
+		task.ErrorChan <- t
 		return true
 	}
 	return false
