@@ -37,6 +37,8 @@ type ConnDlg struct {
 	connListBox         *gtk.ListBox
 	connCopyBtn         *gtk.Button
 	connDeleteBtn       *gtk.Button
+	connTestBtn         *gtk.Button
+	connBtn             *gtk.Button
 }
 
 func InitConnDialog(mainWindow *MainWindow) {
@@ -55,14 +57,10 @@ func InitConnDialog(mainWindow *MainWindow) {
 	connDlg.connPwdEntry = GetObject("connPwdEntry").(*gtk.Entry)
 
 	connDlg.connCopyBtn = GetObject("connCopyBtn").(*gtk.Button)
-	connDlg.connCopyBtn.Connect("clicked", onConnCopyBtnClicked)
 	connDlg.connDeleteBtn = GetObject("connDeleteBtn").(*gtk.Button)
-	connDlg.connDeleteBtn.Connect("clicked", onConnDeleteBtnClicked)
+	connDlg.connTestBtn = GetObject("connTestBtn").(*gtk.Button)
+	connDlg.connBtn = GetObject("connBtn").(*gtk.Button)
 	GetObject("connDialogCancelBtn").(*gtk.Button).Connect("clicked", onConnDialogCancelBtnClicked(connDlg.dlg))
-	GetObject("connAddBtn").(*gtk.Button).Connect("clicked", onConnAddBtnClicked)
-	GetObject("connSaveBtn").(*gtk.Button).Connect("clicked", onConnSaveBtnClicked)
-	GetObject("connTestBtn").(*gtk.Button).Connect("clicked", onConnTestBtnClicked)
-	GetObject("connBtn").(*gtk.Button).Connect("clicked", onConnBtnClicked)
 
 	connInfos := ConnRepo.FindAll()
 	if len(connInfos) == 0 {
@@ -71,6 +69,7 @@ func InitConnDialog(mainWindow *MainWindow) {
 
 	connDlg.connListBox = GetObject("connList").(*gtk.ListBox)
 	initConnListBox()
+	enableConnBtns(false)
 
 	connDlg.dlg.ShowAll()
 }
@@ -172,8 +171,14 @@ func onConnSelected() {
 		return
 	}
 
+	enableConnBtns(true)
 	enableConnActions(true)
 	drawConnInfo(selectedConn, false)
+}
+
+func enableConnBtns(value bool) {
+	connDlg.connTestBtn.SetSensitive(value)
+	connDlg.connBtn.SetSensitive(value)
 }
 
 func enableConnActions(value bool) {
@@ -198,6 +203,7 @@ func onConnListBoxBtnPress(listBox *gtk.ListBox, e *gdk.Event) {
 func onConnAddBtnClicked() {
 	connDlg.connListBox.UnselectAll()
 	enableConnActions(false)
+	enableConnBtns(true)
 	drawConnInfo(&core.ConnInfo{Name: ConnNameDraft}, true)
 }
 

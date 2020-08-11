@@ -13,6 +13,8 @@ var (
 	mainWindow *MainWindow
 )
 
+type Signals map[string]interface{}
+
 func OnAppActivate(app *gtk.Application) func() {
 	return func() {
 		log.Infof("Reading glade file %v", core.Config.GladeFilePath)
@@ -31,10 +33,23 @@ func OnAppActivate(app *gtk.Application) func() {
 }
 
 func connectSignals(builder *gtk.Builder) {
-	signals := map[string]interface{}{
+	menuAboutSignals := Signals{
 		"onMenuAboutBtnCloseClicked": onMenuAboutBtnCloseClicked,
 		"onMenuAboutActivate":        onMenuAboutActivate,
 	}
+
+	connDlgSignals := Signals{
+		"onConnCopyBtnClicked":   onConnCopyBtnClicked,
+		"onConnDeleteBtnClicked": onConnDeleteBtnClicked,
+		"onConnTestBtnClicked":   onConnTestBtnClicked,
+		"onConnBtnClicked":       onConnBtnClicked,
+		"onConnAddBtnClicked":    onConnAddBtnClicked,
+		"onConnSaveBtnClicked":   onConnSaveBtnClicked,
+	}
+
+	signals := merge(Signals{}, menuAboutSignals)
+	signals = merge(signals, connDlgSignals)
+
 	builder.ConnectSignals(signals)
 }
 
@@ -62,4 +77,11 @@ func GetObject(objectName string) glib.IObject {
 	util.CheckError(err)
 
 	return object
+}
+
+func merge(dst Signals, src Signals) Signals {
+	for k, v := range src {
+		dst[k] = v
+	}
+	return dst
 }

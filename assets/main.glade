@@ -295,6 +295,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
+                <signal name="clicked" handler="onConnTestBtnClicked" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">True</property>
@@ -308,6 +309,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
+                <signal name="clicked" handler="onConnBtnClicked" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">True</property>
@@ -481,6 +483,7 @@
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
                     <property name="image">iconConnAdd</property>
+                    <signal name="clicked" handler="onConnAddBtnClicked" swapped="no"/>
                   </object>
                   <packing>
                     <property name="position">0</property>
@@ -492,6 +495,7 @@
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
                     <property name="image">iconConnSave</property>
+                    <signal name="clicked" handler="onConnSaveBtnClicked" swapped="no"/>
                   </object>
                   <packing>
                     <property name="position">1</property>
@@ -503,6 +507,7 @@
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
                     <property name="image">iconConnCopy</property>
+                    <signal name="clicked" handler="onConnCopyBtnClicked" swapped="no"/>
                   </object>
                   <packing>
                     <property name="position">2</property>
@@ -515,6 +520,7 @@
                     <property name="receives_default">True</property>
                     <property name="image">iconConnDelete</property>
                     <property name="image_position">right</property>
+                    <signal name="clicked" handler="onConnDeleteBtnClicked" swapped="no"/>
                   </object>
                   <packing>
                     <property name="position">3</property>
