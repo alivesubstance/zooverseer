@@ -9,7 +9,10 @@ INSTALL_ASSETS_DIR=${INSTALL_DIR}/${SRC_ASSETS_DIR}
 
 rm -rf "${INSTALL_DIR}"
 mkdir -p "${INSTALL_ASSETS_DIR}"
-cp "../${SRC_ASSETS_DIR}/{main.glade,logo.png,logo_small.png,style.css}" "${INSTALL_ASSETS_DIR}/"
+cp "../${SRC_ASSETS_DIR}/main.glade" "${INSTALL_ASSETS_DIR}/"
+cp "../${SRC_ASSETS_DIR}/logo.png" "${INSTALL_ASSETS_DIR}/"
+cp "../${SRC_ASSETS_DIR}/logo_small.png" "${INSTALL_ASSETS_DIR}/"
+cp "../${SRC_ASSETS_DIR}/style.css" "${INSTALL_ASSETS_DIR}/"
 
 env \
   GOOS="${GOOS}" \
