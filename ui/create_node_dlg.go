@@ -73,6 +73,7 @@ func (c *CreateNodeDlg) getAcl() []goZk.ACL {
 
 func (c *CreateNodeDlg) showAll() {
 	c.nameEntry.SetText("")
+	c.nameEntry.GrabFocus()
 	c.valueEntry.SetText("")
 
 	connInfo := getSelectedConn()

@@ -65,14 +65,14 @@ func TestGetChildren(t *testing.T) {
 func TestSave(t *testing.T) {
 	ZkRepo.SetConnInfo(connInfo)
 
-	nodeName := "test"
-	err := ZkRepo.SaveChild("/", nodeName, core.AclWorldAnyone)
+	node := &Node{Name: "test"}
+	err := ZkRepo.SaveChild("/", node)
 	assert.Nil(t, err)
 	if err != nil {
-		log.WithError(err).Panicf("Failed to save node " + nodeName)
+		log.WithError(err).Panicf("Failed to save node %v", node)
 	}
 
-	meta, _ := ZkRepo.GetMeta("/" + nodeName)
+	meta, _ := ZkRepo.GetMeta("/" + node.Name)
 	assert.NotNil(t, meta)
 }
 

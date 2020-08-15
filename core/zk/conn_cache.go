@@ -36,7 +36,7 @@ func init() {
 			time.Sleep(core.ConnCacheStatsPeriodMinutes * time.Minute)
 			stats := goCache.Stats{}
 			c.Stats(&stats)
-			log.Infof("Conn cache: %+v\n", stats)
+			log.Infof("Conn cache: %+v", stats)
 		}
 	}()
 

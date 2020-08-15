@@ -117,8 +117,6 @@ func enableRowActions(enabled bool) {
 func onExpandRow(treeView *gtk.TreeView, parentIter *gtk.TreeIter, treePath *gtk.TreePath) {
 	removeRowChildren(parentIter)
 
-	//todo use go subroutine with channel in order not to freeze UI
-	//todo add spinner in case of long running function
 	parentValue, _ := nodeTreeStore.GetValue(parentIter, core.NodeColumn)
 	parentGoValue, _ := parentValue.GoValue()
 
@@ -239,13 +237,7 @@ func getNodesTreeView() *gtk.TreeView {
 }
 
 func refreshNode(zkPath string) {
-	var treePath string
-	for treePathKey, cachedZkPath := range ZkPathByTreePath {
-		if cachedZkPath == zkPath {
-			treePath = treePathKey
-			break
-		}
-	}
+	treePath := findTreePathByZkPath(zkPath)
 
 	parentTreeIter, _ := nodeTreeStore.GetIterFromString(treePath)
 	parentTreePath, _ := nodeTreeStore.GetPath(parentTreeIter)
@@ -281,7 +273,20 @@ func deleteSelectedNode() {
 			return
 		}
 
+		// remove cached tree path for a given zk path
+		delete(ZkPathByTreePath, findTreePathByZkPath(zkPath))
+
 		parentZkPath := gopath.Dir(zkPath)
 		refreshNode(parentZkPath)
 	}
+}
+
+func findTreePathByZkPath(zkPath string) string {
+	for treePathKey, cachedZkPath := range ZkPathByTreePath {
+		if cachedZkPath == zkPath {
+			return treePathKey
+		}
+	}
+
+	panic("Failed to find tree path by " + zkPath + " zk path")
 }

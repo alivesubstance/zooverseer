@@ -1,9 +1,11 @@
 package core
 
 import (
+	"container/list"
 	"fmt"
 	"github.com/alivesubstance/zooverseer/util"
 	log "github.com/sirupsen/logrus"
+	"io"
 	"io/ioutil"
 	"os"
 	"path"
@@ -16,6 +18,19 @@ const (
 	timeFormatLogFileName = "20060102_150405"
 )
 
+type PlainFormatter struct{}
+
+type CompositeWriter struct {
+	writers *list.List
+}
+
+func (cw CompositeWriter) Write(p []byte) (n int, err error) {
+	for e := cw.writers.Front(); e != nil; e = e.Next() {
+		n, err = e.Value.(io.Writer).Write(p)
+	}
+	return n, err
+}
+
 func InitLogger() {
 	log.SetLevel(Config.Log.Level)
 	log.SetFormatter(&PlainFormatter{})
@@ -26,10 +41,17 @@ func InitLogger() {
 	//})
 
 	cleanOldLogs()
-	initLogFile()
+
+	compositeWriter := CompositeWriter{writers: list.New()}
+	compositeWriter.writers.PushFront(os.Stdout)
+	logFile := initLogFile()
+	if logFile != nil {
+		compositeWriter.writers.PushFront(logFile)
+	}
+	log.SetOutput(compositeWriter)
 }
 
-func initLogFile() {
+func initLogFile() *os.File {
 	_, err := os.Stat(Config.Log.Dir)
 	if os.IsNotExist(err) {
 		err := os.Mkdir(Config.Log.Dir, 0775)
@@ -41,11 +63,12 @@ func initLogFile() {
 	logFileName := Config.Log.Dir + "/zooverseer-" + time.Now().Format(timeFormatLogFileName) + ".log"
 	logFile, err := os.Create(logFileName)
 	if err == nil {
-		log.SetOutput(logFile)
+		return logFile
 	} else {
 		log.WithError(err).Panicf("Failed to create log file, using default stdout")
-		log.SetOutput(os.Stdout)
 	}
+
+	return nil
 }
 
 func cleanOldLogs() {
@@ -64,9 +87,6 @@ func cleanOldLogs() {
 
 		}
 	}
-}
-
-type PlainFormatter struct {
 }
 
 func (f *PlainFormatter) Format(entry *log.Entry) ([]byte, error) {

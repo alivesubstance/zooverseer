@@ -35,7 +35,7 @@ func init() {
 			time.Sleep(core.ZkCacheStatsPeriodMinutes * time.Minute)
 			stats := goCache.Stats{}
 			cache.Stats(&stats)
-			log.Infof("Zk cache: %+v\n", stats)
+			log.Infof("Zk cache: %+v", stats)
 		}
 	}()
 }
