@@ -1,10 +1,12 @@
 #!/bin/bash
 
+VERSION="1.0.0"
 GOOS="linux"
 GOARCH="amd64"
+BIN_DIR="/home/mirian/code/zooverseer/bin"
 
 SRC_ASSETS_DIR="assets"
-INSTALL_DIR="../bin/linux-1.0.0"
+INSTALL_DIR="$BIN_DIR/linux-$VERSION"
 INSTALL_ASSETS_DIR=${INSTALL_DIR}/${SRC_ASSETS_DIR}
 
 rm -rf "${INSTALL_DIR}"
@@ -22,3 +24,6 @@ env \
 
 cp "${INSTALL_DIR}/zooverseer" /home/mirian/env/zooverseer/bin
 cp -r "${INSTALL_ASSETS_DIR}/." /home/mirian/env/zooverseer/assets
+
+cd "$INSTALL_DIR"
+tar -zcvf  "$BIN_DIR"/zooverseer-"$VERSION".tar.gz $(ls -A)
