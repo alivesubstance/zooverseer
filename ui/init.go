@@ -27,6 +27,7 @@ func OnAppActivate(app *gtk.Application) func() {
 
 		mainWindow = NewMainWindow()
 		InitConnDialog(mainWindow)
+		initAppIcon(mainWindow)
 
 		app.AddWindow(mainWindow.gtkWindow)
 	}
@@ -47,8 +48,8 @@ func connectSignals(builder *gtk.Builder) {
 		"onConnSaveBtnClicked":   onConnSaveBtnClicked,
 	}
 
-	signals := merge(Signals{}, menuAboutSignals)
-	signals = merge(signals, connDlgSignals)
+	signals := mergeSignals(Signals{}, menuAboutSignals)
+	signals = mergeSignals(signals, connDlgSignals)
 
 	builder.ConnectSignals(signals)
 }
@@ -79,9 +80,16 @@ func GetObject(objectName string) glib.IObject {
 	return object
 }
 
-func merge(dst Signals, src Signals) Signals {
+func mergeSignals(dst Signals, src Signals) Signals {
 	for k, v := range src {
 		dst[k] = v
 	}
 	return dst
+}
+
+func initAppIcon(window *MainWindow) {
+	err := window.gtkWindow.SetIconFromFile(core.Config.LogoFilePath)
+	if err != nil {
+		log.WithError(err).Panicf("Failed to set icon from %v", core.Config.LogoFilePath)
+	}
 }

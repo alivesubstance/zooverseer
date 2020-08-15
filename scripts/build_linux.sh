@@ -4,7 +4,7 @@ GOOS="linux"
 GOARCH="amd64"
 
 SRC_ASSETS_DIR="assets"
-INSTALL_DIR="../bin/linux-1.0.0b"
+INSTALL_DIR="../bin/linux-1.0.0"
 INSTALL_ASSETS_DIR=${INSTALL_DIR}/${SRC_ASSETS_DIR}
 
 rm -rf "${INSTALL_DIR}"
