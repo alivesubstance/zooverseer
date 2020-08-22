@@ -26,4 +26,4 @@ cp "${INSTALL_DIR}/zooverseer" /home/mirian/env/zooverseer/bin
 cp -r "${INSTALL_ASSETS_DIR}/." /home/mirian/env/zooverseer/assets
 
 cd "$INSTALL_DIR"
-tar -zcvf  "$BIN_DIR"/zooverseer-"$VERSION".tar.gz $(ls -A)
+tar -zcvf  "$BIN_DIR"/zooverseer-"$VERSION"-"$GOOS"-"$GOARCH".tar.gz $(ls -A)

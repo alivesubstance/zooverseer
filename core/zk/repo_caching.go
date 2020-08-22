@@ -1,10 +1,12 @@
 package zk
 
 import (
+	"context"
 	"github.com/alivesubstance/zooverseer/core"
 	goCache "github.com/goburrow/cache"
 	goZk "github.com/samuel/go-zookeeper/zk"
 	log "github.com/sirupsen/logrus"
+	"sync"
 	"time"
 )
 
@@ -174,24 +176,46 @@ func (c *CachingRepository) Close() {
 	c.InvalidateAll()
 }
 
-func (c *CachingRepository) Export(path string) (*Node, error) {
+func (c *CachingRepository) Export(ctx context.Context, cancelFunc context.CancelFunc, path string) (*Node, error) {
 	node, err := c.Get(path)
 	if err != nil {
 		return nil, err
 	}
 
-	return node, c.doExport(node, path)
+	return node, c.doExport(ctx, cancelFunc, node, path)
 }
 
-func (c *CachingRepository) doExport(parent *Node, parentPath string) error {
-	for i, child := range parent.Children {
-		// todo run in parallel
-		childNode, err := c.Export(c.Repo.buildAbsPath(parentPath, child.Name))
-		parent.Children[i] = childNode
-		if err != nil {
-			return err
-		}
-	}
+func (c *CachingRepository) doExport(
+	ctx context.Context,
+	cancelFunc context.CancelFunc,
+	parent *Node,
+	parentPath string,
+) error {
+	errChan := make(chan error, 1)
 
-	return nil
+	go func(ctx context.Context, cancelFunc context.CancelFunc, parent *Node, parentPath string) {
+		var wg sync.WaitGroup
+		for i, child := range parent.Children {
+			wg.Add(1)
+			go func(idx int, childName string) {
+				defer wg.Done()
+
+				childNode, err := c.Export(ctx, cancelFunc, c.Repo.buildAbsPath(parentPath, childName))
+				parent.Children[idx] = childNode
+				if err != nil {
+					errChan <- err
+					cancelFunc()
+				}
+			}(i, child.Name)
+		}
+		wg.Wait()
+	}(ctx, cancelFunc, parent, parentPath)
+
+	select {
+	case <-ctx.Done():
+		log.Infof("Node export has been canceled")
+		return ctx.Err()
+	case err := <-errChan:
+		return err
+	}
 }

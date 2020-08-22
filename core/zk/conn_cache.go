@@ -22,7 +22,7 @@ func (_ infoLogger) Printf(format string, a ...interface{}) {
 
 func init() {
 	connRemoveListener := func(key goCache.Key, value goCache.Value) {
-		log.Debugf("Conn closed from remove listener. %s", key)
+		log.Debugf("Conn closed from remove listener. %v", key)
 		value.(*goZk.Conn).Close()
 	}
 

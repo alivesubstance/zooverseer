@@ -1,11 +1,11 @@
 package ui
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/alivesubstance/zooverseer/core"
 	"github.com/alivesubstance/zooverseer/core/zk"
-	"github.com/alivesubstance/zooverseer/task"
 	"github.com/kennygrant/sanitize"
 	log "github.com/sirupsen/logrus"
 	"os"
@@ -13,14 +13,6 @@ import (
 	"path/filepath"
 	"time"
 )
-
-type ExportTask struct {
-	ZkPath       string
-	Tree         *zk.Node
-	JsonFilePath string
-	Error        error
-	task.Task
-}
 
 type Meta struct {
 	RootPath  string
@@ -38,38 +30,47 @@ type ExportNodeReport struct {
 	Data *zk.Node
 }
 
-func exportSelectedNode() {
-	treeSelection, _ := getNodesTreeView().GetSelection()
-	zkPath, _ := getTreeSelectedZkPath(treeSelection)
-	createExportTask(zkPath)
+type ExportTask struct {
+	ZkPath       string
+	Tree         *zk.Node
+	JsonFilePath string
+	Error        error
+	Task
+	*baseTask
 }
 
 func createExportTask(zkPath string) {
-	exportTask := &ExportTask{
-		ZkPath: zkPath,
+	ctx, cancel := context.WithCancel(context.Background())
+	nodeExportDlg.cancelOperationFunc = cancel
+
+	baseTask := &baseTask{
+		Context:    ctx,
+		CancelFunc: cancel,
 	}
-	task.CreateChan <- exportTask
+
+	exportTask := &ExportTask{
+		ZkPath:   zkPath,
+		baseTask: baseTask,
+	}
+	addTask(exportTask)
 
 	nodeExportDlg.startExport(zkPath)
 }
 
-func (t *ExportTask) Fail(task task.Task) {
-	exportTask := task.(*ExportTask)
-	log.WithError(exportTask.Error).Errorf("Failed to export from %v", exportTask.ZkPath)
-	nodeExportDlg.showError(exportTask.ZkPath, exportTask.Error)
+func (t *ExportTask) fail() {
+	log.WithError(t.Error).Errorf("Failed to export from %v", t.ZkPath)
+	nodeExportDlg.showError(t.ZkPath, t.Error)
 }
 
-func (t *ExportTask) Complete(task task.Task) {
-	exportTask := task.(*ExportTask)
-	jsonFilePath := exportTask.JsonFilePath
-	log.Infof("Exported %v to %v", exportTask.ZkPath, jsonFilePath)
-	nodeExportDlg.showResult(exportTask.ZkPath, jsonFilePath)
+func (t *ExportTask) complete() {
+	log.Infof("Exported %v to %v", t.ZkPath, t.JsonFilePath)
+	nodeExportDlg.showResult(t.ZkPath, t.JsonFilePath)
 }
 
-func (t *ExportTask) Process() {
+func (t *ExportTask) process() {
 	log.Infof("Start exporting %s", t.ZkPath)
 
-	node, err := zk.CachingRepo.Export(t.ZkPath)
+	node, err := zk.CachingRepo.Export(t.Context, t.CancelFunc, t.ZkPath)
 	if t.hasError(err) {
 		return
 	}
@@ -110,13 +111,13 @@ func (t *ExportTask) Process() {
 
 	log.Infof("Finish exporting %s to %s", t.ZkPath, absJsonFilePath)
 	t.JsonFilePath = absJsonFilePath
-	task.CompleteChan <- t
+	completeChan <- t
 }
 
 func (t *ExportTask) hasError(err error) bool {
 	if err != nil {
 		t.Error = err
-		task.ErrorChan <- t
+		errorChan <- t
 		return true
 	}
 	return false

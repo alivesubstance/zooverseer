@@ -24,10 +24,8 @@ type ZooverseerConfig struct {
 	Log                LogConfig
 }
 
-// Because of some unbelievable reason the value "com.github.alivesubstance.zooverseer" can't be
-// used as AppId. In this case "app.Run(os.Args)" returns zero code immediately and application exits. WTF!?
 var Config = ZooverseerConfig{
-	AppId:              "com.github.alivesubstance.app.zooverseer",
+	AppId:              "com.github.alivesubstance.zooverseer",
 	AppTitle:           "Zooverseer",
 	ShowFolderFirst:    true,
 	ConnConfigFilePath: AppAssetsDir + "/connections.json",

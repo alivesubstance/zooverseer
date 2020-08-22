@@ -33,15 +33,9 @@ func NewContextMenu() *ContextMenu {
 	contextMenu.copyNameItem = GetObject("contextMenuCopyName").(*gtk.MenuItem)
 	contextMenu.copyNameItem.Connect("activate", contextMenu.onCopyName)
 
-	//contextMenu.copyPathItem = GetObject("contextMenuCopyPath").(*gtk.MenuItem)
-	//contextMenu.copyPathItem.Connect("activate", onCopyValue)
-	//
-	//contextMenu.pasteValueItem = GetObject("contextMenuPasteValue").(*gtk.MenuItem)
-	//contextMenu.pasteValueItem.Connect("activate", onCopyValue)
-	//
-	//contextMenu.renameItem = GetObject("contextMenuRename").(*gtk.MenuItem)
-	//contextMenu.renameItem.Connect("activate", onCopyValue)
-	//
+	contextMenu.copyPathItem = GetObject("contextMenuCopyPath").(*gtk.MenuItem)
+	contextMenu.copyPathItem.Connect("activate", contextMenu.onCopyPath)
+
 	contextMenu.deleteItem = GetObject("contextMenuDeleteNode").(*gtk.MenuItem)
 	contextMenu.deleteItem.Connect("activate", contextMenu.onDeleteNode)
 
@@ -58,7 +52,9 @@ func (m *ContextMenu) onAddNewNode() {
 }
 
 func (m *ContextMenu) onExportNode() {
-	exportSelectedNode()
+	treeSelection, _ := getNodesTreeView().GetSelection()
+	zkPath, _ := getTreeSelectedZkPath(treeSelection)
+	createExportTask(zkPath)
 }
 
 func (m *ContextMenu) onDeleteNode() {
@@ -71,6 +67,14 @@ func (m *ContextMenu) onCopyValue() {
 
 func (m *ContextMenu) onCopyName() {
 	m.copyToClipboard(func(node *zk.Node) string { return node.Name }, "node name")
+}
+
+func (m *ContextMenu) onCopyPath() {
+	m.copyToClipboard(func(node *zk.Node) string {
+		treeSelection, _ := getNodesTreeView().GetSelection()
+		zkPath, _ := getTreeSelectedZkPath(treeSelection)
+		return zkPath
+	}, "node path")
 }
 
 func (m *ContextMenu) copyToClipboard(producer func(node *zk.Node) string, errMsg string) {

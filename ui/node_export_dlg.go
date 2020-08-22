@@ -1,29 +1,33 @@
 package ui
 
 import (
+	"context"
 	"github.com/gotk3/gotk3/gtk"
 )
 
 type ExportResultDlg struct {
-	dlg         *gtk.Dialog
-	statusLabel *gtk.Label
-	spinner     *gtk.Spinner
-	resultLabel *gtk.Label
-	okBtn       *gtk.Button
-	mainWindow  *gtk.Window
+	dlg                 *gtk.Dialog
+	statusLabel         *gtk.Label
+	spinner             *gtk.Spinner
+	resultLabel         *gtk.Label
+	okBtn               *gtk.Button
+	mainWindow          *gtk.Window
+	cancelOperationFunc context.CancelFunc
 }
 
 func NewNodeExportDlg(mainWindow *gtk.Window) *ExportResultDlg {
 	exportResultDlg := &ExportResultDlg{}
-	exportResultDlg.statusLabel = GetObject("nodeExportStatusLabel").(*gtk.Label)
-	exportResultDlg.spinner = GetObject("nodeExportSpinner").(*gtk.Spinner)
-	exportResultDlg.resultLabel = GetObject("nodeExportResultLabel").(*gtk.Label)
-	exportResultDlg.okBtn = GetObject("exportDlgOkBtn").(*gtk.Button)
 	exportResultDlg.mainWindow = mainWindow
 	exportResultDlg.dlg = GetObject("nodeExportDlg").(*gtk.Dialog)
 	exportResultDlg.dlg.SetTransientFor(mainWindow)
+	exportResultDlg.statusLabel = GetObject("nodeExportStatusLabel").(*gtk.Label)
+	exportResultDlg.spinner = GetObject("nodeExportSpinner").(*gtk.Spinner)
+	exportResultDlg.resultLabel = GetObject("nodeExportResultLabel").(*gtk.Label)
 
-	exportResultDlg.okBtn.Connect("clicked", exportResultDlg.onOkBtnClicked(exportResultDlg))
+	exportResultDlg.okBtn = GetObject("exportDlgOkBtn").(*gtk.Button)
+	exportResultDlg.okBtn.Connect("clicked", exportResultDlg.onOkBtnClicked)
+	GetObject("exportDlgCancelBtn").(*gtk.Button).
+		Connect("clicked", exportResultDlg.onCancelBtnClicked)
 	return exportResultDlg
 }
 
@@ -75,6 +79,11 @@ func (d *ExportResultDlg) resetDlg() {
 	d.spinner.Stop()
 }
 
-func (d *ExportResultDlg) onOkBtnClicked(dlg *ExportResultDlg) func() {
-	return func() { dlg.dlg.Hide() }
+func (d *ExportResultDlg) onOkBtnClicked() {
+	d.dlg.Hide()
+}
+
+func (d *ExportResultDlg) onCancelBtnClicked() {
+	d.dlg.Hide()
+	d.cancelOperationFunc()
 }

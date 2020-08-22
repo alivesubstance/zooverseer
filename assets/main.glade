@@ -53,9 +53,7 @@
             <child>
               <object class="GtkMenuItem" id="contextMenuCopyPath">
                 <property name="visible">True</property>
-                <property name="sensitive">False</property>
                 <property name="can_focus">False</property>
-                <property name="tooltip_text" translatable="yes">Not implemented yet</property>
                 <property name="label" translatable="yes">Path</property>
                 <property name="use_underline">True</property>
               </object>
@@ -482,6 +480,7 @@
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
+                    <property name="tooltip_text" translatable="yes">Create connection</property>
                     <property name="image">iconConnAdd</property>
                     <signal name="clicked" handler="onConnAddBtnClicked" swapped="no"/>
                   </object>
@@ -494,6 +493,7 @@
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
+                    <property name="tooltip_text" translatable="yes">Save connection</property>
                     <property name="image">iconConnSave</property>
                     <signal name="clicked" handler="onConnSaveBtnClicked" swapped="no"/>
                   </object>
@@ -506,6 +506,7 @@
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
+                    <property name="tooltip_text" translatable="yes">Copy connection</property>
                     <property name="image">iconConnCopy</property>
                     <signal name="clicked" handler="onConnCopyBtnClicked" swapped="no"/>
                   </object>
@@ -518,6 +519,7 @@
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
+                    <property name="tooltip_text" translatable="yes">Delete connection</property>
                     <property name="image">iconConnDelete</property>
                     <property name="image_position">right</property>
                     <signal name="clicked" handler="onConnDeleteBtnClicked" swapped="no"/>
@@ -582,6 +584,11 @@
     <property name="can_focus">False</property>
     <property name="stock">gtk-find</property>
     <property name="icon_size">3</property>
+  </object>
+  <object class="GtkImage" id="image1">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-zoom-fit</property>
   </object>
   <object class="GtkWindow" id="mainWindow">
     <property name="can_focus">False</property>
@@ -927,6 +934,17 @@
                       <object class="GtkActionBar">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
+                        <child>
+                          <object class="GtkButton" id="iconValuePrettify">
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                            <property name="receives_default">True</property>
+                            <property name="image">image1</property>
+                          </object>
+                          <packing>
+                            <property name="position">0</property>
+                          </packing>
+                        </child>
                         <child>
                           <object class="GtkButton" id="searchDataBtn">
                             <property name="visible">True</property>
@@ -1527,11 +1545,23 @@
             <property name="can_focus">False</property>
             <property name="layout_style">end</property>
             <child>
-              <placeholder/>
-            </child>
-            <child>
               <object class="GtkButton" id="exportDlgOkBtn">
                 <property name="label">gtk-ok</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="use_stock">True</property>
+                <property name="always_show_image">True</property>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="exportDlgCancelBtn">
+                <property name="label">gtk-cancel</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
@@ -1623,8 +1653,8 @@
             <property name="can_focus">False</property>
             <property name="layout_style">end</property>
             <child>
-              <object class="GtkButton" id="renameNodeDlgCancelBtn">
-                <property name="label">gtk-cancel</property>
+              <object class="GtkButton" id="renameNodeDlgOkBtn">
+                <property name="label">gtk-ok</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
@@ -1639,8 +1669,8 @@
               </packing>
             </child>
             <child>
-              <object class="GtkButton" id="renameNodeDlgOkBtn">
-                <property name="label">gtk-ok</property>
+              <object class="GtkButton" id="renameNodeDlgCancelBtn">
+                <property name="label">gtk-cancel</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
