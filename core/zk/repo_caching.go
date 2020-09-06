@@ -213,7 +213,7 @@ func (c *CachingRepository) doExport(
 
 	select {
 	case <-ctx.Done():
-		log.Infof("Node export has been canceled")
+		log.Infof("Node %s export has been canceled", parentPath)
 		return ctx.Err()
 	case err := <-errChan:
 		return err

@@ -45,6 +45,7 @@ func InitConnDialog(mainWindow *MainWindow) {
 	connDlg.dlg = GetObject("connDialog").(*gtk.Dialog)
 	connDlg.dlg.SetTransientFor(mainWindow.gtkWindow)
 	connDlg.dlg.SetPosition(gtk.WIN_POS_CENTER)
+	GetObject("connDialog").(*gtk.Dialog).Connect("close", func() { connDlg.dlg.Hide() })
 
 	connDlg.connPortEntry = GetObject("connPortEntry").(*gtk.Entry)
 	connDlg.connPortEntry.SetWidthChars(10)

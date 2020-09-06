@@ -49,8 +49,7 @@ func NewMainWindow() *MainWindow {
 
 func initMainMenu(mainWindow *MainWindow) {
 	GetObject("menuConnect").(*gtk.MenuItem).Connect("activate", func() {
-		connDialog := GetObject("connDialog").(*gtk.Dialog)
-		connDialog.Show()
+		connDlg.dlg.ShowAll()
 	})
 	GetObject("menuExit").(*gtk.MenuItem).Connect("activate", func() {
 		zk.CachingRepo.Close()
